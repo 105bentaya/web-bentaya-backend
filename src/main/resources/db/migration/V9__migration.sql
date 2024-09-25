@@ -1,0 +1,1 @@
+alter table scout add enabled boolean not null default true;

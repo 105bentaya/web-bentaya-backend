@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<div>
+    <p>
+        Se ha cancelado la reserva N.º
+        <b th:text="${id}"></b>
+        para el centro scout
+        <b th:text="${center}"></b>.
+    </p>
+    <p>
+        El motivo indicado es el siguiente: <span th:text="${statusObservation}"></span>
+    </p>
+    <div>
+        <br>
+        <span>Atentamente,<br></span>
+        <span>El sistema de mensajería de Scouts 105 Bentaya</span>
+    </div>
+</div>
+</html>

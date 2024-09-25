@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div>
+    <h2>Scouts 105 Bentaya - Formulario de Donación</h2>
+    <p>Hemos recibido su formulario de donación. A continuación, se detallan los datos que nos ha proporcionado:</p>
+    <h3 style="margin-top: 2rem;">Datos de Donante</h3>
+    <p>
+        <strong>Nombre:</strong> <span th:text="${name}">nombre</span>
+    </p>
+    <p>
+        <strong>Primer Apellido:</strong> <span th:text="${firstSurname}">-</span>
+    </p>
+    <p>
+        <strong>Segundo Apellido:</strong> <span th:text="${secondSurname}">-</span>
+    </p>
+    <p>
+        <strong>CIF o NIF:</strong> <span th:text="${cif}">-</span>
+    </p>
+    <p>
+        <strong>Teléfono:</strong> <span th:text="${phone}">-</span>
+    </p>
+    <p>
+        <strong>Correo electrónico:</strong> <span th:text="${email}">-</span>
+    </p>
+    <p>
+        <strong>Desea desgravar:</strong>
+        <span th:if="${deduct}">Sí</span>
+        <span th:unless="${deduct}">No</span>
+    </p>
+    <h3 style="margin-top: 2rem;">Datos de Donación</h3>
+    <p>
+        <strong>Importe:</strong> <span th:text="${amount}">-</span>
+    </p>
+    <p>
+        <strong>Periodicidad:</strong> <span th:text="${frequency}">-</span>
+    </p>
+    <p th:if="${singleType}">
+        <strong>Método de donación:</strong> <span th:text="${singleType}">-</span>
+    </p>
+    <p th:if="${manualDonation}">
+        Recuerde que al optar por ingreso en nuestra cuenta, debe identificar el ingreso como 'Donación' y, en su caso,
+        señalar 'Nombre y Apellidos' o 'Razón Social'. El ingreso se hará a la cuenta: ES63 3058 6103 2527 2000 6238.
+    </p>
+    <p th:if="${donationPaymentOrder}">
+        El número de pago asociado a su donación es: <b th:text="${donationPaymentOrder}">-</b>.
+    </p>
+    <p th:if="${iban}">
+        <strong>IBAN:</strong> <span th:text="${iban}">-</span>
+    </p>
+    <p>
+        Ante cualquier duda, por favor envíe un correo a
+        <a href="mailto:tesoreria@105bentaya.org">tesoreria@105bentaya.org</a>.
+    </p>
+</div>
+</body>
+</html>

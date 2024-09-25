@@ -1,0 +1,1 @@
+alter table booking add column own_booking boolean default false;

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<div>
+    <p>
+        Su reserva con número
+        <b th:text="${id}"></b>
+        para el centro scout
+        <b th:text="${center}"></b>
+        ha sido confirmada.
+    </p>
+    <p th:if="${exclusivenessRejected}">
+        No obstante, la exclusividad no ha podido ser aceptada por el siguiente motivo:
+        «<span th:text="${statusObservation}"></span>»
+    </p>
+    <p th:if="${!exclusivenessRejected && statusObservation != null}">
+        Se han incluido las siguientes observaciones:
+        «<span th:text="${statusObservation}"></span>»
+    </p>
+    <p>
+        Para retirar las llaves del lugar, pónganse en contacto con la persona responsable del lugar la semana anterior
+        a su reserva y con al menos dos días de antelación respecto al inicio de la misma. La información de contacto la
+        puede consultar en el PDF con las normas.
+    </p>
+    <p>
+        Ante cualquier duda, por favor envíe un correo a
+        <a href="mailto:centroscouts@105bentaya.org">centroscouts@105bentaya.org</a>.
+    </p>
+    <div>
+        <br>
+        <span>Atentamente,<br></span>
+        <span>El sistema de mensajería de Scouts 105 Bentaya</span>
+    </div>
+</div>
+</html>

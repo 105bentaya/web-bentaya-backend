@@ -1,0 +1,1 @@
+alter table scout add census int;
