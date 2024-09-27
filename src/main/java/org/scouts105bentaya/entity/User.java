@@ -11,12 +11,14 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.scouts105bentaya.constraint.IsUnit;
 import org.scouts105bentaya.enums.Group;
+import org.scouts105bentaya.enums.Roles;
 
 import java.util.List;
 import java.util.Set;
@@ -63,8 +65,13 @@ public class User {
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<Booking> bookingList;
 
-    public boolean hasRole(String roleName) {
-        return roles.stream().anyMatch(role -> role.getName().equals(roleName));
+    @Transient
+    public boolean hasRole(Roles roleEnum) {
+        return roles.stream().anyMatch(role -> role.getName().equals(roleEnum.name()));
     }
 
+    @Transient
+    public boolean isMember() {
+        return hasRole(Roles.ROLE_USER) || hasRole(Roles.ROLE_SCOUTER) || hasRole(Roles.ROLE_GROUP_SCOUTER);
+    }
 }

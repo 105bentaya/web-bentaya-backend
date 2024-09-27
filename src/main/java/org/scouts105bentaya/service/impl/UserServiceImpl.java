@@ -9,6 +9,7 @@ import org.scouts105bentaya.dto.UserDto;
 import org.scouts105bentaya.entity.Role;
 import org.scouts105bentaya.entity.Scout;
 import org.scouts105bentaya.entity.User;
+import org.scouts105bentaya.enums.Roles;
 import org.scouts105bentaya.exception.PasswordsNotMatchException;
 import org.scouts105bentaya.exception.RoleNotFoundException;
 import org.scouts105bentaya.exception.user.UserAlreadyExistsException;
@@ -93,13 +94,13 @@ public class UserServiceImpl implements UserService {
             throw new UserAlreadyExistsException("A user with this username already exists");
         }
 
-        if (!user.hasRole("ROLE_SCOUTER")) {
+        if (!user.hasRole(Roles.ROLE_SCOUTER)) {
             user.setGroupId(null);
         } else if (user.getGroupId() == null) {
             throw new UserHasNotGroupException("El usuario debe tener una unidad");
         }
 
-        if (!user.hasRole("ROLE_USER")) {
+        if (!user.hasRole(Roles.ROLE_USER)) {
             user.setScoutList(null);
         } else if (user.getScoutList() == null) {
             throw new UserHasNotScoutsException("El usuario debe tener educandos");
@@ -147,7 +148,7 @@ public class UserServiceImpl implements UserService {
 
         if (usernameUser.isPresent()) {
             User existingUser = usernameUser.get();
-            if (!existingUser.hasRole("ROLE_SCOUT_CENTER_REQUESTER")) {
+            if (!existingUser.hasRole(Roles.ROLE_SCOUT_CENTER_REQUESTER)) {
                 existingUser.getRoles().add(roleRepository.findByName("ROLE_SCOUT_CENTER_REQUESTER")
                         .orElseThrow(RoleNotFoundException::new)
                 );
@@ -233,17 +234,17 @@ public class UserServiceImpl implements UserService {
         userDB.setUsername(userToUpdate.getUsername());
 
 
-        if (userDB.hasRole("ROLE_USER") && !userToUpdate.hasRole("ROLE_USER")) {
+        if (userDB.hasRole(Roles.ROLE_USER) && !userToUpdate.hasRole(Roles.ROLE_USER)) {
             userDB.setScoutList(null);
         }
 
-        if (userToUpdate.hasRole("ROLE_USER")) {
+        if (userToUpdate.hasRole(Roles.ROLE_USER)) {
             if (userToUpdate.getScoutList() == null)
                 throw new UserHasNotScoutsException("El usuario debe tener educandos");
             userDB.setScoutList(userToUpdate.getScoutList());
         }
 
-        if (userToUpdate.hasRole("ROLE_SCOUTER")) {
+        if (userToUpdate.hasRole(Roles.ROLE_USER)) {
             if (userToUpdate.getGroupId() == null)
                 throw new UserHasNotGroupException("El usuario debe tener una unidad");
             userDB.setGroupId(userToUpdate.getGroupId());
@@ -265,7 +266,7 @@ public class UserServiceImpl implements UserService {
                 user.getRoles().removeIf(role -> !role.getName().equals("ROLE_USER"));
                 user.setEnabled(true);
             }
-            if (!user.hasRole("ROLE_USER")) {
+            if (!user.hasRole(Roles.ROLE_USER)) {
                 user.getRoles().add(roleRepository.findByName("ROLE_USER").orElseThrow(RoleNotFoundException::new));
             }
             user.getScoutList().add(scout);
@@ -285,10 +286,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public void removeScout(User user, Scout scout) {
         user.getScoutList().remove(scout);
-        if (user.getScoutList().isEmpty() && user.hasRole("ROLE_USER") && user.getRoles().size() == 1) {
+        if (user.getScoutList().isEmpty() && user.hasRole(Roles.ROLE_USER) && user.getRoles().size() == 1) {
             user.setEnabled(false);
-        } else if (user.getScoutList().isEmpty() && user.hasRole("ROLE_USER")) {
-            user.getRoles().removeIf(role -> role.getName().equals("ROLE_USER"));
+        } else if (user.getScoutList().isEmpty() && user.hasRole(Roles.ROLE_USER)) {
+            user.getRoles().removeIf(role -> role.getName().equals(Roles.ROLE_USER.name()));
         }
         userRepository.save(user);
     }

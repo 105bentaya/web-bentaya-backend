@@ -8,6 +8,7 @@ import org.scouts105bentaya.dto.event.EventDto;
 import org.scouts105bentaya.dto.event.EventFormDto;
 import org.scouts105bentaya.exception.WebBentayaException;
 import org.scouts105bentaya.service.EventService;
+import org.scouts105bentaya.service.impl.CalendarService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -42,15 +43,18 @@ public class EventController {
     private final EventService eventService;
     private final EventCalendarConverter eventCalendarConverter;
     private final EventFormConverter eventFormConverter;
+    private final CalendarService calendarService;
     private final EventConverter eventConverter;
 
     public EventController(EventService eventService,
                            EventCalendarConverter eventCalendarConverter,
                            EventFormConverter eventFormConverter,
+                           CalendarService calendarService,
                            EventConverter eventConverter) {
         this.eventService = eventService;
         this.eventCalendarConverter = eventCalendarConverter;
         this.eventFormConverter = eventFormConverter;
+        this.calendarService = calendarService;
         this.eventConverter = eventConverter;
     }
 
@@ -65,7 +69,7 @@ public class EventController {
     @GetMapping("/subscribe")
     public String subscribeToCalendar() {
         log.info("METHOD EventController.subscribeToCalendar{}", getLoggedUserUsernameForLog());
-        return (eventService.getCalendarSubscription());
+        return (calendarService.getCalendarSubscription());
     }
 
     @GetMapping("/public/calendar")
@@ -74,7 +78,7 @@ public class EventController {
         return ResponseEntity.ok()
             .header("Content-Type", "text/calendar")
             .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=bentaya-calendar.ics")
-            .body(eventService.getIcsCalendar(token));
+            .body(calendarService.getIcsCalendar(token));
     }
 
     @PostAuthorize("@authLogic.groupIdIsUserAuthorized(returnObject.groupId) or hasAnyRole('SCOUTER', 'GROUP_SCOUTER', 'ADMIN')")

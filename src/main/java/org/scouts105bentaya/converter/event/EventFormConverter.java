@@ -1,16 +1,14 @@
 package org.scouts105bentaya.converter.event;
 
+import org.scouts105bentaya.constant.GenericConstants;
 import org.scouts105bentaya.converter.GenericConverter;
 import org.scouts105bentaya.dto.event.EventFormDto;
 import org.scouts105bentaya.entity.Event;
 import org.scouts105bentaya.enums.Group;
 import org.springframework.stereotype.Component;
 
-import java.time.ZoneId;
-
 @Component
 public class EventFormConverter extends GenericConverter<Event, EventFormDto> {
-    private static final ZoneId ZONE = ZoneId.of("UTC");
 
     @Override
     public Event convertFromDto(EventFormDto dto) {
@@ -26,8 +24,8 @@ public class EventFormConverter extends GenericConverter<Event, EventFormDto> {
         dto.setDescription(entity.getDescription());
         dto.setStartDate(entity.getStartDate());
         dto.setEndDate(entity.getEndDate());
-        dto.setLocalStartDate(entity.getStartDate().withZoneSameInstant(ZONE).toLocalDate());
-        dto.setLocalEndDate(entity.getEndDate().withZoneSameInstant(ZONE).toLocalDate());
+        dto.setLocalStartDate(entity.getStartDate().withZoneSameInstant(GenericConstants.UTC_ZONE).toLocalDate());
+        dto.setLocalEndDate(entity.getEndDate().withZoneSameInstant(GenericConstants.UTC_ZONE).toLocalDate());
         dto.setLocation(entity.getLocation());
         dto.setLongitude(entity.getLongitude());
         dto.setLatitude(entity.getLatitude());
