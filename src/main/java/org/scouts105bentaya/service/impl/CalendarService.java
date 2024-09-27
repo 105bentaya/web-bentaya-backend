@@ -112,12 +112,11 @@ public class CalendarService {
 
     private String generateEventDescription(Event event) {
         String description = """
-            Actividad de: %s
+            Actividad de %s.
             %s""".formatted(event.getGroupId().toTitleCase(), event.getDescription());
         if (!description.endsWith(".")) description += ".";
-        if (event.isActiveAttendanceList()) {
-            description += "\nPara acceder a la asistencia entre a https://105bentaya.org";
-        }
+        if (event.isUnknownTime()) description += "\nEl horario está aún por concretar.";
+        if (event.isActiveAttendanceList()) description += "\nPara acceder a la asistencia entre a https://105bentaya.org";
         return description;
     }
 
