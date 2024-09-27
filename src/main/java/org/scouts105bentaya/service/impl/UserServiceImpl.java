@@ -244,7 +244,7 @@ public class UserServiceImpl implements UserService {
             userDB.setScoutList(userToUpdate.getScoutList());
         }
 
-        if (userToUpdate.hasRole(Roles.ROLE_USER)) {
+        if (userToUpdate.hasRole(Roles.ROLE_SCOUTER)) {
             if (userToUpdate.getGroupId() == null)
                 throw new UserHasNotGroupException("El usuario debe tener una unidad");
             userDB.setGroupId(userToUpdate.getGroupId());
