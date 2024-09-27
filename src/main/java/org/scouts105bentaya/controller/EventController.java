@@ -64,8 +64,7 @@ public class EventController {
         return eventService.findAll().stream().map(eventCalendarConverter::convertFromEntity).collect(Collectors.toList());
     }
 
-//    @PostAuthorize("hasAnyRole('SCOUTER', 'GROUP_SCOUTER', 'USER')")
-    @PostAuthorize("hasAnyRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SCOUTER', 'GROUP_SCOUTER', 'USER')")
     @GetMapping("/subscribe")
     public String subscribeToCalendar() {
         log.info("METHOD EventController.subscribeToCalendar{}", getLoggedUserUsernameForLog());
