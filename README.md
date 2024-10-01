@@ -12,7 +12,9 @@ El desarrollo se ha hecho usando IntelliJ Ultimate, se recomienda su uso.
 2. Instalar la librería de Redsys ejecutando el comando:
    `mvn install:install-file -Dfile=${project.basedir}/libs/apiSha256.jar -DgroupId=sis.redsys.api -DartifactId=api-sha256 -Dversion=2.3 -Dpackaging=jar`
 
-## Desarrollo
+## Configuración para el desarrollo
+
+### Variables de entorno
 
 Para ejecutar WebBentayaBackendApplication será necesario añadir las siguientes variables de entorno:
 
@@ -38,9 +40,16 @@ estén bajo tu control.
 Si deseas tener un entorno de pago funcional, instalar ngrok, ejecutarlo y añadir la variable de entorno TPV_URL con la
 dirección proporcionada por ngrok.
 
+Puedes copiar las variables de entorno en el formato de IntelliJ a continuación. Con estas variables de entorno funcionará la aplicación, pero puedes cambiar los valores según lo comentado anteriormente:
+```
+BENTAYA_EMAIL_ARI=fake_mail;BENTAYA_EMAIL_ART=fake_mail;BENTAYA_EMAIL_AUT=fake_mail;BENTAYA_EMAIL_BAO=fake_mail;BENTAYA_EMAIL_BOOKING=fake_mail;BENTAYA_EMAIL_GAR=fake_mail;BENTAYA_EMAIL_IDA=fake_mail;BENTAYA_EMAIL_IT=fake_mail;BENTAYA_EMAIL_MAIN=fake_mail;BENTAYA_EMAIL_TREASURY=fake_mail;BENTAYA_EMAIL_WAI=fake_mail;TPV_URL=;WEB_EMAIL_PASSWORD=fake_app_password;WEB_EMAIL_USERNAME=fake_mail
+```
+
+### Perfil
+
 También tendrás que especificar en 'Active profiles' local-mysql.
 
-### Despliegue
+## Despliegue
 
 1. Al actualizar la rama 'main' se creará un workflow en GitHub que actualizará automáticamente la app.
 2. El entorno de producción deberá contar con las siguientes variables de entorno, además de las mencionadas en el
