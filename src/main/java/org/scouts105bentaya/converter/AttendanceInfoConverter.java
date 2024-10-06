@@ -13,14 +13,14 @@ public class AttendanceInfoConverter extends GenericConverter<Confirmation, Atte
 
     @Override
     public AttendanceInfoDto convertFromEntity(Confirmation entity) {
-        AttendanceInfoDto dto = new AttendanceInfoDto();
-        dto.setName(entity.getScout().getName());
-        dto.setSurname(entity.getScout().getSurname());
-        dto.setMedicalData(entity.getScout().getMedicalData());
-        dto.setText(entity.getText());
-        dto.setAttending(entity.getAttending());
-        dto.setScoutId(entity.getScout().getId());
-        dto.setPayed(entity.getPayed());
-        return dto;
+        return new AttendanceInfoDto(
+            entity.getScout().getName(),
+            entity.getScout().getSurname(),
+            entity.getScout().getId(),
+            entity.getAttending(),
+            entity.getPayed(),
+            entity.getText(),
+            entity.getScout().getMedicalData()
+        );
     }
 }

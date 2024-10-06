@@ -7,8 +7,9 @@ import org.scouts105bentaya.dto.attendance.AttendanceInfoDto;
 import org.scouts105bentaya.dto.attendance.AttendanceListBasicDto;
 import org.scouts105bentaya.dto.attendance.AttendanceListUserDto;
 import org.scouts105bentaya.dto.attendance.AttendanceScoutEventInfo;
+import org.scouts105bentaya.service.AttendanceExcelReportService;
 import org.scouts105bentaya.service.ConfirmationService;
-import org.scouts105bentaya.service.impl.AttendanceExcelReportService;
+import org.scouts105bentaya.util.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -22,9 +23,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.stream.Collectors;
-
-import static org.scouts105bentaya.util.SecurityUtils.getLoggedUserUsernameForLog;
 
 @RestController
 @RequestMapping("api/confirmation")
@@ -36,8 +34,12 @@ public class ConfirmationController {
     private final AttendanceInfoConverter attendanceInfoConverter;
     private final AttendanceExcelReportService attendanceExcelReportService;
 
-    public ConfirmationController(ConfirmationService confirmationService, ConfirmationConverter confirmationConverter,
-                                  AttendanceInfoConverter attendanceInfoConverter, AttendanceExcelReportService attendanceExcelReportService) {
+    public ConfirmationController(
+        ConfirmationService confirmationService,
+        ConfirmationConverter confirmationConverter,
+        AttendanceInfoConverter attendanceInfoConverter,
+        AttendanceExcelReportService attendanceExcelReportService
+    ) {
         this.confirmationService = confirmationService;
         this.confirmationConverter = confirmationConverter;
         this.attendanceInfoConverter = attendanceInfoConverter;
@@ -47,15 +49,17 @@ public class ConfirmationController {
     @PreAuthorize("hasRole('SCOUTER')")
     @GetMapping("/basic")
     public List<AttendanceListBasicDto> findLoggedScouterAttendanceList() {
-        log.info("METHOD ConfirmationController.findLoggedScouterAttendanceList" + getLoggedUserUsernameForLog());
+        log.info("METHOD ConfirmationController.findLoggedScouterAttendanceList{}", SecurityUtils.getLoggedUserUsernameForLog());
         return confirmationService.findScouterAttendanceList();
     }
 
     @PreAuthorize("hasRole('SCOUTER') and @authLogic.eventIsEditableByUser(#id)")
     @GetMapping("/info/{id}")
     public List<AttendanceInfoDto> findAllByEventId(@PathVariable Integer id) {
-        log.info("METHOD ConfirmationController.findAllByEventId --- PARAMS id: " + id + getLoggedUserUsernameForLog());
-        return confirmationService.findAllByEventId(id).stream().map(attendanceInfoConverter::convertFromEntity).collect(Collectors.toList());
+        log.info("METHOD ConfirmationController.findAllByEventId --- PARAMS id: {}{}", id, SecurityUtils.getLoggedUserUsernameForLog());
+        return confirmationService.findAllByEventId(id).stream()
+            .map(attendanceInfoConverter::convertFromEntity)
+            .toList();
     }
 
     @PreAuthorize("hasRole('USER')")
@@ -67,45 +71,42 @@ public class ConfirmationController {
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/user")
     public List<AttendanceListUserDto> findLoggedUserAttendanceList() {
-        log.info("METHOD ConfirmationController.findLoggedUserAttendanceList" + getLoggedUserUsernameForLog());
+        log.info("METHOD ConfirmationController.findLoggedUserAttendanceList{}", SecurityUtils.getLoggedUserUsernameForLog());
         return confirmationService.findUserAttendanceList();
     }
 
     @PreAuthorize("hasRole('USER') and @authLogic.userHasScoutId(#scoutId)")
     @GetMapping("/form/{scoutId}/{eventId}")
     public ConfirmationDto findByScoutAndEvent(@PathVariable Integer eventId, @PathVariable Integer scoutId) {
-        log.info("METHOD ConfirmationController.findByScoutAndEvent --- PARAMS eventId: {}, scoutId: {}" +
-            getLoggedUserUsernameForLog(), eventId, scoutId);
+        log.info("METHOD ConfirmationController.findByScoutAndEvent --- PARAMS eventId: {}, scoutId: {}{}", eventId, scoutId, SecurityUtils.getLoggedUserUsernameForLog());
         return confirmationConverter.convertFromEntity(confirmationService.findById(scoutId, eventId));
     }
 
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/event/{eventId}")
     public List<AttendanceScoutEventInfo> findByEventIdForEventInfo(@PathVariable Integer eventId) {
-        log.info("METHOD ConfirmationController.findByEventIdForEventInfo --- PARAMS eventId: " + eventId + getLoggedUserUsernameForLog());
+        log.info("METHOD ConfirmationController.findByEventIdForEventInfo --- PARAMS eventId: {}{}", eventId, SecurityUtils.getLoggedUserUsernameForLog());
         return confirmationService.findByLoggedUserScoutsAndEventId(eventId);
     }
 
     @PreAuthorize("hasRole('SCOUTER')")
     @PutMapping("/scouter")
     public ConfirmationDto updateConfirmationByScouter(@RequestBody ConfirmationDto confirmationDto) {
-        log.info("METHOD ConfirmationController.updateConfirmationByScouter --- PARAMS eventId: {}, scoutId: {}" +
-            getLoggedUserUsernameForLog(), confirmationDto.getEventId(), confirmationDto.getScoutId());
+        log.info("METHOD ConfirmationController.updateConfirmationByScouter --- PARAMS eventId: {}, scoutId: {}{}", confirmationDto.getEventId(), confirmationDto.getScoutId(), SecurityUtils.getLoggedUserUsernameForLog());
         return confirmationConverter.convertFromEntity(confirmationService.updateByScouter(confirmationDto));
     }
 
     @PreAuthorize("hasRole('USER') and @authLogic.userHasScoutId(#confirmationDto.scoutId)")
     @PutMapping("/user")
     public ConfirmationDto updateConfirmationByUser(@RequestBody ConfirmationDto confirmationDto) {
-        log.info("METHOD ConfirmationController.updateConfirmationByUser --- PARAMS eventId: {}, scoutId: {}" +
-            getLoggedUserUsernameForLog(), confirmationDto.getEventId(), confirmationDto.getScoutId());
+        log.info("METHOD ConfirmationController.updateConfirmationByUser --- PARAMS eventId: {}, scoutId: {}{}", confirmationDto.getEventId(), confirmationDto.getScoutId(), SecurityUtils.getLoggedUserUsernameForLog());
         return confirmationConverter.convertFromEntity(confirmationService.updateByUser(confirmationDto));
     }
 
     @PreAuthorize("hasRole('SCOUTER')")
     @GetMapping(value = "/courseAttendanceExcel")
     public ResponseEntity<byte[]> downloadCourseAttendanceExcelReport() {
-        log.info("METHOD ConfirmationController.downloadCourseAttendanceExcelReport{}", getLoggedUserUsernameForLog());
+        log.info("METHOD ConfirmationController.downloadCourseAttendanceExcelReport{}", SecurityUtils.getLoggedUserUsernameForLog());
         return ResponseEntity
             .ok()
             .contentType(MediaType.APPLICATION_OCTET_STREAM)

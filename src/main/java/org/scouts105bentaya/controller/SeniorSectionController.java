@@ -25,7 +25,10 @@ public class SeniorSectionController {
     private final SeniorSectionService seniorSectionService;
     private final SeniorFormConverter seniorFormConverter;
 
-    public SeniorSectionController(SeniorSectionService seniorSectionService, SeniorFormConverter seniorFormConverter) {
+    public SeniorSectionController(
+        SeniorSectionService seniorSectionService,
+        SeniorFormConverter seniorFormConverter
+    ) {
         this.seniorSectionService = seniorSectionService;
         this.seniorFormConverter = seniorFormConverter;
     }

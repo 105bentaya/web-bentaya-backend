@@ -16,7 +16,9 @@ public class ComplaintController {
     private final Logger log = LoggerFactory.getLogger(ComplaintController.class);
     private final ComplaintService complaintService;
 
-    public ComplaintController(ComplaintService complaintService){ this.complaintService = complaintService;}
+    public ComplaintController(ComplaintService complaintService) {
+        this.complaintService = complaintService;
+    }
 
     @PostMapping("/form")
     public void sendComplaintMail(@RequestBody Complaint complaint) {

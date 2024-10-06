@@ -15,11 +15,11 @@ public class BlogInfoConverter extends GenericConverter<Blog, BlogInfoDto> {
 
     @Override
     public BlogInfoDto convertFromEntity(Blog blog) {
-        BlogInfoDto blogInfoDto = new BlogInfoDto();
-        blogInfoDto.setDescription(blog.getDescription());
-        blogInfoDto.setEvent(blog.isEvent());
-        blogInfoDto.setImage(blog.getImage());
-        blogInfoDto.setTitle(blog.getTitle());
-        return blogInfoDto;
+        return new BlogInfoDto(
+            blog.getTitle(),
+            blog.getDescription(),
+            blog.getImage(),
+            blog.isEvent()
+        );
     }
 }

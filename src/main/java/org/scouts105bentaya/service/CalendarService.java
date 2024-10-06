@@ -1,4 +1,4 @@
-package org.scouts105bentaya.service.impl;
+package org.scouts105bentaya.service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
@@ -24,9 +24,6 @@ import org.scouts105bentaya.entity.User;
 import org.scouts105bentaya.enums.Group;
 import org.scouts105bentaya.enums.Roles;
 import org.scouts105bentaya.exception.WebBentayaException;
-import org.scouts105bentaya.service.AuthService;
-import org.scouts105bentaya.service.EventService;
-import org.scouts105bentaya.service.UserService;
 import org.scouts105bentaya.util.JwtUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -116,7 +113,8 @@ public class CalendarService {
             %s""".formatted(event.getGroupId().toTitleCase(), event.getDescription());
         if (!description.endsWith(".")) description += ".";
         if (event.isUnknownTime()) description += "\nEl horario está aún por concretar.";
-        if (event.isActiveAttendanceList()) description += "\nPara acceder a la asistencia entre a https://105bentaya.org";
+        if (event.isActiveAttendanceList())
+            description += "\nPara acceder a la asistencia entre a https://105bentaya.org";
         return description;
     }
 
@@ -139,7 +137,8 @@ public class CalendarService {
 
         if (claims.containsKey(TOKEN_USER_GROUPS_KEY) && Boolean.TRUE.equals(claims.get(TOKEN_USER_GROUPS_KEY, Boolean.class))) {
             groups.add(Group.GRUPO);
-            if (user.hasRole(Roles.ROLE_USER)) groups.addAll(user.getScoutList().stream().map(Scout::getGroupId).toList());
+            if (user.hasRole(Roles.ROLE_USER))
+                groups.addAll(user.getScoutList().stream().map(Scout::getGroupId).toList());
             if (user.hasRole(Roles.ROLE_SCOUTER)) groups.addAll(List.of(user.getGroupId(), Group.SCOUTERS));
             else if (user.hasRole(Roles.ROLE_GROUP_SCOUTER)) groups.add(Group.SCOUTERS);
         }

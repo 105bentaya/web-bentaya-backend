@@ -1,4 +1,4 @@
-package org.scouts105bentaya.service.impl;
+package org.scouts105bentaya.service;
 
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.BuiltinFormats;
@@ -34,9 +34,6 @@ import org.scouts105bentaya.entity.Confirmation;
 import org.scouts105bentaya.entity.Event;
 import org.scouts105bentaya.entity.Scout;
 import org.scouts105bentaya.entity.User;
-import org.scouts105bentaya.service.AuthService;
-import org.scouts105bentaya.service.EventService;
-import org.scouts105bentaya.service.SettingService;
 import org.scouts105bentaya.util.ExcelUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,23 +61,18 @@ import java.util.regex.Pattern;
 public class AttendanceExcelReportService {
 
     private static final Logger log = LoggerFactory.getLogger(AttendanceExcelReportService.class);
-
-    private Workbook workbook;
-    private Sheet sheet;
-
-    private final EventService eventService;
-    private final AuthService authService;
-    private final SettingService settingService;
-
     private static final int FIRST_EVENT_COLUMN_INDEX = 3;
     private static final int EVENT_ROW_INDEX = 1;
     private static final int FIRST_SCOUT_ROW_INDEX = 4;
-
+    private final EventService eventService;
+    private final AuthService authService;
+    private final SettingService settingService;
+    private Workbook workbook;
+    private Sheet sheet;
     private CellStyle idCellStyle;
     private CellStyle nameCellStyle;
     private CellStyle dateCellStyle;
     private CellStyle defaultStyle;
-
     private List<Scout> scoutsInAttendanceList;
 
     public AttendanceExcelReportService(
@@ -109,9 +101,8 @@ public class AttendanceExcelReportService {
             .toList();
 
         try (InputStream file = new ClassPathResource("excel/groupAttendanceTemplate.xlsx").getInputStream()) {
-            XSSFWorkbook workbook = new XSSFWorkbook(file);
-            this.workbook = workbook;
-            this.sheet = workbook.getSheetAt(0);
+            this.workbook = new XSSFWorkbook(file);
+            this.sheet = this.workbook.getSheetAt(0);
 
             this.generateCellStyles();
 
@@ -184,7 +175,7 @@ public class AttendanceExcelReportService {
             Row row = sheet.createRow(FIRST_SCOUT_ROW_INDEX + i);
 
             Cell cell = row.createCell(0);
-            cell.setCellValue(i + 1);
+            cell.setCellValue((double) i + 1);
             cell.setCellStyle(idCellStyle);
 
             cell = row.createCell(1);
@@ -292,7 +283,7 @@ public class AttendanceExcelReportService {
 
         CellStyle percentageStyle = workbook.createCellStyle();
         percentageStyle.cloneStyleFrom(defaultStyle);
-        percentageStyle.setDataFormat(workbook.createDataFormat().getFormat(BuiltinFormats.getBuiltinFormat( 10 )));
+        percentageStyle.setDataFormat(workbook.createDataFormat().getFormat(BuiltinFormats.getBuiltinFormat(10)));
 
 
         for (int i = 0; i < scoutsInAttendanceList.size(); i++) {

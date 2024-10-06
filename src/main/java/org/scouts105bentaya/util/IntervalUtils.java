@@ -20,7 +20,7 @@ public final class IntervalUtils {
     }
 
     public static Interval intervalFromBooking(BookingDateFormDto booking) {
-        return intervalFromLocalDateTimes(booking.getStartDate(), booking.getEndDate());
+        return intervalFromLocalDateTimes(booking.startDate(), booking.endDate());
     }
 
     private static Interval intervalFromLocalDateTimes(LocalDateTime startDate, LocalDateTime endDate) {

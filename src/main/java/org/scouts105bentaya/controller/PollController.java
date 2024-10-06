@@ -8,6 +8,7 @@ import org.scouts105bentaya.entity.Poll;
 import org.scouts105bentaya.exception.WebBentayaException;
 import org.scouts105bentaya.service.EmailService;
 import org.scouts105bentaya.service.PollService;
+import org.scouts105bentaya.util.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,8 +28,6 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Map;
 
-import static org.scouts105bentaya.util.SecurityUtils.getLoggedUserUsernameForLog;
-
 @PreAuthorize("hasRole('ADMIN')")
 @RestController
 @RequestMapping("api/poll")
@@ -43,7 +42,11 @@ public class PollController {
     private final EmailService emailService;
     private final PublicPollConverter publicPollConverter;
 
-    public PollController(PollService pollService, EmailService emailService, PublicPollConverter publicPollConverter) {
+    public PollController(
+        PollService pollService,
+        EmailService emailService,
+        PublicPollConverter publicPollConverter
+    ) {
         this.pollService = pollService;
         this.emailService = emailService;
         this.publicPollConverter = publicPollConverter;
@@ -81,7 +84,7 @@ public class PollController {
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping()
     public void update(@RequestBody Poll poll) {
-        log.info("METHOD PollController.update --- PARAMS optionId: {}{}", poll.getId(), getLoggedUserUsernameForLog());
+        log.info("METHOD PollController.update --- PARAMS optionId: {}{}", poll.getId(), SecurityUtils.getLoggedUserUsernameForLog());
         pollService.update(poll);
     }
 
@@ -89,9 +92,9 @@ public class PollController {
     public void sendMail(@RequestBody ContactMessage contactMessage) {
         log.info("METHOD PollController.sendMail");
         emailService.sendSimpleEmail(email, "Canción Disco Bentaya", String.format("""
-                %s con correo %s nos envía la canción %s:
-                %s
-                """, contactMessage.getName(), contactMessage.getEmail(), contactMessage.getSubject(), contactMessage.getMessage()));
+            %s con correo %s nos envía la canción %s:
+            %s
+            """, contactMessage.getName(), contactMessage.getEmail(), contactMessage.getSubject(), contactMessage.getMessage()));
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)

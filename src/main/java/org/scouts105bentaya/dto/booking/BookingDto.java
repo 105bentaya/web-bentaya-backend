@@ -68,14 +68,9 @@ public class BookingDto {
     private String observations;
 
     private String statusObservations;
-
     private boolean exclusiveReservation;
-
     private ZonedDateTime creationDate;
-
     private boolean userConfirmedDocuments;
-
     private boolean ownBooking;
-
     private Float price;
 }

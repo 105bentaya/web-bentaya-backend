@@ -5,6 +5,7 @@ import org.scouts105bentaya.dto.payment.PaymentDto;
 import org.scouts105bentaya.dto.payment.PaymentFormDataDto;
 import org.scouts105bentaya.enums.PaymentType;
 import org.scouts105bentaya.service.PaymentService;
+import org.scouts105bentaya.util.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,8 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-import static org.scouts105bentaya.util.SecurityUtils.getLoggedUserUsernameForLog;
-
 @RestController
 @RequestMapping("api/tpv")
 public class PaymentController {
@@ -26,7 +25,10 @@ public class PaymentController {
     private final PaymentService paymentService;
     private final PaymentConverter paymentConverter;
 
-    public PaymentController(PaymentService paymentService, PaymentConverter paymentConverter) {
+    public PaymentController(
+        PaymentService paymentService,
+        PaymentConverter paymentConverter
+    ) {
         this.paymentService = paymentService;
         this.paymentConverter = paymentConverter;
     }
@@ -34,7 +36,7 @@ public class PaymentController {
     @PreAuthorize("hasRole('TRANSACTION')")
     @GetMapping
     public List<PaymentDto> findAll() {
-        log.info("METHOD PaymentController.findAll{}", getLoggedUserUsernameForLog());
+        log.info("METHOD PaymentController.findAll{}", SecurityUtils.getLoggedUserUsernameForLog());
         return paymentConverter.convertEntityCollectionToDtoList(paymentService.findAll());
     }
 

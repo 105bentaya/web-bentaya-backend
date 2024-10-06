@@ -7,6 +7,7 @@ import org.scouts105bentaya.dto.DonationFormDto;
 import org.scouts105bentaya.dto.payment.PaymentFormDataDto;
 import org.scouts105bentaya.dto.payment.PaymentUrlsDto;
 import org.scouts105bentaya.service.DonationService;
+import org.scouts105bentaya.util.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -35,7 +36,7 @@ public class DonationController {
     @PreAuthorize("hasRole('TRANSACTION')")
     @GetMapping()
     public List<DonationDto> getAll() {
-        log.info("METHOD DonationController.getAll");
+        log.info("METHOD DonationController.getAll{}", SecurityUtils.getLoggedUserUsernameForLog());
         return donationConverter.convertEntityCollectionToDtoList(donationService.getAll());
     }
 

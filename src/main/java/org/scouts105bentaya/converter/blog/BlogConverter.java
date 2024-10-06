@@ -10,30 +10,30 @@ public class BlogConverter extends GenericConverter<Blog, BlogDto> {
     @Override
     public Blog convertFromDto(BlogDto dto) {
         Blog blog = new Blog();
-        blog.setId(dto.getId());
-        blog.setData(dto.getData());
-        blog.setDescription(dto.getDescription());
-        blog.setEvent(dto.isEvent());
-        blog.setImage(dto.getImage());
-        blog.setEndDate(dto.getEndDate());
-        blog.setModificationDate(dto.getModificationDate());
-        blog.setPublished(dto.isPublished());
-        blog.setTitle(dto.getTitle());
+        blog.setId(dto.id());
+        blog.setData(dto.data());
+        blog.setDescription(dto.description());
+        blog.setEvent(dto.event());
+        blog.setImage(dto.image());
+        blog.setEndDate(dto.endDate());
+        blog.setModificationDate(dto.modificationDate());
+        blog.setPublished(dto.published());
+        blog.setTitle(dto.title());
         return blog;
     }
 
     @Override
     public BlogDto convertFromEntity(Blog entity) {
-        BlogDto blogDto = new BlogDto();
-        blogDto.setId(entity.getId());
-        blogDto.setData(entity.getData());
-        blogDto.setDescription(entity.getDescription());
-        blogDto.setEvent(entity.isEvent());
-        blogDto.setImage(entity.getImage());
-        blogDto.setEndDate(entity.getEndDate());
-        blogDto.setModificationDate(entity.getModificationDate());
-        blogDto.setPublished(entity.isPublished());
-        blogDto.setTitle(entity.getTitle());
-        return blogDto;
+        return new BlogDto(
+            entity.getId(),
+            entity.getTitle(),
+            entity.getDescription(),
+            entity.getImage(),
+            entity.getData(),
+            entity.getModificationDate(),
+            entity.getEndDate(),
+            entity.isEvent(),
+            entity.isPublished()
+        );
     }
 }

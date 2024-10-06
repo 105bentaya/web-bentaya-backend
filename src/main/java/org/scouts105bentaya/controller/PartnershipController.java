@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("api/partnership")
 public class PartnershipController {
+
     private static final Logger log = LoggerFactory.getLogger(PartnershipController.class);
     private final PartnershipService partnershipService;
 

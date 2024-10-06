@@ -15,11 +15,11 @@ public class BookingDocumentConverter extends GenericConverter<BookingDocument, 
 
     @Override
     public BookingDocumentDto convertFromEntity(BookingDocument entity) {
-        BookingDocumentDto dto = new BookingDocumentDto();
-        dto.setId(entity.getId());
-        dto.setBookingId(entity.getBooking().getId());
-        dto.setFileName(entity.getFileName());
-        dto.setStatus(entity.getStatus());
-        return dto;
+        return new BookingDocumentDto(
+            entity.getId(),
+            entity.getBooking().getId(),
+            entity.getFileName(),
+            entity.getStatus()
+        );
     }
 }
