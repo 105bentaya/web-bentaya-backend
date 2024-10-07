@@ -38,7 +38,7 @@ public class ResetPasswordService {
             userService.findByUsername(username);
             if (usernameHasChangedPassword(username)) {
                 throw new UserHasAlreadyChangedPasswordException(
-                        "La contraseña ha sido restablecida recientemente. Vuelva a intentarlo más tarde");
+                    "La contraseña ha sido restablecida recientemente. Vuelva a intentarlo más tarde");
             }
             String token = generateToken();
             tokenCache.put(token, username);

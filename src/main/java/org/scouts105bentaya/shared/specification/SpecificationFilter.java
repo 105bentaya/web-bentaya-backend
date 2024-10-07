@@ -20,7 +20,7 @@ public abstract class SpecificationFilter {
 
     public Sort getSort() {
         return asc ?
-            Sort.by(getSortedBy()).and(Sort.by("id")):
+            Sort.by(getSortedBy()).and(Sort.by("id")) :
             Sort.by(getSortedBy()).descending().and(Sort.by("id"));
     }
 }

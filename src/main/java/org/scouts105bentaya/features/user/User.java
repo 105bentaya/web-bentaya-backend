@@ -38,9 +38,9 @@ public class User {
     @NotEmpty(message = "The user must have a role assigned")
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "user_role",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
+        name = "user_role",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private List<Role> roles;
     private boolean enabled = true;
@@ -50,9 +50,9 @@ public class User {
     private Group groupId;
     @ManyToMany
     @JoinTable(
-            name = "scout_user",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "scout_id")
+        name = "scout_user",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "scout_id")
     )
     private Set<Scout> scoutList;
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)

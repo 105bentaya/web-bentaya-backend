@@ -40,7 +40,9 @@ estén bajo tu control.
 Si deseas tener un entorno de pago funcional, instalar ngrok, ejecutarlo y añadir la variable de entorno TPV_URL con la
 dirección proporcionada por ngrok.
 
-Puedes copiar las variables de entorno en el formato de IntelliJ a continuación. Con estas variables de entorno funcionará la aplicación, pero puedes cambiar los valores según lo comentado anteriormente:
+Puedes copiar las variables de entorno en el formato de IntelliJ a continuación. Con estas variables de entorno
+funcionará la aplicación, pero puedes cambiar los valores según lo comentado anteriormente:
+
 ```
 BENTAYA_EMAIL_ARI=fake_mail;BENTAYA_EMAIL_ART=fake_mail;BENTAYA_EMAIL_AUT=fake_mail;BENTAYA_EMAIL_BAO=fake_mail;BENTAYA_EMAIL_BOOKING=fake_mail;BENTAYA_EMAIL_GAR=fake_mail;BENTAYA_EMAIL_IDA=fake_mail;BENTAYA_EMAIL_IT=fake_mail;BENTAYA_EMAIL_MAIN=fake_mail;BENTAYA_EMAIL_TREASURY=fake_mail;BENTAYA_EMAIL_WAI=fake_mail;TPV_URL=;WEB_EMAIL_PASSWORD=fake_app_password;WEB_EMAIL_USERNAME=fake_mail
 ```

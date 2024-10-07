@@ -1,24 +1,24 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <div>
-    <p>
-        La reserva N.º
-        <b th:text="${id}"></b>
-        para el centro scout
-        <b th:text="${center}"></b>
-        ha sido marcada como completada por parte del usuario. Puede acceder al gestor para marcarla como totalmente
-        finalizada una vez haya revisado el estado del lugar.
-    </p>
-    <p th:if="${uploadedDocument}">
-        El usuario ha subido el registro de estados, que podrá ver en el apartado de documentos de la reserva.
-    </p>
-    <p th:unless="${uploadedDocument}">
-        El usuario no ha subido el registro de estados.
-    </p>
-    <div>
-        <br>
-        <span>Atentamente,<br></span>
-        <span>El sistema de mensajería de Scouts 105 Bentaya</span>
-    </div>
+  <p>
+    La reserva N.º
+    <b th:text="${id}"></b>
+    para el centro scout
+    <b th:text="${center}"></b>
+    ha sido marcada como completada por parte del usuario. Puede acceder al gestor para marcarla como totalmente
+    finalizada una vez haya revisado el estado del lugar.
+  </p>
+  <p th:if="${uploadedDocument}">
+    El usuario ha subido el registro de estados, que podrá ver en el apartado de documentos de la reserva.
+  </p>
+  <p th:unless="${uploadedDocument}">
+    El usuario no ha subido el registro de estados.
+  </p>
+  <div>
+    <br>
+    <span>Atentamente,<br></span>
+    <span>El sistema de mensajería de Scouts 105 Bentaya</span>
+  </div>
 </div>
 </html>

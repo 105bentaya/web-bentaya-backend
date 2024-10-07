@@ -10,7 +10,10 @@ import java.util.Optional;
 @Repository
 public interface ScoutRepository extends JpaRepository<Scout, Integer> {
     List<Scout> findAllByEnabledIsTrue();
+
     Optional<Scout> findByIdAndEnabledIsTrue(Integer id);
+
     List<Scout> findAllByGroupIdAndEnabledIsTrue(Group groupId);
+
     List<Scout> findAllByImageAuthorizationAndEnabledIsTrue(boolean imageAuthorization);
 }

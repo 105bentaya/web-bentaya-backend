@@ -43,13 +43,11 @@ import java.util.Set;
 public class CalendarService {
 
     private static final String TOKEN_USER_GROUPS_KEY = "userGroups";
-
-    @Value("${jwt.calendar.key}")
-    private String secret;
-
     private final UserService userService;
     private final EventService eventService;
     private final AuthService authService;
+    @Value("${jwt.calendar.key}")
+    private String secret;
 
     public CalendarService(
         UserService userService,

@@ -4,21 +4,21 @@ final class SecurityConstant {
     static final String AUTH_LOGIN_URL = "/api/login";
 
     static final String[] AUTH_WHITELIST = {
-            "/api/inscription/form",
-            "/api/blog/public/**",
-            "/api/complaint/form",
-            "/api/contact-message/form",
-            "/api/partnership/form",
-            "/api/pre-scout/form",
-            "/api/pre-scouter/form",
-            "/api/settings/get/**",
-            "/api/tpv/notification/**",
-            "/api/user/password/**",
-            // "/api/poll/public/**",
-            "/api/donation/public/**",
-            "/api/booking/public/**",
-            "/api/senior/form",
-            "/api/event/public/**"
+        "/api/inscription/form",
+        "/api/blog/public/**",
+        "/api/complaint/form",
+        "/api/contact-message/form",
+        "/api/partnership/form",
+        "/api/pre-scout/form",
+        "/api/pre-scouter/form",
+        "/api/settings/get/**",
+        "/api/tpv/notification/**",
+        "/api/user/password/**",
+        // "/api/poll/public/**",
+        "/api/donation/public/**",
+        "/api/booking/public/**",
+        "/api/senior/form",
+        "/api/event/public/**"
     };
 
     static final String API_URL = "/api/**";

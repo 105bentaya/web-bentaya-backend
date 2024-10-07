@@ -17,12 +17,12 @@ import java.util.Optional;
 @Service
 public class PreScouterService {
 
-    @Value("${bentaya.email.main}")
-    private String email;
     private final EmailService emailService;
     private final PdfService pdfService;
     private final PreScouterRepository preScouterRepository;
     private final PreScouterConverter preScouterConverter;
+    @Value("${bentaya.email.main}")
+    private String email;
 
     public PreScouterService(
         EmailService emailService,

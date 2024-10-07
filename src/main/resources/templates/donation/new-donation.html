@@ -2,52 +2,52 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 <div>
-    <h2>¡Nuevo Formulario de Donación!</h2>
-    <p>Hemos recibido un nuevo formulario de donación. A continuación, se detallan los datos:</p>
-    <p>
-        <strong>N.º de la donación:</strong> <span th:text="${donationId}">-</span>
-    </p>
-    <p th:if="${donationPaymentOrder}">
-        <strong>Número de pago asociado:</strong> <span th:text="${donationPaymentOrder}">-</span>
-    </p>
+  <h2>¡Nuevo Formulario de Donación!</h2>
+  <p>Hemos recibido un nuevo formulario de donación. A continuación, se detallan los datos:</p>
+  <p>
+    <strong>N.º de la donación:</strong> <span th:text="${donationId}">-</span>
+  </p>
+  <p th:if="${donationPaymentOrder}">
+    <strong>Número de pago asociado:</strong> <span th:text="${donationPaymentOrder}">-</span>
+  </p>
 
-    <h3 style="margin-top: 2rem;">Datos de Donante</h3>
-    <p>
-        <strong>Nombre:</strong> <span th:text="${name}">-</span>
-    </p>
-    <p>
-        <strong>Primer Apellido:</strong> <span th:text="${firstSurname}">-</span>
-    </p>
-    <p>
-        <strong>Segundo Apellido:</strong> <span th:text="${secondSurname}">-</span>
-    </p>
-    <p>
-        <strong>CIF o NIF:</strong> <span th:text="${cif}">-</span>
-    </p>
-    <p>
-        <strong>Teléfono:</strong> <span th:text="${phone}">-</span>
-    </p>
-    <p>
-        <strong>Correo electrónico:</strong> <span th:text="${email}">-</span>
-    </p>
-    <p>
-        <strong>Desea desgravar:</strong>
-        <span th:if="${deduct}">Sí</span>
-        <span th:unless="${deduct}">No</span>
-    </p>
-    <h3 style="margin-top: 2rem;">Datos de Donación</h3>
-    <p>
-        <strong>Importe:</strong> <span th:text="${amount}">-</span>
-    </p>
-    <p>
-        <strong>Periodicidad:</strong> <span th:text="${frequency}">-</span>
-    </p>
-    <p th:if="${singleType}">
-        <strong>Método de donación:</strong> <span th:text="${singleType}">-</span>
-    </p>
-    <p th:if="${iban}">
-        <strong>IBAN:</strong> <span th:text="${iban}">-</span>
-    </p>
+  <h3 style="margin-top: 2rem;">Datos de Donante</h3>
+  <p>
+    <strong>Nombre:</strong> <span th:text="${name}">-</span>
+  </p>
+  <p>
+    <strong>Primer Apellido:</strong> <span th:text="${firstSurname}">-</span>
+  </p>
+  <p>
+    <strong>Segundo Apellido:</strong> <span th:text="${secondSurname}">-</span>
+  </p>
+  <p>
+    <strong>CIF o NIF:</strong> <span th:text="${cif}">-</span>
+  </p>
+  <p>
+    <strong>Teléfono:</strong> <span th:text="${phone}">-</span>
+  </p>
+  <p>
+    <strong>Correo electrónico:</strong> <span th:text="${email}">-</span>
+  </p>
+  <p>
+    <strong>Desea desgravar:</strong>
+    <span th:if="${deduct}">Sí</span>
+    <span th:unless="${deduct}">No</span>
+  </p>
+  <h3 style="margin-top: 2rem;">Datos de Donación</h3>
+  <p>
+    <strong>Importe:</strong> <span th:text="${amount}">-</span>
+  </p>
+  <p>
+    <strong>Periodicidad:</strong> <span th:text="${frequency}">-</span>
+  </p>
+  <p th:if="${singleType}">
+    <strong>Método de donación:</strong> <span th:text="${singleType}">-</span>
+  </p>
+  <p th:if="${iban}">
+    <strong>IBAN:</strong> <span th:text="${iban}">-</span>
+  </p>
 </div>
 </body>
 </html>

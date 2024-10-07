@@ -24,6 +24,19 @@ public enum Group {
         this.emailProperty = mail;
     }
 
+    public static Group valueOf(Integer value) {
+        return value == null ? null :
+            Arrays.stream(values())
+                .filter(group -> group.value == value)
+                .findFirst()
+                .orElse(null);
+    }
+
+    public static Integer valueFrom(Group group) {
+        if (group == null) return null;
+        return group.getValue();
+    }
+
     public String toTitleCase() {
         return this.name().toUpperCase().charAt(0) + this.name().substring(1).toLowerCase();
     }
@@ -34,18 +47,5 @@ public enum Group {
 
     public boolean isUserAuthorized() {
         return this != SCOUTERS;
-    }
-
-    public static Group valueOf(Integer value) {
-        return value == null ? null :
-                Arrays.stream(values())
-                .filter(group -> group.value == value)
-                .findFirst()
-                .orElse(null);
-    }
-
-    public static Integer valueFrom(Group group) {
-        if (group == null) return null;
-        return group.getValue();
     }
 }

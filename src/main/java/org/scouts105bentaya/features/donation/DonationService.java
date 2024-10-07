@@ -25,13 +25,13 @@ import java.util.List;
 @Service
 public class DonationService {
 
-    @Value("${bentaya.email.treasury}")
-    private String treasuryEmail;
     private final DonationFormConverter donationFormConverter;
     private final DonationRepository donationRepository;
     private final TemplateEngine templateEngine;
     private final EmailService emailService;
     private final PaymentService paymentService;
+    @Value("${bentaya.email.treasury}")
+    private String treasuryEmail;
 
     public DonationService(
         TemplateEngine templateEngine,

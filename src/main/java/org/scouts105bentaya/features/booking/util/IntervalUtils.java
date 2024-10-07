@@ -13,7 +13,8 @@ import java.util.List;
 
 public final class IntervalUtils {
 
-    private IntervalUtils() {}
+    private IntervalUtils() {
+    }
 
     public static Interval intervalFromBooking(Booking booking) {
         return intervalFromLocalDateTimes(booking.getStartDate(), booking.getEndDate());
@@ -31,11 +32,11 @@ public final class IntervalUtils {
 
     public static LocalDateTime jodaLocalDateTimeToJavaDateTime(DateTime dateTime) {
         return LocalDateTime.of(
-                dateTime.getYear(),
-                dateTime.getMonthOfYear(),
-                dateTime.getDayOfMonth(),
-                dateTime.getHourOfDay(),
-                dateTime.getMinuteOfHour()
+            dateTime.getYear(),
+            dateTime.getMonthOfYear(),
+            dateTime.getDayOfMonth(),
+            dateTime.getHourOfDay(),
+            dateTime.getMinuteOfHour()
         );
     }
 
@@ -44,8 +45,8 @@ public final class IntervalUtils {
 
         for (Interval currentInterval : slave) {
             List<Interval> overlappingIntervals = master.stream()
-                    .filter(interval -> interval.overlaps(currentInterval))
-                    .toList();
+                .filter(interval -> interval.overlaps(currentInterval))
+                .toList();
 
             if (!overlappingIntervals.isEmpty()) {
                 Interval newInterval = currentInterval;
@@ -77,7 +78,7 @@ public final class IntervalUtils {
         List<Interval> result = new ArrayList<>();
         for (Interval currentInterval : intervals) {
             List<Interval> overlappingIntervals = result.stream()
-                    .filter(interval -> interval.overlaps(currentInterval) || interval.abuts(currentInterval)).toList();
+                .filter(interval -> interval.overlaps(currentInterval) || interval.abuts(currentInterval)).toList();
             if (!overlappingIntervals.isEmpty()) {
                 result.removeAll(overlappingIntervals);
                 Interval mergedInterval = currentInterval;

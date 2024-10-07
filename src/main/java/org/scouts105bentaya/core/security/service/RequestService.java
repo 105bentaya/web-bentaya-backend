@@ -15,7 +15,7 @@ public class RequestService {
     public String getClientIP() {
         final String xfHeader = request.getHeader("X-Forwarded-For");
         String result;
-        if (xfHeader != null) result =  xfHeader.split(",")[0];
+        if (xfHeader != null) result = xfHeader.split(",")[0];
         else result = request.getRemoteAddr();
         if (result.contains(":") && result.contains(".")) result = result.split(":")[0];
         return result;

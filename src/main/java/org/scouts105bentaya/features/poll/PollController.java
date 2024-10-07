@@ -32,13 +32,11 @@ import java.util.Map;
 public class PollController {
 
     private static final Logger log = LoggerFactory.getLogger(PollController.class);
-
-    @Value("${bentaya.email.it}")
-    private String email;
-
     private final PollService pollService;
     private final EmailService emailService;
     private final PublicPollConverter publicPollConverter;
+    @Value("${bentaya.email.it}")
+    private String email;
 
     public PollController(
         PollService pollService,

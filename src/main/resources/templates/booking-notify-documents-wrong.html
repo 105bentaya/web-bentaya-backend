@@ -1,27 +1,27 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <div>
-    <p>
-        Los documentos de su reserva con número
-        <b th:text="${id}"></b>
-        para el centro scout
-        <b th:text="${center}"></b>
-        han sido rechazados por el siguiente motivo:
-    </p>
-    <p>
-        «<span th:text="${statusObservation}"></span>»
-    </p>
-    <p>
-        Por favor, entre al gestor de reservas en <a href="https://105bentaya.org">www.105bentaya.org</a> para
-        corregir los fallos. Si no recuerda la contraseña de su usuario (<b th:text="${contactMail}"></b>), puede
-        restablecerla al intentar iniciar sesión haciendo click en <b>'Olvidé la contraseña'</b>. Ante cualquier duda,
-        por favor envíe un correo a
-        <a href="mailto:centroscouts@105bentaya.org">centroscouts@105bentaya.org</a>.
-    </p>
-    <div>
-        <br>
-        <span>Atentamente,<br></span>
-        <span>El sistema de mensajería de Scouts 105 Bentaya</span>
-    </div>
+  <p>
+    Los documentos de su reserva con número
+    <b th:text="${id}"></b>
+    para el centro scout
+    <b th:text="${center}"></b>
+    han sido rechazados por el siguiente motivo:
+  </p>
+  <p>
+    «<span th:text="${statusObservation}"></span>»
+  </p>
+  <p>
+    Por favor, entre al gestor de reservas en <a href="https://105bentaya.org">www.105bentaya.org</a> para
+    corregir los fallos. Si no recuerda la contraseña de su usuario (<b th:text="${contactMail}"></b>), puede
+    restablecerla al intentar iniciar sesión haciendo click en <b>'Olvidé la contraseña'</b>. Ante cualquier duda,
+    por favor envíe un correo a
+    <a href="mailto:centroscouts@105bentaya.org">centroscouts@105bentaya.org</a>.
+  </p>
+  <div>
+    <br>
+    <span>Atentamente,<br></span>
+    <span>El sistema de mensajería de Scouts 105 Bentaya</span>
+  </div>
 </div>
 </html>

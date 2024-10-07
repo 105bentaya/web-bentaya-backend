@@ -1,26 +1,26 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <div>
-    <p>
-        Su reserva con número
-        <b th:text="${id}"></b>
-        para el centro scout
-        <b th:text="${center}"></b>
-        ha sido rechazada por el siguiente motivo:
-    </p>
-    <p>
-        «<span th:text="${statusObservation}"></span>»
-    </p>
-    <p>
-        Si lo desea, puede volver a realizar una reserva en otra fecha o para otro centro scout desde su usuario
-        <b th:text="${contactMail}"></b>.
-        Ante cualquier otra duda, por favor envíe un correo a
-        <a href="mailto:centroscouts@105bentaya.org">centroscouts@105bentaya.org</a>.
-    </p>
-    <div>
-        <br>
-        <span>Atentamente,<br></span>
-        <span>El sistema de mensajería de Scouts 105 Bentaya</span>
-    </div>
+  <p>
+    Su reserva con número
+    <b th:text="${id}"></b>
+    para el centro scout
+    <b th:text="${center}"></b>
+    ha sido rechazada por el siguiente motivo:
+  </p>
+  <p>
+    «<span th:text="${statusObservation}"></span>»
+  </p>
+  <p>
+    Si lo desea, puede volver a realizar una reserva en otra fecha o para otro centro scout desde su usuario
+    <b th:text="${contactMail}"></b>.
+    Ante cualquier otra duda, por favor envíe un correo a
+    <a href="mailto:centroscouts@105bentaya.org">centroscouts@105bentaya.org</a>.
+  </p>
+  <div>
+    <br>
+    <span>Atentamente,<br></span>
+    <span>El sistema de mensajería de Scouts 105 Bentaya</span>
+  </div>
 </div>
 </html>

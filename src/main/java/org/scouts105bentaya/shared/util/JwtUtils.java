@@ -15,11 +15,11 @@ import java.util.regex.Pattern;
 
 public final class JwtUtils {
 
-    private JwtUtils() {
-    }
-
     private static final Logger log = LoggerFactory.getLogger(JwtUtils.class);
     private static final Pattern BEARER = Pattern.compile("Bearer ", Pattern.LITERAL);
+
+    private JwtUtils() {
+    }
 
     public static Jws<Claims> decodeJwtToken(String token, String secret) {
         try {

@@ -21,12 +21,10 @@ public class BookingIntervalHelper {
 
     private final List<Booking> sameCenterBookings;
     private final Interval mainInterval;
-
-    private List<Booking> overlappingBookingsIntervalList;
-
     List<Interval> fullyOccupiedIntervals;
     List<Interval> occupiedIntervals;
     List<Interval> reservedIntervals;
+    private List<Booking> overlappingBookingsIntervalList;
 
     //todo not working properly, getting same ranges for occupied and fully occupied
 //    Durante las siguientes fechas el centro está parcialmente ocupado, por lo que su reserva puede no ser aceptada si sobrepasa el aforo restante:
@@ -43,20 +41,20 @@ public class BookingIntervalHelper {
 
     public boolean overlapsWithFullyOccupiedBooking() {
         this.overlappingBookingsIntervalList = sameCenterBookings.stream()
-                .filter(booking -> booking.getStatus() == FULLY_OCCUPIED)
-                .filter(this::bookingOverlapsWithMainInterval)
-                .toList();
+            .filter(booking -> booking.getStatus() == FULLY_OCCUPIED)
+            .filter(this::bookingOverlapsWithMainInterval)
+            .toList();
 
         return !adjustIntervalsToBooking(
-                mergeIntervalList(getSortedIntervalListByBookingStatus(FULLY_OCCUPIED)), FULLY_OCCUPIED
+            mergeIntervalList(getSortedIntervalListByBookingStatus(FULLY_OCCUPIED)), FULLY_OCCUPIED
         ).isEmpty();
     }
 
     public List<SimpleBookingDto> getOverlappingBookingIntervals() {
         this.overlappingBookingsIntervalList = sameCenterBookings.stream()
-                .filter(this::bookingStatusIsNeeded)
-                .filter(this::bookingOverlapsWithMainInterval)
-                .toList();
+            .filter(this::bookingStatusIsNeeded)
+            .filter(this::bookingOverlapsWithMainInterval)
+            .toList();
 
         fullyOccupiedIntervals = getSortedIntervalListByBookingStatus(FULLY_OCCUPIED);
         occupiedIntervals = getSortedIntervalListByBookingStatus(OCCUPIED);
@@ -110,8 +108,8 @@ public class BookingIntervalHelper {
     private boolean bookingStatusIsNeeded(Booking booking) {
         BookingStatus status = booking.getStatus();
         return status == RESERVED ||
-                status == OCCUPIED ||
-                status == FULLY_OCCUPIED;
+               status == OCCUPIED ||
+               status == FULLY_OCCUPIED;
     }
 
     private boolean bookingOverlapsWithMainInterval(Booking booking) {

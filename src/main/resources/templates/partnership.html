@@ -17,7 +17,10 @@
   </p>
   <p>
     <b>Correo:</b>
-    <a th:href="@{mailto:(to=${form.email},subject=${'Colaboración Scouts 105 Bentaya - ' + form.subject})}" th:text="${form.email}">correo</a>
+    <a
+      th:href="@{mailto:(to=${form.email},subject=${'Colaboración Scouts 105 Bentaya - ' + form.subject})}"
+      th:text="${form.email}"
+    ></a>
   </p>
   <p>
     <b>Teléfono:</b>

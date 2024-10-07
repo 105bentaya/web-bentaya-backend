@@ -2,34 +2,35 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 <div>
-    <h2>Scouts 105 Bentaya - Formulario de Sección Senior</h2>
-    <p>Hemos recibido su formulario de sección senior satisfactoriamente. A continuación, se detallan los datos que nos ha proporcionado:</p>
-    <p>
-        <strong>Nombre:</strong> <span th:text="${name}">nombre</span>
-    </p>
-    <p>
-        <strong>Apellidos:</strong> <span th:text="${surname}">apellidos</span>
-    </p>
-    <p>
-        <strong>Teléfono:</strong> <span th:text="${phone}">-</span>
-    </p>
-    <p>
-        <strong>Correo electrónico:</strong> <span th:text="${email}">-</span>
-    </p>
+  <h2>Scouts 105 Bentaya - Formulario de Sección Senior</h2>
+  <p>Hemos recibido su formulario de sección senior satisfactoriamente. A continuación, se detallan los datos que nos ha
+    proporcionado:</p>
+  <p>
+    <strong>Nombre:</strong> <span th:text="${name}">nombre</span>
+  </p>
+  <p>
+    <strong>Apellidos:</strong> <span th:text="${surname}">apellidos</span>
+  </p>
+  <p>
+    <strong>Teléfono:</strong> <span th:text="${phone}">-</span>
+  </p>
+  <p>
+    <strong>Correo electrónico:</strong> <span th:text="${email}">-</span>
+  </p>
 
-    <p>
-        <strong>Desea ser agregado a grupos de mensajería:</strong>
-        <span th:if="${acceptMessageGroup}">Sí</span>
-        <span th:unless="${acceptMessageGroup}">No</span>
-    </p>
-    <p>
-        <strong>Desea recibir noticias de actividades scout:</strong>
-        <span th:if="${acceptNewsletter}">Sí</span>
-        <span th:unless="${acceptNewsletter}">No</span>
-    </p>
-    <p th:unless="${observations.isBlank()}">
-        <strong>Observaciones o sugerencias:</strong> <span th:text="${observations}">observaciones</span>
-    </p>
+  <p>
+    <strong>Desea ser agregado a grupos de mensajería:</strong>
+    <span th:if="${acceptMessageGroup}">Sí</span>
+    <span th:unless="${acceptMessageGroup}">No</span>
+  </p>
+  <p>
+    <strong>Desea recibir noticias de actividades scout:</strong>
+    <span th:if="${acceptNewsletter}">Sí</span>
+    <span th:unless="${acceptNewsletter}">No</span>
+  </p>
+  <p th:unless="${observations.isBlank()}">
+    <strong>Observaciones o sugerencias:</strong> <span th:text="${observations}">observaciones</span>
+  </p>
 </div>
 </body>
 </html>

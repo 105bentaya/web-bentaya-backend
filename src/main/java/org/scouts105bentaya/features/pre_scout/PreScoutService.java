@@ -33,8 +33,6 @@ import java.util.Optional;
 @Service
 public class PreScoutService {
 
-    @Value("${bentaya.email.main}")
-    private String mainEmail;
     private final EmailService emailService;
     private final PdfService pdfService;
     private final PreScoutRepository preScoutRepository;
@@ -43,6 +41,8 @@ public class PreScoutService {
     private final SettingService settingService;
     private final AuthService authService;
     private final Environment environment;
+    @Value("${bentaya.email.main}")
+    private String mainEmail;
 
     public PreScoutService(
         EmailService emailService,

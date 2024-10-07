@@ -21,15 +21,13 @@ import java.time.ZonedDateTime;
 @Service
 public class BookingStatusService {
 
-    @Value("${bentaya.email.booking}")
-    private String bookingMail;
-
     private static final Logger log = LoggerFactory.getLogger(BookingStatusService.class);
-
     private final BookingRepository bookingRepository;
     private final TemplateEngine htmlTemplateEngine;
     private final EmailService emailService;
     private final UserService userService;
+    @Value("${bentaya.email.booking}")
+    private String bookingMail;
 
     public BookingStatusService(
         BookingRepository bookingRepository,

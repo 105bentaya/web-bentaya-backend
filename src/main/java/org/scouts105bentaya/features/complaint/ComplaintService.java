@@ -11,15 +11,13 @@ import java.util.List;
 @Service
 public class ComplaintService {
 
-    @Value("${bentaya.email.it}")
-    private String itEmail;
-
-    @Value("${bentaya.email.main}")
-    private String mainEmail;
-
     private final EmailService emailService;
     private final PdfService pdfService;
     private final ComplaintRepository complaintRepository;
+    @Value("${bentaya.email.it}")
+    private String itEmail;
+    @Value("${bentaya.email.main}")
+    private String mainEmail;
 
     public ComplaintService(
         EmailService emailService,

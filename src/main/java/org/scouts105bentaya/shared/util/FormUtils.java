@@ -1,5 +1,7 @@
 package org.scouts105bentaya.shared.util;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
@@ -22,7 +24,10 @@ public class FormUtils {
 
     public static String getPriority(int priorityGroup, int year) {
         return switch (priorityGroup) {
-            case 1 -> String.format("1. Tiene hermanos/as o es hija de scouters que están en el grupo en la Ronda Solar %d/%d", year - 1, year - 2000);
+            case 1 -> String.format(
+                "1. Tiene hermanos/as o es hija de scouters que están en el grupo en la Ronda Solar %d/%d",
+                year - 1, year - 2000
+            );
             case 2 -> "2. Es hija de scouters o scouts que hayan pertenecido al grupo, a SEC o a ASDE";
             case 3 -> "3. Tiene hermanos o hermanas en la lista de espera para la misma ronda";
             case 4 -> "Ninguno";
@@ -32,5 +37,10 @@ public class FormUtils {
 
     public static boolean hasPriority(int priorityGroup) {
         return priorityGroup == 1 || priorityGroup == 2 || priorityGroup == 3;
+    }
+
+    //todo check if it can be replaced by utf encoding
+    public static String removeSpecialCharacters(String str) {
+        return StringUtils.stripAccents(str).replaceAll(", ", "_").replaceAll("[, ]", "_");
     }
 }

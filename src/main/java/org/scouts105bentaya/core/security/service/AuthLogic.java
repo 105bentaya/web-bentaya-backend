@@ -82,22 +82,22 @@ public class AuthLogic {
 
     public boolean userOwnsBooking(int bookingId) {
         return authService.getLoggedUser().getBookingList().stream()
-                .anyMatch(booking -> booking.getId().equals(bookingId));
+            .anyMatch(booking -> booking.getId().equals(bookingId));
     }
 
     public boolean userOwnsBookingDocument(int documentId) {
         return authService.getLoggedUser().getBookingList().stream()
-                .map(Booking::getBookingDocumentList)
-                .flatMap(Collection::stream)
-                .anyMatch(bookingDocument -> bookingDocument.getId().equals(documentId));
+            .map(Booking::getBookingDocumentList)
+            .flatMap(Collection::stream)
+            .anyMatch(bookingDocument -> bookingDocument.getId().equals(documentId));
     }
 
     public boolean userCanEditBookingDocument(int documentId) {
         Optional<BookingDocument> userBookingDocument = authService.getLoggedUser().getBookingList().stream()
-                .map(Booking::getBookingDocumentList)
-                .flatMap(Collection::stream)
-                .filter(bookingDocument -> bookingDocument.getId().equals(documentId))
-                .findFirst();
+            .map(Booking::getBookingDocumentList)
+            .flatMap(Collection::stream)
+            .filter(bookingDocument -> bookingDocument.getId().equals(documentId))
+            .findFirst();
 
         if (userBookingDocument.isPresent()) {
             Booking booking = userBookingDocument.get().getBooking();

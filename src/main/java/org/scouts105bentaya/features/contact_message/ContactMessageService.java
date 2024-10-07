@@ -12,12 +12,11 @@ import java.util.List;
 public class ContactMessageService {
 
     private static final String TEMPLATE = "contact-message.html";
-
-    @Value("${bentaya.email.it}")
-    private String itEmail;
     private final EmailService emailService;
     private final ContactMessageRepository contactMessageRepository;
     private final TemplateEngine templateEngine;
+    @Value("${bentaya.email.it}")
+    private String itEmail;
 
     public ContactMessageService(
         EmailService emailService,

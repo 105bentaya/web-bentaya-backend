@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 public class PreScouterConverter extends GenericConverter<PreScouter, PreScouterDto> {
 
     @Override
-    public PreScouter convertFromDto(PreScouterDto preScouterDto){
+    public PreScouter convertFromDto(PreScouterDto preScouterDto) {
         PreScouter preScouter = new PreScouter();
         preScouter.setId(preScouterDto.id());
         preScouter.setName(preScouterDto.name());
@@ -23,7 +23,7 @@ public class PreScouterConverter extends GenericConverter<PreScouter, PreScouter
     }
 
     @Override
-    public PreScouterDto convertFromEntity(PreScouter preScouter){
+    public PreScouterDto convertFromEntity(PreScouter preScouter) {
         return new PreScouterDto(
             preScouter.getId(),
             preScouter.getName(),

@@ -12,7 +12,7 @@ import java.util.Optional;
 public class PreScoutConverter extends GenericConverter<PreScout, PreScoutDto> {
 
     @Override
-    public PreScout convertFromDto(PreScoutDto preScoutDto){
+    public PreScout convertFromDto(PreScoutDto preScoutDto) {
         PreScout preScout = new PreScout();
         preScout.setId(preScoutDto.id());
         preScout.setName(preScoutDto.name().toUpperCase());
@@ -40,7 +40,7 @@ public class PreScoutConverter extends GenericConverter<PreScout, PreScoutDto> {
     }
 
     @Override
-    public PreScoutDto convertFromEntity(PreScout preScout){
+    public PreScoutDto convertFromEntity(PreScout preScout) {
         return new PreScoutDto(
             preScout.getId(),
             preScout.getName(),

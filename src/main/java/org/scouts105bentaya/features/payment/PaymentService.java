@@ -32,17 +32,16 @@ import java.util.List;
 @Service
 public class PaymentService {
 
+    private static final DateTimeFormatter DATE_AND_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyMMdd");
+    private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
+    private final PaymentRepository paymentRepository;
+    private final DonationService donationService;
     @Value("${tpv.shop.key}")
     private String key;
     @Value("${tpv.shop.id}")
     private String shopId;
     @Value("${tpv.notification.url}")
     private String notificationUrl;
-
-    private static final DateTimeFormatter DATE_AND_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyMMdd");
-    private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
-    private final PaymentRepository paymentRepository;
-    private final DonationService donationService;
 
     public PaymentService(
         PaymentRepository paymentRepository,

@@ -8,8 +8,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 public class WebBentayaBackendApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(WebBentayaBackendApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(WebBentayaBackendApplication.class, args);
+    }
 
 }

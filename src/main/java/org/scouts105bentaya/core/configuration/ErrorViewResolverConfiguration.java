@@ -12,6 +12,6 @@ public class ErrorViewResolverConfiguration {
     @Bean
     public ErrorViewResolver errorViewResolverToRedirectToAngularApp() {
         final ModelAndView redirectToIndexHtml = new ModelAndView("forward:/index.html", HttpStatus.OK);
-        return ((request, status, model) ->  status == HttpStatus.NOT_FOUND ? redirectToIndexHtml: null);
+        return ((request, status, model) -> status == HttpStatus.NOT_FOUND ? redirectToIndexHtml : null);
     }
 }

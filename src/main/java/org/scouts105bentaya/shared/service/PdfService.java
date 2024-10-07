@@ -14,7 +14,6 @@ import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfString;
 import com.lowagie.text.pdf.PdfWriter;
 import jakarta.mail.util.ByteArrayDataSource;
-import org.apache.commons.lang3.StringUtils;
 import org.scouts105bentaya.features.complaint.Complaint;
 import org.scouts105bentaya.features.pre_scout.entity.PreScout;
 import org.scouts105bentaya.features.pre_scouter.PreScouter;
@@ -32,12 +31,12 @@ import java.io.IOException;
 public class PdfService {
 
     private static final Logger log = LoggerFactory.getLogger(PdfService.class);
+    private static final String LOGO_IMG = "img/logo.JPG";
+    private static final Color HEADER_COLOR = WebColors.getRGBColor("#03569C");
 
     private final Font headFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, WebColors.getRGBColor("#F1E61F"));
     private final Font boldFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10);
     private final Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 10);
-    private static final String LOGO_IMG = "img/logo.JPG";
-    private static final Color HEADER_COLOR = WebColors.getRGBColor("#03569C");
 
     public ByteArrayDataSource generatePreScoutPDF(PreScout preScout) {
         PdfPTable pdfPTable = new PdfPTable(12);
@@ -50,8 +49,8 @@ public class PdfService {
         ByteArrayDataSource dataSource = generatePdfByteArrayDataSourceFromPdfPTable(pdfPTable);
         dataSource.setName("%s_%s_%s_%s.pdf".formatted(
             FormUtils.getGroup(preScout.getBirthday(), false, formYear - 1),
-            removeSpecialCharacters(preScout.getName()),
-            removeSpecialCharacters(preScout.getSurname()),
+            FormUtils.removeSpecialCharacters(preScout.getName()),
+            FormUtils.removeSpecialCharacters(preScout.getSurname()),
             preScout.getCreationDate())
         );
 
@@ -68,8 +67,8 @@ public class PdfService {
         ByteArrayDataSource dataSource = generatePdfByteArrayDataSourceFromPdfPTable(pdfPTable);
         dataSource.setName(
             "Preinscripcion_Voluntariado_" +
-            removeSpecialCharacters(preScouter.getName()) + "_" +
-            removeSpecialCharacters(preScouter.getSurname()) + "_" +
+            FormUtils.removeSpecialCharacters(preScouter.getName()) + "_" +
+            FormUtils.removeSpecialCharacters(preScouter.getSurname()) + "_" +
             preScouter.getCreationDate() + ".pdf"
         );
         return dataSource;
@@ -102,7 +101,6 @@ public class PdfService {
         byte[] bytes = outputStream.toByteArray();
         return new ByteArrayDataSource(bytes, "application/pdf");
     }
-
 
     private void createBasicHeader(PdfPTable table) {
         table.setWidthPercentage(100);
@@ -333,11 +331,6 @@ public class PdfService {
         cell.setColspan(8);
         cell.setMinimumHeight(70);
         table.addCell(cell);
-    }
-
-    //todo check if it can be replaced by utf encoding
-    private static String removeSpecialCharacters(String str) {
-        return StringUtils.stripAccents(str).replaceAll(", ", "_").replaceAll("[, ]", "_");
     }
 
     private PdfPCell addParagraphToCell(String fieldTitle, String field) {

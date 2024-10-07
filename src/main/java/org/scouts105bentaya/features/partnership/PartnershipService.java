@@ -10,11 +10,10 @@ import org.thymeleaf.TemplateEngine;
 public class PartnershipService {
 
     private static final String TEMPLATE = "partnership.html";
-
-    @Value("${bentaya.email.it}")
-    private String itEmail;
     private final EmailService emailService;
     private final TemplateEngine templateEngine;
+    @Value("${bentaya.email.it}")
+    private String itEmail;
 
     public PartnershipService(
         EmailService emailService,

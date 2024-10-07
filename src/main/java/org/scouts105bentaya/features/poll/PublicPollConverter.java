@@ -25,17 +25,17 @@ public class PublicPollConverter extends GenericConverter<Poll, PublicPollDto> {
     @Override
     public PublicPollDto convertFromEntity(Poll entity) {
         return new PublicPollDto(
-                entity.getId(),
-                entity.getName(),
-                entity.getDescription(),
-                entity.getOptions().stream().map(option -> new PublicPollOptionDto(
-                        option.getId(),
-                        option.getName(),
-                        option.getDescription(),
-                        option.getVotes().size(),
-                        option.getAttachments().stream().map(PollAttachment::getLink).toList(),
-                        option.getVotes().stream().anyMatch(vote -> vote.getIp().equals(requestService.getClientIP()))
-                )).toList()
+            entity.getId(),
+            entity.getName(),
+            entity.getDescription(),
+            entity.getOptions().stream().map(option -> new PublicPollOptionDto(
+                option.getId(),
+                option.getName(),
+                option.getDescription(),
+                option.getVotes().size(),
+                option.getAttachments().stream().map(PollAttachment::getLink).toList(),
+                option.getVotes().stream().anyMatch(vote -> vote.getIp().equals(requestService.getClientIP()))
+            )).toList()
         );
     }
 }

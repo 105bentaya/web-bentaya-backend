@@ -37,21 +37,21 @@ public class WebSecurityConfig {
         AuthenticationManager authenticationManager = authenticationManager(http.getSharedObject(AuthenticationConfiguration.class));
         http.headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable));
         http.csrf(AbstractHttpConfigurer::disable)
-                .cors(Customizer.withDefaults())
-                .formLogin(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(authorization -> authorization
-                        .requestMatchers(SecurityConstant.AUTH_WHITELIST).permitAll()
-                        .requestMatchers(SecurityConstant.API_URL).authenticated()
-                        .anyRequest().permitAll()
-                )
-                .addFilter(new JwtAuthenticationFilter(authenticationManager, jwt))
-                .addFilter(new JwtAuthorizationFilter(authenticationManager, jwt))
-                .sessionManagement(sessionManagementConfigurer -> sessionManagementConfigurer
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-                .exceptionHandling(exceptionHandlingConfigurer -> exceptionHandlingConfigurer
-                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
-                );
+            .cors(Customizer.withDefaults())
+            .formLogin(AbstractHttpConfigurer::disable)
+            .authorizeHttpRequests(authorization -> authorization
+                .requestMatchers(SecurityConstant.AUTH_WHITELIST).permitAll()
+                .requestMatchers(SecurityConstant.API_URL).authenticated()
+                .anyRequest().permitAll()
+            )
+            .addFilter(new JwtAuthenticationFilter(authenticationManager, jwt))
+            .addFilter(new JwtAuthorizationFilter(authenticationManager, jwt))
+            .sessionManagement(sessionManagementConfigurer -> sessionManagementConfigurer
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+            .exceptionHandling(exceptionHandlingConfigurer -> exceptionHandlingConfigurer
+                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+            );
         return http.build();
     }
 
