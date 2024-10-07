@@ -13,11 +13,11 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import lombok.Getter;
 import lombok.Setter;
-import org.scouts105bentaya.shared.constraint.IsUnit;
 import org.scouts105bentaya.features.confirmation.Confirmation;
 import org.scouts105bentaya.features.scout_contact.Contact;
 import org.scouts105bentaya.features.user.User;
 import org.scouts105bentaya.shared.Group;
+import org.scouts105bentaya.shared.constraint.IsUnit;
 
 import java.util.Date;
 import java.util.List;

@@ -2,8 +2,8 @@ package org.scouts105bentaya.features.user;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
-import org.scouts105bentaya.features.user.dto.ChangePasswordDto;
 import org.scouts105bentaya.core.security.service.ResetPasswordService;
+import org.scouts105bentaya.features.user.dto.ChangePasswordDto;
 import org.scouts105bentaya.features.user.dto.UserDto;
 import org.scouts105bentaya.features.user.specification.UserSpecificationFilter;
 import org.scouts105bentaya.shared.specification.PageDto;

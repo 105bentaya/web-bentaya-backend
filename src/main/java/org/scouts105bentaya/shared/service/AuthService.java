@@ -1,7 +1,7 @@
 package org.scouts105bentaya.shared.service;
 
-import org.scouts105bentaya.features.user.User;
 import org.scouts105bentaya.core.exception.user.UserNotFoundException;
+import org.scouts105bentaya.features.user.User;
 import org.scouts105bentaya.features.user.UserRepository;
 import org.scouts105bentaya.shared.util.SecurityUtils;
 import org.slf4j.Logger;

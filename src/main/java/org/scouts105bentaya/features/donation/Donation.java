@@ -12,9 +12,9 @@ import jakarta.persistence.OneToOne;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
-import org.scouts105bentaya.features.payment.Payment;
 import org.scouts105bentaya.features.donation.enums.DonationFrequency;
 import org.scouts105bentaya.features.donation.enums.SingleDonationPaymentType;
+import org.scouts105bentaya.features.payment.Payment;
 
 import java.time.ZonedDateTime;
 

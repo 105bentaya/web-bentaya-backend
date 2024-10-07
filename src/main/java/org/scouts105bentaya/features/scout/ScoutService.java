@@ -1,20 +1,20 @@
 package org.scouts105bentaya.features.scout;
 
 import jakarta.transaction.Transactional;
-import org.scouts105bentaya.features.scout.converter.ScoutConverter;
-import org.scouts105bentaya.features.scout.dto.ScoutDto;
-import org.scouts105bentaya.features.scout.dto.ScoutFormUserUpdateDto;
-import org.scouts105bentaya.features.confirmation.Confirmation;
-import org.scouts105bentaya.features.scout_contact.Contact;
-import org.scouts105bentaya.features.scout_contact.ContactRepository;
-import org.scouts105bentaya.features.user.User;
 import org.scouts105bentaya.core.exception.ScoutNotFoundException;
 import org.scouts105bentaya.core.exception.user.UserNotFoundException;
-import org.scouts105bentaya.shared.service.AuthService;
+import org.scouts105bentaya.features.confirmation.Confirmation;
 import org.scouts105bentaya.features.confirmation.service.ConfirmationService;
 import org.scouts105bentaya.features.event.service.EventService;
 import org.scouts105bentaya.features.pre_scout.PreScoutService;
+import org.scouts105bentaya.features.scout.converter.ScoutConverter;
+import org.scouts105bentaya.features.scout.dto.ScoutDto;
+import org.scouts105bentaya.features.scout.dto.ScoutFormUserUpdateDto;
+import org.scouts105bentaya.features.scout_contact.Contact;
+import org.scouts105bentaya.features.scout_contact.ContactRepository;
+import org.scouts105bentaya.features.user.User;
 import org.scouts105bentaya.features.user.UserService;
+import org.scouts105bentaya.shared.service.AuthService;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 

@@ -1,15 +1,15 @@
 package org.scouts105bentaya.features.event.service;
 
+import org.scouts105bentaya.core.exception.EventNotFoundException;
+import org.scouts105bentaya.core.exception.WebBentayaException;
+import org.scouts105bentaya.features.confirmation.Confirmation;
 import org.scouts105bentaya.features.confirmation.service.ConfirmationService;
 import org.scouts105bentaya.features.event.Event;
 import org.scouts105bentaya.features.event.EventRepository;
-import org.scouts105bentaya.shared.GenericConstants;
 import org.scouts105bentaya.features.event.dto.EventFormDto;
-import org.scouts105bentaya.features.confirmation.Confirmation;
-import org.scouts105bentaya.shared.Group;
-import org.scouts105bentaya.core.exception.EventNotFoundException;
-import org.scouts105bentaya.core.exception.WebBentayaException;
 import org.scouts105bentaya.features.scout.ScoutService;
+import org.scouts105bentaya.shared.GenericConstants;
+import org.scouts105bentaya.shared.Group;
 import org.springframework.stereotype.Service;
 
 import java.beans.Transient;

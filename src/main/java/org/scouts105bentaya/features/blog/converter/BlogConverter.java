@@ -1,8 +1,8 @@
 package org.scouts105bentaya.features.blog.converter;
 
-import org.scouts105bentaya.shared.GenericConverter;
-import org.scouts105bentaya.features.blog.dto.BlogDto;
 import org.scouts105bentaya.features.blog.Blog;
+import org.scouts105bentaya.features.blog.dto.BlogDto;
+import org.scouts105bentaya.shared.GenericConverter;
 import org.springframework.stereotype.Component;
 
 @Component

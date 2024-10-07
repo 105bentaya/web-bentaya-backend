@@ -12,9 +12,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import lombok.Getter;
 import lombok.Setter;
-import org.scouts105bentaya.features.user.User;
-import org.scouts105bentaya.features.booking.enums.BookingStatus;
 import org.scouts105bentaya.features.booking.ScoutCenter;
+import org.scouts105bentaya.features.booking.enums.BookingStatus;
+import org.scouts105bentaya.features.user.User;
 
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;

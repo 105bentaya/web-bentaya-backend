@@ -2,13 +2,13 @@ package org.scouts105bentaya.core.security.service;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import org.scouts105bentaya.features.user.ForgotPasswordDto;
 import org.scouts105bentaya.core.exception.InvalidTokenException;
 import org.scouts105bentaya.core.exception.PasswordsNotMatchException;
 import org.scouts105bentaya.core.exception.UserHasAlreadyChangedPasswordException;
 import org.scouts105bentaya.core.exception.user.UserNotFoundException;
-import org.scouts105bentaya.shared.service.EmailService;
+import org.scouts105bentaya.features.user.ForgotPasswordDto;
 import org.scouts105bentaya.features.user.UserService;
+import org.scouts105bentaya.shared.service.EmailService;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;

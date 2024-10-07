@@ -1,10 +1,10 @@
 package org.scouts105bentaya.features.user;
 
+import org.scouts105bentaya.features.scout.converter.ScoutUserConverter;
 import org.scouts105bentaya.features.user.dto.UserDto;
 import org.scouts105bentaya.shared.GenericConstants;
 import org.scouts105bentaya.shared.GenericConverter;
 import org.scouts105bentaya.shared.Group;
-import org.scouts105bentaya.features.scout.converter.ScoutUserConverter;
 import org.springframework.stereotype.Component;
 
 import java.util.stream.Collectors;

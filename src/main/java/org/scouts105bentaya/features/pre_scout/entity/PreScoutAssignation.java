@@ -10,8 +10,8 @@ import jakarta.persistence.OneToOne;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
-import org.scouts105bentaya.shared.constraint.IsUnit;
 import org.scouts105bentaya.shared.Group;
+import org.scouts105bentaya.shared.constraint.IsUnit;
 
 import java.time.ZonedDateTime;
 

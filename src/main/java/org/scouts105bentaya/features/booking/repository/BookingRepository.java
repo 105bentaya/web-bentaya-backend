@@ -1,7 +1,7 @@
 package org.scouts105bentaya.features.booking.repository;
 
-import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.booking.ScoutCenter;
+import org.scouts105bentaya.features.booking.entity.Booking;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

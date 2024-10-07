@@ -11,8 +11,8 @@ import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
-import org.scouts105bentaya.shared.Group;
 import org.scouts105bentaya.features.confirmation.Confirmation;
+import org.scouts105bentaya.shared.Group;
 
 import java.time.ZonedDateTime;
 import java.util.List;

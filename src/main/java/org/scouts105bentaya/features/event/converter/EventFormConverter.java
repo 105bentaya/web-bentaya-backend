@@ -1,9 +1,9 @@
 package org.scouts105bentaya.features.event.converter;
 
+import org.scouts105bentaya.features.event.Event;
+import org.scouts105bentaya.features.event.dto.EventFormDto;
 import org.scouts105bentaya.shared.GenericConstants;
 import org.scouts105bentaya.shared.GenericConverter;
-import org.scouts105bentaya.features.event.dto.EventFormDto;
-import org.scouts105bentaya.features.event.Event;
 import org.scouts105bentaya.shared.Group;
 import org.springframework.stereotype.Component;
 

@@ -1,9 +1,9 @@
 package org.scouts105bentaya.features.scout.converter;
 
+import org.scouts105bentaya.features.scout.Scout;
+import org.scouts105bentaya.features.scout.dto.ScoutUserDto;
 import org.scouts105bentaya.features.scout_contact.ContactConverter;
 import org.scouts105bentaya.shared.GenericConverter;
-import org.scouts105bentaya.features.scout.dto.ScoutUserDto;
-import org.scouts105bentaya.features.scout.Scout;
 import org.scouts105bentaya.shared.Group;
 import org.springframework.stereotype.Component;
 

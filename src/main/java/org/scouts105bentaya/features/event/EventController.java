@@ -1,12 +1,12 @@
 package org.scouts105bentaya.features.event;
 
+import org.scouts105bentaya.core.exception.WebBentayaException;
 import org.scouts105bentaya.features.event.converter.EventCalendarConverter;
 import org.scouts105bentaya.features.event.converter.EventConverter;
 import org.scouts105bentaya.features.event.converter.EventFormConverter;
 import org.scouts105bentaya.features.event.dto.EventCalendarDto;
 import org.scouts105bentaya.features.event.dto.EventDto;
 import org.scouts105bentaya.features.event.dto.EventFormDto;
-import org.scouts105bentaya.core.exception.WebBentayaException;
 import org.scouts105bentaya.features.event.service.CalendarService;
 import org.scouts105bentaya.features.event.service.EventService;
 import org.scouts105bentaya.shared.util.SecurityUtils;

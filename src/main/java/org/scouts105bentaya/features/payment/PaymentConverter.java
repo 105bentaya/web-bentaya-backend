@@ -1,7 +1,7 @@
 package org.scouts105bentaya.features.payment;
 
-import org.scouts105bentaya.shared.GenericConverter;
 import org.scouts105bentaya.features.payment.dto.PaymentDto;
+import org.scouts105bentaya.shared.GenericConverter;
 import org.springframework.stereotype.Component;
 
 @Component

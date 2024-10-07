@@ -1,8 +1,8 @@
 package org.scouts105bentaya.features.donation.converter;
 
 import org.scouts105bentaya.features.donation.Donation;
-import org.scouts105bentaya.shared.GenericConverter;
 import org.scouts105bentaya.features.donation.dto.DonationFormDto;
+import org.scouts105bentaya.shared.GenericConverter;
 import org.springframework.stereotype.Component;
 
 @Component

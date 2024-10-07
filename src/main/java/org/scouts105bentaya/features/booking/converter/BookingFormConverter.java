@@ -1,8 +1,8 @@
 package org.scouts105bentaya.features.booking.converter;
 
-import org.scouts105bentaya.shared.GenericConverter;
 import org.scouts105bentaya.features.booking.dto.BookingFormDto;
 import org.scouts105bentaya.features.booking.entity.Booking;
+import org.scouts105bentaya.shared.GenericConverter;
 import org.springframework.stereotype.Component;
 
 import static java.time.temporal.ChronoUnit.MINUTES;

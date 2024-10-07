@@ -1,8 +1,8 @@
 package org.scouts105bentaya.features.confirmation.converter;
 
-import org.scouts105bentaya.shared.GenericConverter;
-import org.scouts105bentaya.features.confirmation.dto.AttendanceInfoDto;
 import org.scouts105bentaya.features.confirmation.Confirmation;
+import org.scouts105bentaya.features.confirmation.dto.AttendanceInfoDto;
+import org.scouts105bentaya.shared.GenericConverter;
 import org.springframework.stereotype.Component;
 
 @Component
