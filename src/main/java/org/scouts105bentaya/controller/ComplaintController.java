@@ -25,5 +25,4 @@ public class ComplaintController {
         log.info("METHOD ComplaintController.sendComplaintEmail");
         this.complaintService.sendComplaintEmail(complaint);
     }
-
 }

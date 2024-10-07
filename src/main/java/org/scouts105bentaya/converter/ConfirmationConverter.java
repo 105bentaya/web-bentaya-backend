@@ -14,12 +14,12 @@ public class ConfirmationConverter extends GenericConverter<Confirmation, Confir
 
     @Override
     public ConfirmationDto convertFromEntity(Confirmation entity) {
-        ConfirmationDto dto = new ConfirmationDto();
-        dto.setAttending(entity.getAttending());
-        dto.setText(entity.getText());
-        dto.setScoutId(entity.getScout().getId());
-        dto.setEventId(entity.getEvent().getId());
-        dto.setPayed(entity.getPayed());
-        return dto;
+        return new ConfirmationDto(
+            entity.getScout().getId(),
+            entity.getEvent().getId(),
+            entity.getAttending(),
+            entity.getText(),
+            entity.getPayed()
+        );
     }
 }

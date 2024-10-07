@@ -8,6 +8,9 @@ import org.apache.poi.ss.util.CellRangeAddress;
 
 public class ExcelUtils {
 
+    private ExcelUtils() {
+    }
+
     public static void mergeRowCells(Sheet sheet, int rowIndex, int lastCol) {
         Row row = sheet.getRow(rowIndex);
         if (row != null) {

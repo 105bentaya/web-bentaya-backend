@@ -13,60 +13,60 @@ public class PreScoutConverter extends GenericConverter<PreScout, PreScoutDto> {
     @Override
     public PreScout convertFromDto(PreScoutDto preScoutDto){
         PreScout preScout = new PreScout();
-        preScout.setId(preScoutDto.getId());
-        preScout.setName(preScoutDto.getName().toUpperCase());
-        preScout.setSurname(preScoutDto.getSurname().toUpperCase());
-        preScout.setSection(preScoutDto.getSection());
-        preScout.setBirthday(preScoutDto.getBirthday());
-        preScout.setAge(preScoutDto.getAge());
-        preScout.setGender(preScoutDto.getGender().toUpperCase());
-        preScout.setDni(preScoutDto.getDni().toUpperCase());
-        preScout.setHasBeenInGroup(preScoutDto.isHasBeenInGroup());
-        preScout.setYearAndSection(preScoutDto.getYearAndSection());
-        preScout.setMedicalData(preScoutDto.getMedicalData());
-        preScout.setParentsName(preScoutDto.getParentsName().toUpperCase());
-        preScout.setRelationship(preScoutDto.getRelationship().toUpperCase());
-        preScout.setPhone(preScoutDto.getPhone());
-        preScout.setEmail(preScoutDto.getEmail().toLowerCase());
-        preScout.setComment(preScoutDto.getComment());
-        preScout.setPriority(preScoutDto.getPriority());
-        preScout.setCreationDate(preScoutDto.getCreationDate());
-        preScout.setParentsSurname(preScoutDto.getParentsSurname().toUpperCase());
-        preScout.setPriorityInfo(preScoutDto.getPriorityInfo());
-        preScout.setSize(preScoutDto.getSize().toUpperCase());
-        preScout.setInscriptionYear(preScoutDto.getInscriptionYear());
+        preScout.setId(preScoutDto.id());
+        preScout.setName(preScoutDto.name().toUpperCase());
+        preScout.setSurname(preScoutDto.surname().toUpperCase());
+        preScout.setSection(preScoutDto.section());
+        preScout.setBirthday(preScoutDto.birthday());
+        preScout.setAge(preScoutDto.age());
+        preScout.setGender(preScoutDto.gender().toUpperCase());
+        preScout.setDni(preScoutDto.dni().toUpperCase());
+        preScout.setHasBeenInGroup(preScoutDto.hasBeenInGroup());
+        preScout.setYearAndSection(preScoutDto.yearAndSection());
+        preScout.setMedicalData(preScoutDto.medicalData());
+        preScout.setParentsName(preScoutDto.parentsName().toUpperCase());
+        preScout.setRelationship(preScoutDto.relationship().toUpperCase());
+        preScout.setPhone(preScoutDto.phone());
+        preScout.setEmail(preScoutDto.email().toLowerCase());
+        preScout.setComment(preScoutDto.comment());
+        preScout.setPriority(preScoutDto.priority());
+        preScout.setCreationDate(preScoutDto.creationDate());
+        preScout.setParentsSurname(preScoutDto.parentsSurname().toUpperCase());
+        preScout.setPriorityInfo(preScoutDto.priorityInfo());
+        preScout.setSize(preScoutDto.size().toUpperCase());
+        preScout.setInscriptionYear(preScoutDto.inscriptionYear());
         return preScout;
     }
 
     @Override
     public PreScoutDto convertFromEntity(PreScout preScout){
-        PreScoutDto preScoutDto = new PreScoutDto();
-        preScoutDto.setId(preScout.getId());
-        preScoutDto.setName(preScout.getName());
-        preScoutDto.setSurname(preScout.getSurname());
-        preScoutDto.setSection(preScout.getSection());
-        preScoutDto.setBirthday(preScout.getBirthday());
-        preScoutDto.setAge(preScout.getAge());
-        preScoutDto.setGender(preScout.getGender());
-        preScoutDto.setDni(preScout.getDni());
-        preScoutDto.setHasBeenInGroup(preScout.isHasBeenInGroup());
-        preScoutDto.setYearAndSection(preScout.getYearAndSection());
-        preScoutDto.setMedicalData(preScout.getMedicalData());
-        preScoutDto.setParentsName(preScout.getParentsName());
-        preScoutDto.setRelationship(preScout.getRelationship());
-        preScoutDto.setPhone(preScout.getPhone());
-        preScoutDto.setEmail(preScout.getEmail());
-        preScoutDto.setComment(preScout.getComment());
-        preScoutDto.setPriority(preScout.getPriority());
-        preScoutDto.setCreationDate(preScout.getCreationDate());
-        preScoutDto.setStatus(Optional.ofNullable(preScout.getPreScoutAssignation()).map(PreScoutAssignation::getStatus).orElse(null));
-        preScoutDto.setAssignationComment(Optional.ofNullable(preScout.getPreScoutAssignation()).map(PreScoutAssignation::getComment).orElse(null));
-        preScoutDto.setAssignationDate(Optional.ofNullable(preScout.getPreScoutAssignation()).map(PreScoutAssignation::getAssignationDate).orElse(null));
-        preScoutDto.setGroupId(Optional.ofNullable(preScout.getPreScoutAssignation()).map(preScoutAssignation -> preScoutAssignation.getGroupId().getValue()).orElse(null));
-        preScoutDto.setParentsSurname(preScout.getParentsSurname());
-        preScoutDto.setPriorityInfo(preScout.getPriorityInfo());
-        preScoutDto.setSize(preScout.getSize());
-        preScoutDto.setInscriptionYear(preScout.getInscriptionYear());
-        return preScoutDto;
+        return new PreScoutDto(
+            preScout.getId(),
+            preScout.getName(),
+            preScout.getSurname(),
+            preScout.getSection(),
+            preScout.getBirthday(),
+            preScout.getAge(),
+            preScout.getGender(),
+            preScout.getDni(),
+            preScout.isHasBeenInGroup(),
+            preScout.getYearAndSection(),
+            preScout.getMedicalData(),
+            preScout.getParentsName(),
+            preScout.getParentsSurname(),
+            preScout.getRelationship(),
+            preScout.getPhone(),
+            preScout.getEmail(),
+            preScout.getComment(),
+            preScout.getPriority(),
+            preScout.getPriorityInfo(),
+            preScout.getCreationDate(),
+            Optional.ofNullable(preScout.getPreScoutAssignation()).map(PreScoutAssignation::getStatus).orElse(null),
+            Optional.ofNullable(preScout.getPreScoutAssignation()).map(preScoutAssignation -> preScoutAssignation.getGroupId().getValue()).orElse(null),
+            Optional.ofNullable(preScout.getPreScoutAssignation()).map(PreScoutAssignation::getComment).orElse(null),
+            Optional.ofNullable(preScout.getPreScoutAssignation()).map(PreScoutAssignation::getAssignationDate).orElse(null),
+            preScout.getInscriptionYear(),
+            preScout.getSize()
+        );
     }
 }

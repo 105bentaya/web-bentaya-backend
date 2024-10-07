@@ -111,7 +111,7 @@ public class ScoutController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('SCOUTER') and @authLogic.userHasSameGroupIdAsScout(#scoutDto.id)")
     @PutMapping
     public ScoutDto update(@RequestBody ScoutDto scoutDto) {
-        log.info("METHOD ScoutController.update --- PARAMS id: {}{}", scoutDto.getId(), SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("METHOD ScoutController.update --- PARAMS id: {}{}", scoutDto.id(), SecurityUtils.getLoggedUserUsernameForLog());
         return scoutConverter.convertFromEntity(scoutService.update(scoutDto));
     }
 

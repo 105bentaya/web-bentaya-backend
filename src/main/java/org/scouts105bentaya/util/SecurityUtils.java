@@ -3,6 +3,10 @@ package org.scouts105bentaya.util;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 public class SecurityUtils {
+
+    private SecurityUtils() {
+    }
+
     public static String getLoggedUserUsername() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
     }

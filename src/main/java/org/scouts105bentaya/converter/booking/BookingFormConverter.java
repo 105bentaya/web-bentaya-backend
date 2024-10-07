@@ -12,19 +12,19 @@ public class BookingFormConverter extends GenericConverter<Booking, BookingFormD
     @Override
     public Booking convertFromDto(BookingFormDto dto) {
         Booking entity = new Booking();
-        entity.setOrganizationName(dto.getGroupName());
-        entity.setCif(dto.getCif());
-        entity.setFacilityUse(dto.getWorkDescription());
-        entity.setContactName(dto.getContactName());
-        entity.setContactRelationship(dto.getRelationship());
-        entity.setContactMail(dto.getEmail());
-        entity.setContactPhone(dto.getPhone());
-        entity.setPacks(dto.getPacks());
-        entity.setScoutCenter(dto.getScoutCenter());
-        entity.setStartDate(dto.getStartDate().truncatedTo(MINUTES));
-        entity.setEndDate(dto.getEndDate().truncatedTo(MINUTES));
-        entity.setObservations(dto.getObservations());
-        entity.setExclusiveReservation(dto.isExclusiveReservation());
+        entity.setOrganizationName(dto.groupName());
+        entity.setCif(dto.cif());
+        entity.setFacilityUse(dto.workDescription());
+        entity.setContactName(dto.contactName());
+        entity.setContactRelationship(dto.relationship());
+        entity.setContactMail(dto.email());
+        entity.setContactPhone(dto.phone());
+        entity.setPacks(dto.packs());
+        entity.setScoutCenter(dto.scoutCenter());
+        entity.setStartDate(dto.startDate().truncatedTo(MINUTES));
+        entity.setEndDate(dto.endDate().truncatedTo(MINUTES));
+        entity.setObservations(dto.observations());
+        entity.setExclusiveReservation(dto.exclusiveReservation());
         return entity;
     }
 

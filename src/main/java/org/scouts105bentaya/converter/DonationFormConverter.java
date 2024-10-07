@@ -10,17 +10,17 @@ public class DonationFormConverter extends GenericConverter<Donation, DonationFo
     @Override
     public Donation convertFromDto(DonationFormDto dto) {
         Donation entity = new Donation();
-        entity.setName(dto.getName());
-        entity.setFirstSurname(dto.getFirstSurname());
-        entity.setSecondSurname(dto.getSecondSurname());
-        entity.setCif(dto.getCif());
-        entity.setPhone(dto.getPhone());
-        entity.setEmail(dto.getEmail());
-        entity.setDeduct(dto.getDeduct());
-        entity.setAmount(dto.getAmount());
-        entity.setFrequency(dto.getFrequency());
-        entity.setSingleDonationPaymentType(dto.getSingleDonationPaymentType());
-        entity.setIban(dto.getIban());
+        entity.setName(dto.name());
+        entity.setFirstSurname(dto.firstSurname());
+        entity.setSecondSurname(dto.secondSurname());
+        entity.setCif(dto.cif());
+        entity.setPhone(dto.phone());
+        entity.setEmail(dto.email());
+        entity.setDeduct(dto.deduct());
+        entity.setAmount(dto.amount());
+        entity.setFrequency(dto.frequency());
+        entity.setSingleDonationPaymentType(dto.singleDonationPaymentType());
+        entity.setIban(dto.iban());
         return entity;
     }
 

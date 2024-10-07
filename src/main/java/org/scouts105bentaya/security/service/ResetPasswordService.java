@@ -23,7 +23,10 @@ public class ResetPasswordService {
     private final UserService userService;
     private final EmailService emailService;
 
-    public ResetPasswordService(UserService userService, EmailService emailService) {
+    public ResetPasswordService(
+        UserService userService,
+        EmailService emailService
+    ) {
         this.userService = userService;
         this.emailService = emailService;
         tokenCache = CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build();
@@ -39,29 +42,35 @@ public class ResetPasswordService {
             }
             String token = generateToken();
             tokenCache.put(token, username);
-            emailService.sendSimpleEmail(username, "Restablecer contraseña - 105 Bentaya", String.format("""
+            emailService.sendSimpleEmail(
+                username,
+                "Restablecer contraseña - 105 Bentaya",
+                String.format("""
                     Link para restablecer la contraseña: 105bentaya.org/reset-password/%s
                     Este link caducará en 5 minutos.
-                    """, token));
-        } catch (UserNotFoundException ignored) {}
+                    """, token)
+            );
+        } catch (UserNotFoundException ignored) {
+            //ignored
+        }
     }
 
     public void resetPassword(ForgotPasswordDto dto) {
-        String username = tokenCache.getIfPresent(dto.getToken());
+        String username = tokenCache.getIfPresent(dto.token());
         if (username == null || usernameHasChangedPassword(username)) {
             throw new InvalidTokenException("El token es inválido o ha expirado");
         }
-        if (!dto.getNewPassword().equals(dto.getNewPasswordRepeat())) {
+        if (!dto.newPassword().equals(dto.newPasswordRepeat())) {
             throw new PasswordsNotMatchException("Las contraseñas no coinciden");
         }
-        tokenCache.invalidate(dto.getToken());
-        userService.changeForgottenPassword(username, dto.getNewPassword());
+        tokenCache.invalidate(dto.token());
+        userService.changeForgottenPassword(username, dto.newPassword());
         usernameHasChangedPswCache.put(username, true);
     }
 
     private boolean usernameHasChangedPassword(String username) {
         Boolean cacheResult = usernameHasChangedPswCache.getIfPresent(username);
-        return cacheResult != null && cacheResult;
+        return Boolean.TRUE.equals(cacheResult);
     }
 
     private String generateToken() {

@@ -53,16 +53,17 @@ public class EventService {
     @Transient
     public Event save(EventFormDto eventForm) {
         Event newEvent = new Event();
-        newEvent.setTitle(eventForm.getTitle());
-        newEvent.setGroupId(Group.valueOf(eventForm.getGroupId()));
-        newEvent.setDescription(eventForm.getDescription());
-        newEvent.setLocation(eventForm.getLocation());
+        newEvent.setTitle(eventForm.title());
+        newEvent.setGroupId(Group.valueOf(eventForm.groupId()));
+        newEvent.setDescription(eventForm.description());
+        newEvent.setLocation(eventForm.location());
 
-        if (newEvent.getGroupId().isNotUnit() && eventForm.isActivateAttendanceList())
+        if (newEvent.getGroupId().isNotUnit() && eventForm.activateAttendanceList()) {
             throw new WebBentayaException("No se puede activar la asistencia para esta unidad");
-        newEvent.setActiveAttendanceList(eventForm.isActivateAttendanceList());
-        if (eventForm.isActivateAttendanceList())
-            newEvent.setActiveAttendancePayment(eventForm.isActivateAttendancePayment());
+        }
+
+        newEvent.setActiveAttendanceList(eventForm.activateAttendanceList());
+        newEvent.setActiveAttendancePayment(eventForm.activateAttendanceList() && eventForm.activateAttendancePayment());
 
         this.setEventCoordinates(newEvent, eventForm);
         this.setEventDates(newEvent, eventForm);
@@ -81,12 +82,12 @@ public class EventService {
 
     @Transient
     public Event update(EventFormDto eventForm) {
-        Event eventDB = findById(eventForm.getId());
+        Event eventDB = findById(eventForm.id());
 
-        eventDB.setTitle(eventForm.getTitle());
-        eventDB.setGroupId(Group.valueOf(eventForm.getGroupId()));
-        eventDB.setDescription(eventForm.getDescription());
-        eventDB.setLocation(eventForm.getLocation());
+        eventDB.setTitle(eventForm.title());
+        eventDB.setGroupId(Group.valueOf(eventForm.groupId()));
+        eventDB.setDescription(eventForm.description());
+        eventDB.setLocation(eventForm.location());
 
         this.setEventCoordinates(eventDB, eventForm);
         this.setEventDates(eventDB, eventForm);
@@ -96,58 +97,61 @@ public class EventService {
     }
 
     private void setEventDates(Event event, EventFormDto eventForm) {
-        event.setUnknownTime(eventForm.isUnknownTime());
-        if (eventForm.isUnknownTime()) {
-            if (eventForm.getLocalStartDate() == null || eventForm.getLocalEndDate() == null)
+        event.setUnknownTime(eventForm.unknownTime());
+        if (eventForm.unknownTime()) {
+            if (eventForm.localStartDate() == null || eventForm.localEndDate() == null) {
                 throw new WebBentayaException("Fechas no especificadas");
-            event.setStartDate(ZonedDateTime.of(eventForm.getLocalStartDate(), LocalTime.of(11, 0), GenericConstants.UTC_ZONE));
-            event.setEndDate(ZonedDateTime.of(eventForm.getLocalEndDate(), LocalTime.of(13, 0), GenericConstants.UTC_ZONE));
+            }
+            event.setStartDate(ZonedDateTime.of(eventForm.localStartDate(), LocalTime.of(11, 0), GenericConstants.UTC_ZONE));
+            event.setEndDate(ZonedDateTime.of(eventForm.localEndDate(), LocalTime.of(13, 0), GenericConstants.UTC_ZONE));
         } else {
-            if (eventForm.getStartDate() == null || eventForm.getEndDate() == null)
+            if (eventForm.startDate() == null || eventForm.endDate() == null) {
                 throw new WebBentayaException("Fechas no especificadas");
-            event.setEndDate(eventForm.getEndDate().truncatedTo(ChronoUnit.MINUTES));
-            event.setStartDate(eventForm.getStartDate().truncatedTo(ChronoUnit.MINUTES));
+            }
+            event.setEndDate(eventForm.endDate().truncatedTo(ChronoUnit.MINUTES));
+            event.setStartDate(eventForm.startDate().truncatedTo(ChronoUnit.MINUTES));
         }
-        if (!event.getStartDate().isBefore(event.getEndDate()))
+        if (!event.getStartDate().isBefore(event.getEndDate())) {
             throw new WebBentayaException("La fecha de fin no debe ser anterior a la de inicio");
+        }
     }
 
     private void setEventCoordinates(Event event, EventFormDto eventForm) {
-        if (eventForm.getLatitude() == null || eventForm.getLongitude() == null) {
+        if (eventForm.latitude() == null || eventForm.longitude() == null) {
             event.setLatitude(null);
             event.setLongitude(null);
         } else {
-            event.setLatitude(eventForm.getLatitude());
-            event.setLongitude(eventForm.getLongitude());
+            event.setLatitude(eventForm.latitude());
+            event.setLongitude(eventForm.longitude());
         }
     }
 
     private void updateEventAttendance(EventFormDto eventForm, Event eventDB) {
-        if (!eventForm.isActivateAttendanceList() || eventDB.getGroupId().isNotUnit()) {
+        if (!eventForm.activateAttendanceList() || eventDB.getGroupId().isNotUnit()) {
             eventDB.setActiveAttendanceList(false);
             eventDB.setActiveAttendancePayment(false);
             eventDB.setClosedAttendanceList(false);
             confirmationService.deleteAllByEventId(eventDB.getId());
         } else if (!eventDB.isActiveAttendanceList()) {
             eventDB.setActiveAttendanceList(true);
-            eventDB.setActiveAttendancePayment(eventForm.isActivateAttendancePayment());
+            eventDB.setActiveAttendancePayment(eventForm.activateAttendancePayment());
             eventDB.setClosedAttendanceList(false);
             this.scoutService.findAllByLoggedScouterGroupId().forEach(scout -> {
                 Confirmation confirmation = new Confirmation();
                 confirmation.setEvent(eventDB);
                 confirmation.setScout(scout);
-                if (eventForm.isActivateAttendancePayment()) confirmation.setPayed(false);
+                if (eventForm.activateAttendancePayment()) confirmation.setPayed(false);
                 confirmationService.save(confirmation);
             });
         } else {
-            eventDB.setClosedAttendanceList(eventForm.isCloseAttendanceList());
-            if (!eventDB.isActiveAttendancePayment() && eventForm.isActivateAttendancePayment()) {
+            eventDB.setClosedAttendanceList(eventForm.closeAttendanceList());
+            if (!eventDB.isActiveAttendancePayment() && eventForm.activateAttendancePayment()) {
                 eventDB.setActiveAttendancePayment(true);
                 eventDB.getConfirmationList().forEach(confirmation -> {
                     confirmation.setPayed(false);
                     confirmationService.save(confirmation);
                 });
-            } else if (eventDB.isActiveAttendancePayment() && !eventForm.isActivateAttendancePayment()) {
+            } else if (eventDB.isActiveAttendancePayment() && !eventForm.activateAttendancePayment()) {
                 eventDB.setActiveAttendancePayment(false);
                 eventDB.getConfirmationList().stream().filter(confirmation -> confirmation.getPayed() != null).forEach(confirmation -> {
                     confirmation.setPayed(null);

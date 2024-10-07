@@ -53,22 +53,24 @@ public class PreScouterService {
         return this.preScouterRepository.save(preScouter);
     }
 
-    //todo replace with template
     private void sendPreScouterEmail(PreScouter preScouter) {
         DataSource dataSource = pdfService.generatePreScouterPDF(preScouter);
         emailService.sendEmailWithAttachment(
             email,
-            "Preinscripción de voluntariado: " + preScouter.getSurname() + ", " + preScouter.getName(),
-            "Preinscripción de la persona interesada - " + preScouter.getSurname() + ", " + preScouter.getName(),
-            dataSource);
+            "Preinscripción de voluntariado: %s, %s".formatted(preScouter.getSurname(), preScouter.getName()),
+            "Preinscripción de la persona interesada - %s, %s".formatted(preScouter.getSurname(), preScouter.getName()),
+            dataSource
+        );
         emailService.sendEmailWithAttachment(
             preScouter.getEmail(),
             "Scouts 105 Bentaya - Copia de la preinscripción",
-            "Se ha recibido con éxito la preinscripción de: " +
-            preScouter.getSurname() + ", " + preScouter.getName() +
-            "\nNos pondremos en contacto con usted con la mayor brevedad posible." +
-            "\nAtentamente,\nGrupo Scout 105 Bentaya",
-            dataSource);
+            """
+                Se ha recibido con éxito la preinscripción de: %s, %s
+                Nos pondremos en contacto con usted con la mayor brevedad posible.
+                
+                Atentamente,
+                Grupo Scout 105 Bentaya
+                """.formatted(preScouter.getSurname(), preScouter.getName()), dataSource);
     }
 
     public ResponseEntity<byte[]> getPDF(Integer id) {
@@ -76,17 +78,12 @@ public class PreScouterService {
         if (optionalPreScouter.isPresent()) {
             try {
                 byte[] pdf = pdfService.generatePreScouterPDF(optionalPreScouter.get()).getInputStream().readAllBytes();
-                return ResponseEntity
-                    .ok()
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .header(HttpHeaders.CONTENT_DISPOSITION)
-                    .body(pdf);
+                return ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM).header(HttpHeaders.CONTENT_DISPOSITION).body(pdf);
             } catch (Exception ignored) {
                 //ignored
             }
         }
-        return ResponseEntity
-            .badRequest().build();
+        return ResponseEntity.badRequest().build();
     }
 
     public void delete(Integer id) {

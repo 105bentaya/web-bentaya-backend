@@ -21,50 +21,33 @@ import java.time.ZonedDateTime;
 @Setter
 @Entity
 public class Donation {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-
     @NotNull
     private String name;
-
     @NotNull
     private String firstSurname;
-
     @NotNull
     private String secondSurname;
-
     @NotNull
     private String cif;
-
     @NotNull
     private String phone;
-
     @NotNull
     private String email;
-
     @NotNull
     private Boolean deduct;
-
     @NotNull
     private Integer amount;
-
     @NotNull
     @Enumerated(EnumType.STRING)
     private DonationFrequency frequency;
-
     @Enumerated(EnumType.STRING)
     private SingleDonationPaymentType singleDonationPaymentType;
-
     private String iban;
-
     private ZonedDateTime creationDate;
-
     @OneToOne
-    @JoinTable(name = "donation_payment",
-            joinColumns = @JoinColumn(name = "donation_id", referencedColumnName = "id"),
-            inverseJoinColumns = @JoinColumn(name = "payment_id", referencedColumnName = "id"))
+    @JoinTable(name = "donation_payment", joinColumns = @JoinColumn(name = "donation_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "payment_id", referencedColumnName = "id"))
     private Payment payment;
-
 }

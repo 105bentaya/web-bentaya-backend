@@ -16,13 +16,13 @@ public class EventCalendarConverter extends GenericConverter<Event, EventCalenda
 
     @Override
     public EventCalendarDto convertFromEntity(Event entity) {
-        EventCalendarDto event = new EventCalendarDto();
-        event.setEndDate(entity.getEndDate());
-        event.setStartDate(entity.getStartDate());
-        event.setGroupId(Group.valueFrom(entity.getGroupId()));
-        event.setTitle(entity.getTitle());
-        event.setId(entity.getId());
-        event.setUnknownTime(entity.isUnknownTime());
-        return event;
+        return new EventCalendarDto(
+            entity.getId(),
+            Group.valueFrom(entity.getGroupId()),
+            entity.getTitle(),
+            entity.getStartDate(),
+            entity.getEndDate(),
+            entity.isUnknownTime()
+        );
     }
 }

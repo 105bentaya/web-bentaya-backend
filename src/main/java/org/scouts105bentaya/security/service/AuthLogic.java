@@ -24,8 +24,12 @@ public class AuthLogic {
     private final EventService eventService;
     private final PreScoutService preScoutService;
 
-    public AuthLogic(AuthService authService, ScoutService scoutService, EventService eventService,
-                     PreScoutService preScoutService) {
+    public AuthLogic(
+        AuthService authService,
+        ScoutService scoutService,
+        EventService eventService,
+        PreScoutService preScoutService
+    ) {
         this.authService = authService;
         this.scoutService = scoutService;
         this.eventService = eventService;

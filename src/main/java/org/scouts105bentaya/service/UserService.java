@@ -3,6 +3,7 @@ package org.scouts105bentaya.service;
 import org.passay.CharacterData;
 import org.passay.CharacterRule;
 import org.passay.PasswordGenerator;
+import org.scouts105bentaya.constant.GenericConstants;
 import org.scouts105bentaya.converter.UserConverter;
 import org.scouts105bentaya.dto.ChangePasswordDto;
 import org.scouts105bentaya.dto.UserDto;
@@ -87,11 +88,11 @@ public class UserService implements UserDetailsService {
     }
 
     public UserDto save(UserDto userDto) {
-        log.info("Trying to save user with username {}", userDto.getUsername());
+        log.info("Trying to save user with username {}", userDto.username());
         User user = userConverter.convertFromDto(userDto);
 
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
-            log.error("User with username {} already exists", userDto.getUsername());
+            log.error("User with username {} already exists", userDto.username());
             throw new UserAlreadyExistsException("A user with this username already exists");
         }
 
@@ -299,22 +300,21 @@ public class UserService implements UserDetailsService {
     }
 
     public void changePassword(ChangePasswordDto changePasswordDto) {
-
         User user = findByUsername(SecurityUtils.getLoggedUserUsername());
 
         log.info("User {} with id {} trying to change password", user.getUsername(), user.getId());
 
-        if (!changePasswordDto.getNewPassword().equals(changePasswordDto.getNewPasswordRepeat())) {
+        if (!changePasswordDto.newPassword().equals(changePasswordDto.newPasswordRepeat())) {
             throw new PasswordsNotMatchException("Las contraseñas nuevas no coinciden");
         }
-        if (changePasswordDto.getNewPassword().equals("fake_password")) {
+        if (changePasswordDto.newPassword().equals(GenericConstants.FAKE_PASSWORD)) {
             throw new PasswordsNotMatchException("La nueva contraseña no es válida");
         }
-        if (!BCrypt.checkpw(changePasswordDto.getCurrentPassword(), user.getPassword())) {
+        if (!BCrypt.checkpw(changePasswordDto.currentPassword(), user.getPassword())) {
             log.error("Current password is not valid");
             throw new PasswordsNotMatchException("La contraseña actual no es válida");
         }
-        user.setPassword(passwordEncoder.encode(changePasswordDto.getNewPassword()));
+        user.setPassword(passwordEncoder.encode(changePasswordDto.newPassword()));
         userRepository.save(user);
     }
 
@@ -323,7 +323,7 @@ public class UserService implements UserDetailsService {
 
         log.info("Trying to change forgotten password for {}", username);
 
-        if (newPassword.equals("fake_password")) {
+        if (newPassword.equals(GenericConstants.FAKE_PASSWORD)) {
             throw new PasswordsNotMatchException("La nueva contraseña no es válida");
         }
         user.setPassword(passwordEncoder.encode(newPassword));
@@ -342,7 +342,7 @@ public class UserService implements UserDetailsService {
             return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), user.isEnabled(),
                 true, true, true, buildAuthorities(user.getRoles()));
         } else {
-            throw new UserNotFoundException("The user " + username + " wasn't found in the database");
+            throw new UserNotFoundException("The user %s wasn't found in the database".formatted(username));
         }
     }
 

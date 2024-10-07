@@ -59,7 +59,7 @@ public class PreScoutController {
     @PreAuthorize("hasRole('FORM')")
     @PostMapping("/assignation")
     public void saveAssignation(@RequestBody PreScoutAssignationDto preScoutAssignationDto) {
-        log.info("METHOD PreScoutController.saveAssignation --- PARAMS id:{}{}", preScoutAssignationDto.getPreScoutId(), SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("METHOD PreScoutController.saveAssignation --- PARAMS id:{}{}", preScoutAssignationDto.preScoutId(), SecurityUtils.getLoggedUserUsernameForLog());
         this.preScoutService.saveAssignation(preScoutAssignationDto);
     }
 
@@ -67,7 +67,7 @@ public class PreScoutController {
     @PreAuthorize("hasRole('FORM') or hasRole('SCOUTER') and #dto.status >= 0 and #dto.status <= 3 and @authLogic.userHasGroupId(#dto.groupId)")
     @PutMapping("/assignation")
     public void updateAssignation(@RequestBody PreScoutAssignationDto dto) {
-        log.info("METHOD PreScoutController.updateAssignation --- PARAMS id:{}{}", dto.getPreScoutId(), SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("METHOD PreScoutController.updateAssignation --- PARAMS id:{}{}", dto.preScoutId(), SecurityUtils.getLoggedUserUsernameForLog());
         this.preScoutService.updateAssignation(dto);
     }
 

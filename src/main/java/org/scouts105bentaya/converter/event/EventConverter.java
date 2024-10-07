@@ -16,18 +16,18 @@ public class EventConverter extends GenericConverter<Event, EventDto> {
 
     @Override
     public EventDto convertFromEntity(Event entity) {
-        EventDto eventDto = new EventDto();
-        eventDto.setId(entity.getId());
-        eventDto.setTitle(entity.getTitle());
-        eventDto.setGroupId(Group.valueFrom(entity.getGroupId()));
-        eventDto.setDescription(entity.getDescription());
-        eventDto.setStartDate(entity.getStartDate());
-        eventDto.setEndDate(entity.getEndDate());
-        eventDto.setLocation(entity.getLocation());
-        eventDto.setLongitude(entity.getLongitude());
-        eventDto.setLatitude(entity.getLatitude());
-        eventDto.setHasAttendance(entity.isActiveAttendanceList());
-        eventDto.setUnknownTime(entity.isUnknownTime());
-        return eventDto;
+        return new EventDto(
+            entity.getId(),
+            Group.valueFrom(entity.getGroupId()),
+            entity.getTitle(),
+            entity.getDescription(),
+            entity.getLocation(),
+            entity.getLongitude(),
+            entity.getLatitude(),
+            entity.getStartDate(),
+            entity.getEndDate(),
+            entity.isUnknownTime(),
+            entity.isActiveAttendanceList()
+        );
     }
 }

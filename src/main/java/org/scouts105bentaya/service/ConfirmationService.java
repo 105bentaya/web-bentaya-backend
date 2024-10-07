@@ -40,7 +40,8 @@ public class ConfirmationService {
     }
 
     public Confirmation findById(Integer scoutId, Integer eventId) {
-        return confirmationRepository.findById(new ConfirmationId(scoutId, eventId))
+        return confirmationRepository
+            .findById(new ConfirmationId(scoutId, eventId))
             .orElseThrow(ConfirmationNotFoundException::new);
     }
 
@@ -81,6 +82,7 @@ public class ConfirmationService {
         attendanceListBasicDto.setEventHasPayment(event.isActiveAttendancePayment());
         attendanceListBasicDto.setEventIsClosed(event.isClosedAttendanceList() || event.eventHasEnded());
         if (event.isActiveAttendancePayment()) attendanceListBasicDto.setAffirmativeAndPayedConfirmations(0);
+
         event.getConfirmationList().forEach(confirmation -> {
             if (Boolean.TRUE.equals(confirmation.getAttending())) {
                 attendanceListBasicDto.incrementAffirmativeConfirmations();
@@ -130,11 +132,11 @@ public class ConfirmationService {
     }
 
     public Confirmation updateByUser(ConfirmationDto confirmation) {
-        Confirmation confirmationDB = this.findById(confirmation.getScoutId(), confirmation.getEventId());
+        Confirmation confirmationDB = this.findById(confirmation.scoutId(), confirmation.eventId());
         Event event = confirmationDB.getEvent();
         if (!event.eventHasEnded() && !event.isClosedAttendanceList()) {
-            confirmationDB.setText(confirmation.getText());
-            confirmationDB.setAttending(confirmation.getAttending());
+            confirmationDB.setText(confirmation.text());
+            confirmationDB.setAttending(confirmation.attending());
             return confirmationRepository.save(confirmationDB);
         }
         log.warn("Trying to edit closed confirmation");
@@ -142,14 +144,14 @@ public class ConfirmationService {
     }
 
     public Confirmation updateByScouter(ConfirmationDto confirmationDto) {
-        Confirmation confirmationDB = confirmationRepository.findById(new ConfirmationId(confirmationDto.getScoutId(), confirmationDto.getEventId())).orElseThrow(ConfirmationNotFoundException::new);
+        Confirmation confirmationDB = confirmationRepository.findById(new ConfirmationId(confirmationDto.scoutId(), confirmationDto.eventId())).orElseThrow(ConfirmationNotFoundException::new);
         User loggedUser = this.authService.getLoggedUser();
         if (loggedUser.getGroupId().equals(confirmationDB.getEvent().getGroupId()) &&
             loggedUser.getGroupId().equals(confirmationDB.getScout().getGroupId())) {
-            confirmationDB.setText(confirmationDto.getText());
-            confirmationDB.setAttending(confirmationDto.getAttending());
+            confirmationDB.setText(confirmationDto.text());
+            confirmationDB.setAttending(confirmationDto.attending());
             if (confirmationDB.getEvent().isActiveAttendancePayment()) {
-                confirmationDB.setPayed(confirmationDto.getPayed() != null && confirmationDto.getPayed());
+                confirmationDB.setPayed(confirmationDto.payed() != null && confirmationDto.payed());
             } else {
                 confirmationDB.setPayed(null);
             }

@@ -7,6 +7,7 @@ import org.scouts105bentaya.dto.PreScoutDto;
 import org.scouts105bentaya.entity.PreScout;
 import org.scouts105bentaya.entity.PreScoutAssignation;
 import org.scouts105bentaya.enums.Group;
+import org.scouts105bentaya.exception.NotFoundException;
 import org.scouts105bentaya.exception.PdfCreationException;
 import org.scouts105bentaya.exception.PreScoutNotFoundException;
 import org.scouts105bentaya.repository.PreScoutAssignationRepository;
@@ -69,7 +70,8 @@ public class PreScoutService {
     }
 
     public List<PreScout> findAllAssignedByLoggedScouter() {
-        return this.preScoutRepository.findAllByPreScoutAssignation_GroupId(Optional.ofNullable(this.authService.getLoggedUser().getGroupId()).orElseThrow(PreScoutNotFoundException::new));
+        Group group = Optional.ofNullable(this.authService.getLoggedUser().getGroupId()).orElseThrow(NotFoundException::new);
+        return this.preScoutRepository.findAllByPreScoutAssignation_GroupId(group);
     }
 
     public void saveAndSendEmail(PreScoutDto preScoutDto) {
@@ -110,10 +112,10 @@ public class PreScoutService {
 
     public void saveAssignation(PreScoutAssignationDto dto) {
         PreScoutAssignation preScoutAssignation = new PreScoutAssignation();
-        preScoutAssignation.setPreScout(this.findById(dto.getPreScoutId()));
-        preScoutAssignation.setComment(dto.getComment());
-        preScoutAssignation.setStatus(dto.getStatus());
-        preScoutAssignation.setGroupId(Group.valueOf(dto.getGroupId()));
+        preScoutAssignation.setPreScout(this.findById(dto.preScoutId()));
+        preScoutAssignation.setComment(dto.comment());
+        preScoutAssignation.setStatus(dto.status());
+        preScoutAssignation.setGroupId(Group.valueOf(dto.groupId()));
         preScoutAssignation.setAssignationDate(ZonedDateTime.now());
 
         PreScoutAssignation savedAssignation = this.preScoutAssignationRepository.save(preScoutAssignation);
@@ -121,17 +123,17 @@ public class PreScoutService {
     }
 
     public void updateAssignation(PreScoutAssignationDto dto) {
-        PreScoutAssignation preScoutAssignation = preScoutAssignationRepository.findById(dto.getPreScoutId()).orElseThrow(PreScoutNotFoundException::new);
-        if (dto.getStatus() == -1) {
+        PreScoutAssignation preScoutAssignation = preScoutAssignationRepository.findById(dto.preScoutId()).orElseThrow(PreScoutNotFoundException::new);
+        if (dto.status() == -1) {
             PreScout preScout = preScoutAssignation.getPreScout();
             preScout.setPreScoutAssignation(null);
             this.preScoutAssignationRepository.delete(preScoutAssignation);
         } else {
             Group originalGroup = preScoutAssignation.getGroupId();
             Integer originalStatus = preScoutAssignation.getStatus();
-            preScoutAssignation.setComment(dto.getComment());
-            preScoutAssignation.setStatus(dto.getStatus());
-            preScoutAssignation.setGroupId(Group.valueOf(dto.getGroupId()));
+            preScoutAssignation.setComment(dto.comment());
+            preScoutAssignation.setStatus(dto.status());
+            preScoutAssignation.setGroupId(Group.valueOf(dto.groupId()));
             PreScoutAssignation savedAssignation = this.preScoutAssignationRepository.save(preScoutAssignation);
             if (originalStatus != 3 && savedAssignation.getStatus() == 3) this.sendRejectionEmail(savedAssignation);
             if (savedAssignation.getGroupId() != originalGroup) this.sendAssignationEmail(savedAssignation);

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+<body>
+<div>
+  <p>
+    Nos ha llegado un nuevo mensaje por medio del formulario de 'COLABORACIONES - Ser Solidaria', con motivo
+    "<b><span th:text="${form.subject}">mensaje</span></b>"
+    y el mensaje recibido es:
+  </p>
+  <hr>
+  <div style="white-space: pre-wrap"><span th:text="${form.message}">mensaje</span></div>
+  <hr>
+  <p>Los datos de la persona de contacto son:</p>
+  <p>
+    <b>Nombre:</b>
+    <span th:text="${form.name}">nombre</span>
+  </p>
+  <p>
+    <b>Correo:</b>
+    <a th:href="@{mailto:(to=${form.email},subject=${'Colaboración Scouts 105 Bentaya - ' + form.subject})}" th:text="${form.email}">correo</a>
+  </p>
+  <p>
+    <b>Teléfono:</b>
+    <span th:text="${form.phone}">nombre</span>
+  </p>
+  <p>
+    <b>Nombre de la entidad:</b>
+    <span th:text="${form.entityName} ?: 'No especificado'">entidad</span>
+  </p>
+  <p>Atentamente,</p>
+  <p>El sistema de mensajería de Scouts 105 Bentaya</p>
+</div>
+</body>
+</html>

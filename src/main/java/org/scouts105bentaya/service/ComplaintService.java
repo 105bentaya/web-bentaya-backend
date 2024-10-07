@@ -45,17 +45,15 @@ public class ComplaintService {
         emailService.sendEmailWithAttachment(
             mainEmail,
             "Denuncia de " + complaint.getCategory(),
-            "Nos ha llegado una denuncia de la siguiente categoría y tipo: " +
-            complaint.getCategory() + ", " +
-            complaint.getType(),
-            dataSource);
+            generateBody(complaint),
+            dataSource
+        );
         emailService.sendEmailWithAttachment(
             itEmail,
             "Denuncia de " + complaint.getCategory(),
-            "Nos ha llegado una denuncia de la siguiente categoría y tipo: " +
-            complaint.getCategory() + ", " +
-            complaint.getType(),
-            dataSource);
+            generateBody(complaint),
+            dataSource
+        );
         if (complaint.getEmail() != null && !complaint.getEmail().isBlank()) {
             emailService.sendSimpleEmail(
                 complaint.getEmail(),
@@ -69,5 +67,11 @@ public class ComplaintService {
                     """
             );
         }
+    }
+
+    private String generateBody(Complaint complaint) {
+        return """
+            Nos ha llegado una denuncia de la siguiente categoría y tipo: %s, %s
+            """.formatted(complaint.getCategory(), complaint.getType());
     }
 }

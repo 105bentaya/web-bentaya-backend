@@ -13,8 +13,6 @@ import java.util.List;
 public interface ConfirmationRepository extends JpaRepository<Confirmation, ConfirmationId> {
     List<Confirmation> findAllByEventId(Integer eventId);
     List<Confirmation> findAllByScoutId(Integer scoutId);
-
     @Query("select c from Confirmation c where c.event.id = :eventId AND c.scout.id in :scoutIds")
     List<Confirmation> findAllByEventIdInScoutIds(@Param("eventId") Integer eventId, @Param("scoutIds") List<Integer> scoutIds);
-
 }

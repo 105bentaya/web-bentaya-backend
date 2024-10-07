@@ -52,13 +52,13 @@ public class SeniorSectionService {
 
     private Context getContextForEmail(SeniorFormDto formDto) {
         Context context = new Context();
-        context.setVariable("name", formDto.getName());
-        context.setVariable("surname", formDto.getSurname());
-        context.setVariable("email", formDto.getEmail());
-        context.setVariable("phone", formDto.getPhone());
-        context.setVariable("observations", formDto.getObservations());
-        context.setVariable("acceptMessageGroup", formDto.getAcceptMessageGroup());
-        context.setVariable("acceptNewsletter", formDto.getAcceptNewsletter());
+        context.setVariable("name", formDto.name());
+        context.setVariable("surname", formDto.surname());
+        context.setVariable("email", formDto.email());
+        context.setVariable("phone", formDto.phone());
+        context.setVariable("observations", formDto.observations());
+        context.setVariable("acceptMessageGroup", formDto.acceptMessageGroup());
+        context.setVariable("acceptNewsletter", formDto.acceptNewsletter());
         return context;
     }
 

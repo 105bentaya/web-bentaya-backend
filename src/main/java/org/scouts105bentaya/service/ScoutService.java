@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class ScoutService {
@@ -81,14 +80,15 @@ public class ScoutService {
     }
 
     public Scout save(ScoutDto scoutDto) {
-        scoutDto.setEnabled(true);
-        Scout scout = scoutRepository.save(scoutConverter.convertFromDto(scoutDto));
-        scout.getContactList().forEach(contact -> {
-            contact.setScout(scout);
+        Scout scoutToSave = scoutConverter.convertFromDto(scoutDto);
+        scoutToSave.setEnabled(true);
+        Scout savedScout = scoutRepository.save(scoutToSave);
+        savedScout.getContactList().forEach(contact -> {
+            contact.setScout(savedScout);
             contactRepository.save(contact);
         });
-        this.createConfirmationFromExistingEvents(scout);
-        return scout;
+        this.createConfirmationFromExistingEvents(savedScout);
+        return savedScout;
     }
 
     public Scout saveFromPreScoutAndDelete(ScoutDto scoutDto, Integer preScoutId) {
@@ -99,7 +99,7 @@ public class ScoutService {
 
     public Scout update(ScoutDto scoutDto) {
         Scout scoutToUpdate = scoutConverter.convertFromDto(scoutDto);
-        Scout scoutDB = this.findById(scoutDto.getId());
+        Scout scoutDB = this.findById(scoutDto.id());
         boolean hasChangedGroup = !scoutDB.getGroupId().equals(scoutToUpdate.getGroupId());
 
         scoutDB.setDni(scoutToUpdate.getDni());

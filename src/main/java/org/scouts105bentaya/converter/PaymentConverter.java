@@ -14,13 +14,13 @@ public class PaymentConverter extends GenericConverter<Payment, PaymentDto> {
 
     @Override
     public PaymentDto convertFromEntity(Payment payment) {
-        PaymentDto paymentDto = new PaymentDto();
-        paymentDto.setId(payment.getId());
-        paymentDto.setPaymentType(payment.getPaymentType());
-        paymentDto.setAmount(payment.getAmount());
-        paymentDto.setModificationDate(payment.getModificationDate());
-        paymentDto.setStatus(payment.getStatus());
-        paymentDto.setOrderNumber(payment.getOrderNumber());
-        return paymentDto;
+        return new PaymentDto(
+            payment.getId(),
+            payment.getOrderNumber(),
+            payment.getStatus(),
+            payment.getPaymentType(),
+            payment.getModificationDate(),
+            payment.getAmount()
+        );
     }
 }

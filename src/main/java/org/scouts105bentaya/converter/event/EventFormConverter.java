@@ -17,22 +17,22 @@ public class EventFormConverter extends GenericConverter<Event, EventFormDto> {
 
     @Override
     public EventFormDto convertFromEntity(Event entity) {
-        EventFormDto dto = new EventFormDto();
-        dto.setId(entity.getId());
-        dto.setTitle(entity.getTitle());
-        dto.setGroupId(Group.valueFrom(entity.getGroupId()));
-        dto.setDescription(entity.getDescription());
-        dto.setStartDate(entity.getStartDate());
-        dto.setEndDate(entity.getEndDate());
-        dto.setLocalStartDate(entity.getStartDate().withZoneSameInstant(GenericConstants.UTC_ZONE).toLocalDate());
-        dto.setLocalEndDate(entity.getEndDate().withZoneSameInstant(GenericConstants.UTC_ZONE).toLocalDate());
-        dto.setLocation(entity.getLocation());
-        dto.setLongitude(entity.getLongitude());
-        dto.setLatitude(entity.getLatitude());
-        dto.setActivateAttendanceList(entity.isActiveAttendanceList());
-        dto.setActivateAttendancePayment(entity.isActiveAttendancePayment());
-        dto.setCloseAttendanceList(entity.isClosedAttendanceList());
-        dto.setUnknownTime(entity.isUnknownTime());
-        return dto;
+        return new EventFormDto(
+            entity.getId(),
+            Group.valueFrom(entity.getGroupId()),
+            entity.getTitle(),
+            entity.getDescription(),
+            entity.getLocation(),
+            entity.getLongitude(),
+            entity.getLatitude(),
+            entity.getStartDate(),
+            entity.getEndDate(),
+            entity.getStartDate().withZoneSameInstant(GenericConstants.UTC_ZONE).toLocalDate(),
+            entity.getEndDate().withZoneSameInstant(GenericConstants.UTC_ZONE).toLocalDate(),
+            entity.isUnknownTime(),
+            entity.isActiveAttendanceList(),
+            entity.isActiveAttendancePayment(),
+            entity.isClosedAttendanceList()
+        );
     }
 }

@@ -1,5 +1,6 @@
 package org.scouts105bentaya.controller;
 
+import jakarta.validation.Valid;
 import org.scouts105bentaya.entity.ContactMessage;
 import org.scouts105bentaya.service.ContactMessageService;
 import org.slf4j.Logger;
@@ -21,7 +22,7 @@ public class ContactMessageController {
     }
 
     @PostMapping("/form")
-    public void sendComplaintMail(@RequestBody ContactMessage contactMessage) {
+    public void sendComplaintMail(@RequestBody @Valid ContactMessage contactMessage) {
         log.info("METHOD ContactMessageController.sendContactMessageEmail");
         this.contactMessageService.sendContactMessageEmail(contactMessage);
     }

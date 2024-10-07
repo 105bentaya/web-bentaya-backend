@@ -10,32 +10,31 @@ public class PreScouterConverter extends GenericConverter<PreScouter, PreScouter
     @Override
     public PreScouter convertFromDto(PreScouterDto preScouterDto){
         PreScouter preScouter = new PreScouter();
-        preScouter.setId(preScouterDto.getId());
-        preScouter.setName(preScouterDto.getName());
-        preScouter.setSurname(preScouterDto.getSurname());
-        preScouter.setBirthday(preScouterDto.getBirthday());
-        preScouter.setGender(preScouterDto.getGender());
-        preScouter.setPhone(preScouterDto.getPhone());
-        preScouter.setEmail(preScouterDto.getEmail());
-        preScouter.setComment(preScouterDto.getComment());
-        preScouter.setCreationDate(preScouterDto.getCreationDate());
+        preScouter.setId(preScouterDto.id());
+        preScouter.setName(preScouterDto.name());
+        preScouter.setSurname(preScouterDto.surname());
+        preScouter.setBirthday(preScouterDto.birthday());
+        preScouter.setGender(preScouterDto.gender());
+        preScouter.setPhone(preScouterDto.phone());
+        preScouter.setEmail(preScouterDto.email());
+        preScouter.setComment(preScouterDto.comment());
+        preScouter.setCreationDate(preScouterDto.creationDate());
 
         return preScouter;
     }
 
     @Override
     public PreScouterDto convertFromEntity(PreScouter preScouter){
-        PreScouterDto preScouterDto = new PreScouterDto();
-        preScouterDto.setId(preScouter.getId());
-        preScouterDto.setName(preScouter.getName());
-        preScouterDto.setSurname(preScouter.getSurname());
-        preScouterDto.setBirthday(preScouter.getBirthday());
-        preScouterDto.setGender(preScouter.getGender());
-        preScouterDto.setPhone(preScouter.getPhone());
-        preScouterDto.setEmail(preScouter.getEmail());
-        preScouterDto.setComment(preScouter.getComment());
-        preScouterDto.setCreationDate(preScouter.getCreationDate());
-
-        return preScouterDto;
+        return new PreScouterDto(
+            preScouter.getId(),
+            preScouter.getName(),
+            preScouter.getSurname(),
+            preScouter.getBirthday(),
+            preScouter.getGender(),
+            preScouter.getPhone(),
+            preScouter.getEmail(),
+            preScouter.getComment(),
+            preScouter.getCreationDate()
+        );
     }
 }

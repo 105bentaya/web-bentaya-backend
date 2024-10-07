@@ -71,8 +71,8 @@ public class PaymentService {
     public Payment createPayment(PaymentInfoDto paymentInfoDto) {
         Payment payment = new Payment();
         payment.setStatus(-1);
-        payment.setAmount(paymentInfoDto.getAmount());
-        payment.setPaymentType(paymentInfoDto.getPaymentType());
+        payment.setAmount(paymentInfoDto.amount());
+        payment.setPaymentType(paymentInfoDto.paymentType());
 
         Payment savedPayment = this.savePayment(payment);
 
@@ -83,22 +83,23 @@ public class PaymentService {
     }
 
     public PaymentFormDataDto getPaymentFormData(PaymentFormDataRequestDto requestDto) {
-        Payment payment = requestDto.getPayment();
+        Payment payment = requestDto.payment();
 
         if (payment.getStatus() != -1) {
             log.error("Payment {} has already been processed", payment.getId());
             throw new WebBentayaException("Este pago ya ha sido procesado");
         }
         try {
-            ApiMacSha256 apiMacSha256 = getApiMacSha256(payment, requestDto.getOkUrl(), requestDto.getKoUrl());
-            PaymentFormDataDto paymentFormDataDto = new PaymentFormDataDto();
-            paymentFormDataDto.setDs_SignatureVersion("HMAC_SHA256_V1");
-            paymentFormDataDto.setDs_MerchantParameters(apiMacSha256.createMerchantParameters());
-            paymentFormDataDto.setDs_Signature(apiMacSha256.createMerchantSignature(key));
-            return paymentFormDataDto;
+            ApiMacSha256 apiMacSha256 = getApiMacSha256(payment, requestDto.okUrl(), requestDto.koUrl());
+            return new PaymentFormDataDto(
+                "HMAC_SHA256_V1",
+                apiMacSha256.createMerchantParameters(),
+                apiMacSha256.createMerchantSignature(key)
+            );
         } catch (UnsupportedEncodingException | InvalidKeyException | NoSuchAlgorithmException |
                  NoSuchPaddingException | InvalidAlgorithmParameterException | IllegalBlockSizeException |
-                 BadPaddingException e) {
+                 BadPaddingException e
+        ) {
             log.error("METHOD getPaymentFormData: Error whilst encrypting payment form info: {}", e.getMessage());
             throw new PaymentEncryptionException();
         }
@@ -108,13 +109,13 @@ public class PaymentService {
     public void paymentConfirmation(PaymentFormDataDto response, PaymentType type) {
         ApiMacSha256 apiMacSha256 = new ApiMacSha256();
         try {
-            apiMacSha256.decodeMerchantParameters(response.getDs_MerchantParameters());
-            if (apiMacSha256.createMerchantSignatureNotif(key, response.getDs_MerchantParameters()).equals(response.getDs_Signature())) {
+            apiMacSha256.decodeMerchantParameters(response.Ds_MerchantParameters());
+            if (apiMacSha256.createMerchantSignatureNotif(key, response.Ds_MerchantParameters()).equals(response.Ds_Signature())) {
                 String order = apiMacSha256.getOrderNotif();
                 Integer status = Integer.valueOf(apiMacSha256.getParameter("Ds_Response"));
                 this.updatePayment(order, status, type);
             } else {
-                log.warn("METHOD paymentConfirmation: response with invalid signature for parameters {} and signature {}", response.getDs_MerchantParameters(), response.getDs_Signature());
+                log.warn("METHOD paymentConfirmation: response with invalid signature for parameters {} and signature {}", response.Ds_MerchantParameters(), response.Ds_Signature());
                 //enviar correo
                 throw new UnauthorizedPaymentNotificationException("Response with invalid signature");
             }

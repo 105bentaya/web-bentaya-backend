@@ -192,5 +192,4 @@ public class BookingController {
     public Map<String, String> exceptionHandler(BasicMessageException e) {
         return Map.of("message", e.getMessage());
     }
-
 }

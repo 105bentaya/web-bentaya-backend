@@ -5,6 +5,9 @@ import java.time.format.DateTimeFormatter;
 
 public class FormUtils {
 
+    private FormUtils() {
+    }
+
     public static String getGroup(String date, boolean fullName, int firstYearOfTerm) {
         int scoutBirthYear = LocalDate.parse(date, DateTimeFormatter.ofPattern("dd/MM/yyyy")).getYear();
 

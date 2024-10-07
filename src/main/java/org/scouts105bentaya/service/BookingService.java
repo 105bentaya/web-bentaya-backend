@@ -144,11 +144,11 @@ public class BookingService {
     }
 
     private SimpleBookingDto createReservationDate(Booking booking) {
-        SimpleBookingDto dto = new SimpleBookingDto();
-        dto.setStartDate(booking.getStartDate());
-        dto.setEndDate(booking.getEndDate());
-        dto.setStatus(booking.getStatus());
-        return dto;
+        return new SimpleBookingDto(
+            booking.getStartDate(),
+            booking.getEndDate(),
+            booking.getStatus()
+        );
     }
 
     public List<BookingDateDto> getBookingDates(ScoutCenter scoutCenter) {
@@ -174,22 +174,22 @@ public class BookingService {
     }
 
     private void saveOwnBooking(OwnBookingFormDto dto, Booking booking) {
-        booking.setStartDate(dto.getStartDate());
-        booking.setEndDate(dto.getEndDate());
-        booking.setScoutCenter(dto.getScoutCenter());
-        booking.setPacks(dto.getPacks());
-        booking.setObservations(dto.getObservations());
-        booking.setExclusiveReservation(dto.isExclusiveReservation());
+        booking.setStartDate(dto.startDate());
+        booking.setEndDate(dto.endDate());
+        booking.setScoutCenter(dto.scoutCenter());
+        booking.setPacks(dto.packs());
+        booking.setObservations(dto.observations());
+        booking.setExclusiveReservation(dto.exclusiveReservation());
         booking.setOwnBooking(true);
 
-        if (!dto.getEndDate().isAfter(dto.getStartDate())) {
+        if (!dto.endDate().isAfter(dto.startDate())) {
             throw new BasicMessageException("La fecha de salida no puede ser posterior a la de entrada.");
         }
         if (this.dateIsAlreadyTaken(booking)) {
             throw new BasicMessageException("Algunas de las fechas seleccionadas no están disponibles.");
         }
 
-        booking.setStatus(dto.isExclusiveReservation() ? BookingStatus.FULLY_OCCUPIED : BookingStatus.OCCUPIED);
+        booking.setStatus(dto.exclusiveReservation() ? BookingStatus.FULLY_OCCUPIED : BookingStatus.OCCUPIED);
         booking.setCreationDate(ZonedDateTime.now());
 
         bookingRepository.save(booking);
@@ -208,7 +208,7 @@ public class BookingService {
     public void saveFromForm(BookingFormDto dto) {
         Booking booking = bookingFormConverter.convertFromDto(dto);
 
-        if (!dto.getEndDate().isAfter(dto.getStartDate())) {
+        if (!dto.endDate().isAfter(dto.startDate())) {
             throw new BasicMessageException("La fecha de salida no puede ser posterior a la de entrada.");
         }
         if (dateIsAlreadyTaken(booking)) {

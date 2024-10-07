@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
@@ -65,20 +64,20 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         UserDetails user = ((UserDetails) authResult.getPrincipal());
 
         List<String> roles = user.getAuthorities()
-                .stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.toList());
+            .stream()
+            .map(GrantedAuthority::getAuthority)
+            .toList();
 
         SecretKey key = Keys.hmacShaKeyFor(jwt.getBytes());
         Date expirationDate = new Date(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(8));
         String token = Jwts.builder()
-                .signWith(key)
-                .setHeaderParam("typ", SecurityConstant.TOKEN_TYPE)
-                .setSubject(user.getUsername())
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(expirationDate)
-                .claim("rol", roles)
-                .compact();
+            .signWith(key)
+            .setHeaderParam("typ", SecurityConstant.TOKEN_TYPE)
+            .setSubject(user.getUsername())
+            .setIssuedAt(new Date(System.currentTimeMillis()))
+            .setExpiration(expirationDate)
+            .claim("rol", roles)
+            .compact();
 
         response.addHeader(SecurityConstant.TOKEN_HEADER, SecurityConstant.TOKEN_PREFIX + token);
     }

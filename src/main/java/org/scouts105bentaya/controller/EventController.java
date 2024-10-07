@@ -106,7 +106,7 @@ public class EventController {
     @PreAuthorize("hasAnyRole('SCOUTER', 'GROUP_SCOUTER', 'ADMIN') and @authLogic.eventIsEditableByUser(#eventDto.id) and (@authLogic.groupIdIsNotUnit(#eventDto.groupId) or @authLogic.userHasGroupId(#eventDto.groupId))")
     @PutMapping
     public EventDto update(@RequestBody EventFormDto eventDto) {
-        log.info("METHOD EventController.update --- PARAMS id: {}{}", eventDto.getId(), SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("METHOD EventController.update --- PARAMS id: {}{}", eventDto.id(), SecurityUtils.getLoggedUserUsernameForLog());
         return eventConverter.convertFromEntity(eventService.update(eventDto));
     }
 

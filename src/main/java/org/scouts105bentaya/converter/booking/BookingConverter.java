@@ -11,52 +11,52 @@ public class BookingConverter extends GenericConverter<Booking, BookingDto> {
     @Override
     public Booking convertFromDto(BookingDto dto) {
         Booking entity = new Booking();
-        entity.setId(dto.getId());
-        entity.setStatus(dto.getStatus());
-        entity.setScoutCenter(dto.getScoutCenter());
-        entity.setOrganizationName(dto.getOrganizationName());
-        entity.setCif(dto.getCif());
-        entity.setFacilityUse(dto.getFacilityUse());
-        entity.setPacks(dto.getPacks());
-        entity.setContactName(dto.getContactName());
-        entity.setContactRelationship(dto.getContactRelationship());
-        entity.setContactMail(dto.getContactMail());
-        entity.setContactPhone(dto.getContactPhone());
-        entity.setStartDate(dto.getStartDate());
-        entity.setEndDate(dto.getEndDate());
-        entity.setCreationDate(dto.getCreationDate());
-        entity.setObservations(dto.getObservations());
-        entity.setExclusiveReservation(dto.isExclusiveReservation());
-        entity.setStatusObservations(dto.getStatusObservations());
-        entity.setUserConfirmedDocuments(dto.isUserConfirmedDocuments());
-        entity.setPrice(dto.getPrice());
-        entity.setOwnBooking(dto.isOwnBooking());
+        entity.setId(dto.id());
+        entity.setStatus(dto.status());
+        entity.setScoutCenter(dto.scoutCenter());
+        entity.setOrganizationName(dto.organizationName());
+        entity.setCif(dto.cif());
+        entity.setFacilityUse(dto.facilityUse());
+        entity.setPacks(dto.packs());
+        entity.setContactName(dto.contactName());
+        entity.setContactRelationship(dto.contactRelationship());
+        entity.setContactMail(dto.contactMail());
+        entity.setContactPhone(dto.contactPhone());
+        entity.setStartDate(dto.startDate());
+        entity.setEndDate(dto.endDate());
+        entity.setCreationDate(dto.creationDate());
+        entity.setObservations(dto.observations());
+        entity.setExclusiveReservation(dto.exclusiveReservation());
+        entity.setStatusObservations(dto.statusObservations());
+        entity.setUserConfirmedDocuments(dto.userConfirmedDocuments());
+        entity.setPrice(dto.price());
+        entity.setOwnBooking(dto.ownBooking());
         return entity;
     }
 
     @Override
     public BookingDto convertFromEntity(Booking entity) {
-        BookingDto dto = new BookingDto();
-        dto.setId(entity.getId());
-        dto.setStatus(entity.getStatus());
-        dto.setScoutCenter(entity.getScoutCenter());
-        dto.setOrganizationName(entity.getOrganizationName());
-        dto.setCif(entity.getCif());
-        dto.setFacilityUse(entity.getFacilityUse());
-        dto.setPacks(entity.getPacks());
-        dto.setContactName(entity.getContactName());
-        dto.setContactRelationship(entity.getContactRelationship());
-        dto.setContactMail(entity.getContactMail());
-        dto.setContactPhone(entity.getContactPhone());
-        dto.setStartDate(entity.getStartDate());
-        dto.setEndDate(entity.getEndDate());
-        dto.setCreationDate(entity.getCreationDate());
-        dto.setObservations(entity.getObservations());
-        dto.setExclusiveReservation(entity.isExclusiveReservation());
-        dto.setStatusObservations(entity.getStatusObservations());
-        dto.setUserConfirmedDocuments(entity.isUserConfirmedDocuments());
-        dto.setPrice(entity.getPrice());
-        dto.setOwnBooking(entity.isOwnBooking());
-        return dto;
+        return new BookingDto(
+            entity.getId(),
+            entity.getStatus(),
+            entity.getScoutCenter(),
+            entity.getOrganizationName(),
+            entity.getCif(),
+            entity.getFacilityUse(),
+            entity.getPacks(),
+            entity.getContactName(),
+            entity.getContactRelationship(),
+            entity.getContactMail(),
+            entity.getContactPhone(),
+            entity.getStartDate(),
+            entity.getEndDate(),
+            entity.getObservations(),
+            entity.getStatusObservations(),
+            entity.isExclusiveReservation(),
+            entity.getCreationDate(),
+            entity.isUserConfirmedDocuments(),
+            entity.isOwnBooking(),
+            entity.getPrice()
+        );
     }
 }

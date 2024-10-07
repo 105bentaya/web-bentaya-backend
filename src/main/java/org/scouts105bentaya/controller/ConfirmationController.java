@@ -92,14 +92,14 @@ public class ConfirmationController {
     @PreAuthorize("hasRole('SCOUTER')")
     @PutMapping("/scouter")
     public ConfirmationDto updateConfirmationByScouter(@RequestBody ConfirmationDto confirmationDto) {
-        log.info("METHOD ConfirmationController.updateConfirmationByScouter --- PARAMS eventId: {}, scoutId: {}{}", confirmationDto.getEventId(), confirmationDto.getScoutId(), SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("METHOD ConfirmationController.updateConfirmationByScouter --- PARAMS eventId: {}, scoutId: {}{}", confirmationDto.eventId(), confirmationDto.scoutId(), SecurityUtils.getLoggedUserUsernameForLog());
         return confirmationConverter.convertFromEntity(confirmationService.updateByScouter(confirmationDto));
     }
 
     @PreAuthorize("hasRole('USER') and @authLogic.userHasScoutId(#confirmationDto.scoutId)")
     @PutMapping("/user")
     public ConfirmationDto updateConfirmationByUser(@RequestBody ConfirmationDto confirmationDto) {
-        log.info("METHOD ConfirmationController.updateConfirmationByUser --- PARAMS eventId: {}, scoutId: {}{}", confirmationDto.getEventId(), confirmationDto.getScoutId(), SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("METHOD ConfirmationController.updateConfirmationByUser --- PARAMS eventId: {}, scoutId: {}{}", confirmationDto.eventId(), confirmationDto.scoutId(), SecurityUtils.getLoggedUserUsernameForLog());
         return confirmationConverter.convertFromEntity(confirmationService.updateByUser(confirmationDto));
     }
 

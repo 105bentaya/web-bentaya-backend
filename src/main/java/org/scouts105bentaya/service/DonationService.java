@@ -55,10 +55,11 @@ public class DonationService {
         Donation donation = donationFormConverter.convertFromDto(donationForm);
         donation.setCreationDate(ZonedDateTime.now());
 
-        if (donationForm.getFrequency().equals(DonationFrequency.SINGLE) && donationForm.getSingleDonationPaymentType().equals(SingleDonationPaymentType.TPV)) {
-            PaymentInfoDto paymentInfoDto = new PaymentInfoDto();
-            paymentInfoDto.setAmount(donationForm.getAmount());
-            paymentInfoDto.setPaymentType(PaymentType.DONATION);
+        if (donationForm.frequency().equals(DonationFrequency.SINGLE) && donationForm.singleDonationPaymentType().equals(SingleDonationPaymentType.TPV)) {
+            PaymentInfoDto paymentInfoDto = new PaymentInfoDto(
+                donation.getAmount(),
+                PaymentType.DONATION
+            );
             donation.setPayment(this.paymentService.createPayment(paymentInfoDto));
         }
 
@@ -75,10 +76,11 @@ public class DonationService {
             throw new PaymentException("Acceso al pago no permitido");
         }
 
-        PaymentFormDataRequestDto requestDto = new PaymentFormDataRequestDto();
-        requestDto.setPayment(payment);
-        requestDto.setOkUrl(urls.getOkUrl());
-        requestDto.setKoUrl(urls.getKoUrl());
+        PaymentFormDataRequestDto requestDto = new PaymentFormDataRequestDto(
+            payment,
+            urls.okUrl(),
+            urls.koUrl()
+        );
         return this.paymentService.getPaymentFormData(requestDto);
     }
 

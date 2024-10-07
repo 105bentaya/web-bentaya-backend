@@ -1,5 +1,6 @@
 package org.scouts105bentaya.controller;
 
+import jakarta.validation.Valid;
 import org.scouts105bentaya.dto.PartnershipDto;
 import org.scouts105bentaya.service.PartnershipService;
 import org.slf4j.Logger;
@@ -21,7 +22,7 @@ public class PartnershipController {
     }
 
     @PostMapping("/form")
-    public void sendPartnershipEmail(@RequestBody PartnershipDto partnershipDto) {
+    public void sendPartnershipEmail(@RequestBody @Valid PartnershipDto partnershipDto) {
         log.info("METHOD PartnershipController.sendPartnershipEmail");
         this.partnershipService.sendPartnershipEmail(partnershipDto);
     }

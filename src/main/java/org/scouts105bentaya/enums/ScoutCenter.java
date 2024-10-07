@@ -1,5 +1,8 @@
 package org.scouts105bentaya.enums;
 
+import lombok.Getter;
+
+@Getter
 public enum ScoutCenter {
     TERRENO("Campamento Bentaya", 45, 30, "Normas Campamento Bentaya.pdf"),
     TEJEDA("Refugio Tejeda", 20, 10, "Normas Refugio Tejeda.pdf"),
@@ -16,21 +19,5 @@ public enum ScoutCenter {
         this.maxCapacity = maxCapacity;
         this.exclusiveReservationCapacity = exclusiveReservationCapacity;
         this.pdfName = pdfName;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public int getMaxCapacity() {
-        return maxCapacity;
-    }
-
-    public int getExclusiveReservationCapacity() {
-        return exclusiveReservationCapacity;
-    }
-
-    public String getPdfName() {
-        return pdfName;
     }
 }

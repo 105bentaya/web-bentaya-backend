@@ -27,17 +27,13 @@ import java.util.Set;
 @Setter
 @Entity
 public class User {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-
     @NotNull
     private String username;
-
     @NotNull
     private String password;
-
     @NotEmpty(message = "The user must have a role assigned")
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -46,14 +42,11 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private List<Role> roles;
-
     private boolean enabled = true;
-
     //todo rename to Group
     @IsUnit
     @Enumerated(EnumType.ORDINAL)
     private Group groupId;
-
     @ManyToMany
     @JoinTable(
             name = "scout_user",
@@ -61,7 +54,6 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "scout_id")
     )
     private Set<Scout> scoutList;
-
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<Booking> bookingList;
 

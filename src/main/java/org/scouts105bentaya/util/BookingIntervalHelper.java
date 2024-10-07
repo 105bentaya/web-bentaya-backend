@@ -8,7 +8,6 @@ import org.scouts105bentaya.enums.BookingStatus;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.scouts105bentaya.enums.BookingStatus.FULLY_OCCUPIED;
 import static org.scouts105bentaya.enums.BookingStatus.OCCUPIED;
@@ -29,7 +28,7 @@ public class BookingIntervalHelper {
     List<Interval> occupiedIntervals;
     List<Interval> reservedIntervals;
 
-    //todo not working properyl, getting same ranges for occupied and fully occupied
+    //todo not working properly, getting same ranges for occupied and fully occupied
 //    Durante las siguientes fechas el centro está parcialmente ocupado, por lo que su reserva puede no ser aceptada si sobrepasa el aforo restante:
 //        25/09 23:00 - 26/09 23:45
 //    Durante las siguientes fechas el centro está totalmente ocupado, por lo que no se puede realizar la reserva:
@@ -80,32 +79,32 @@ public class BookingIntervalHelper {
 
     private List<Interval> getSortedIntervalListByBookingStatus(BookingStatus status) {
         return this.overlappingBookingsIntervalList.stream()
-                .filter(booking -> booking.getStatus() == status)
-                .map(IntervalUtils::intervalFromBooking)
-                .sorted(Comparator.comparingLong(Interval::getStartMillis))
-                .collect(Collectors.toList());
+            .filter(booking -> booking.getStatus() == status)
+            .map(IntervalUtils::intervalFromBooking)
+            .sorted(Comparator.comparingLong(Interval::getStartMillis))
+            .toList();
     }
 
     private List<SimpleBookingDto> adjustIntervalsToBooking(List<Interval> intervals, BookingStatus status) {
         return intervals.stream()
             .filter(interval -> interval.overlaps(mainInterval))
             .map(interval -> {
-            if (interval.getStart().isBefore(mainInterval.getStart())) {
-                interval = interval.withStart(mainInterval.getStart());
-            }
-            if (interval.getEnd().isAfter(mainInterval.getEnd())) {
-                interval = interval.withEnd(mainInterval.getEnd());
-            }
-            return createIntervalDto(interval, status);
-        }).toList();
+                if (interval.getStart().isBefore(mainInterval.getStart())) {
+                    interval = interval.withStart(mainInterval.getStart());
+                }
+                if (interval.getEnd().isAfter(mainInterval.getEnd())) {
+                    interval = interval.withEnd(mainInterval.getEnd());
+                }
+                return createIntervalDto(interval, status);
+            }).toList();
     }
 
     private SimpleBookingDto createIntervalDto(Interval interval, BookingStatus status) {
-        SimpleBookingDto dto = new SimpleBookingDto();
-        dto.setStartDate(jodaLocalDateTimeToJavaDateTime(interval.getStart()));
-        dto.setEndDate(jodaLocalDateTimeToJavaDateTime(interval.getEnd()));
-        dto.setStatus(status);
-        return dto;
+        return new SimpleBookingDto(
+            jodaLocalDateTimeToJavaDateTime(interval.getStart()),
+            jodaLocalDateTimeToJavaDateTime(interval.getEnd()),
+            status
+        );
     }
 
     private boolean bookingStatusIsNeeded(Booking booking) {

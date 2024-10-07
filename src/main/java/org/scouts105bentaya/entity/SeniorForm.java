@@ -15,24 +15,17 @@ public class SeniorForm {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-
     @NotNull
     private String name;
-
     @NotNull
     private String surname;
-
     @NotNull
     private String email;
-
     @NotNull
     private String phone;
-
     @NotNull
     private Boolean acceptMessageGroup;
-
     @NotNull
     private Boolean acceptNewsletter;
-
     private String observations;
 }
