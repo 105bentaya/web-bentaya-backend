@@ -63,9 +63,9 @@ public class CalendarService {
         Jws<Claims> parsedToken = JwtUtils.decodeJwtToken(jwtToken, secret);
 
         if (parsedToken == null) throw new WebBentayaException("No se ha podido generar el calendario");
-        if (parsedToken.getBody().getIssuedAt() == null) throw new WebBentayaException("Este link es inválido");
+        if (parsedToken.getPayload().getIssuedAt() == null) throw new WebBentayaException("Este link es inválido");
 
-        User user = userService.findById(parsedToken.getBody().get("usr", Integer.class));
+        User user = userService.findById(parsedToken.getPayload().get("usr", Integer.class));
         if (!user.isEnabled()) throw new WebBentayaException("Usuario no autorizado");
 
 
@@ -75,7 +75,7 @@ public class CalendarService {
         calendar.add(new ProdId("-//Scouts 105 Bentaya//Calendario Web Bentaya//ES-es"));
         calendar.add(new Name("Calendario Scouts 105 Bentaya"));
 
-        Set<Group> tokenGroups = getTokenGroups(user, parsedToken.getBody());
+        Set<Group> tokenGroups = getTokenGroups(user, parsedToken.getPayload());
         List<Event> events = tokenGroups.stream().map(eventService::findAllByGroupId).flatMap(Collection::stream).toList();
         events.forEach(event -> calendar.add(this.generateICSEvent(event)));
 
@@ -123,10 +123,12 @@ public class CalendarService {
 
         SecretKey key = Keys.hmacShaKeyFor(secret.getBytes());
         return Jwts.builder()
-            .setHeaderParam("typ", "JWT")
+            .header()
+            .type("JWT")
+            .and()
             .claim("usr", user.getId())
             .claim(TOKEN_USER_GROUPS_KEY, true)
-            .setIssuedAt(new Date(System.currentTimeMillis()))
+            .issuedAt(new Date(System.currentTimeMillis()))
             .signWith(key)
             .compact();
     }

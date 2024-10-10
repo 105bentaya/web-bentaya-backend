@@ -1,10 +1,13 @@
 package org.scouts105bentaya.features.blog;
 
-import org.apache.commons.lang3.StringUtils;
 import org.scouts105bentaya.core.exception.BlogAlreadyExistsException;
 import org.scouts105bentaya.core.exception.BlogNotFoundException;
+import org.scouts105bentaya.core.exception.WebBentayaException;
 import org.springframework.stereotype.Service;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -70,8 +73,7 @@ public class BlogService {
         return blogRepository.save(blogToUpdate);
     }
 
-    //todo replaceall sonarlint
     private String standardizeStringToURL(String string) {
-        return StringUtils.stripAccents(string.replaceAll(" ", "-").toLowerCase());
+        return URLEncoder.encode(string.replaceAll("[, ]+", "-"), StandardCharsets.UTF_8).toLowerCase();
     }
 }

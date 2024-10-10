@@ -1,5 +1,6 @@
 package org.scouts105bentaya.features.payment;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -28,6 +29,7 @@ public class Payment {
     private Integer status;
     @NotNull
     @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "varchar")
     private PaymentTypeEnum paymentType;
     private ZonedDateTime modificationDate;
     @OneToOne(mappedBy = "payment")

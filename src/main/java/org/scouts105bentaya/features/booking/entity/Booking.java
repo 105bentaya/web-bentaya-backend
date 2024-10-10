@@ -1,5 +1,6 @@
 package org.scouts105bentaya.features.booking.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -31,8 +32,10 @@ public class Booking {
     @JoinColumn(name = "user_id")
     private User user;
     @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "varchar")
     private BookingStatus status;
     @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "varchar")
     private ScoutCenter scoutCenter;
     private String organizationName;
     private String cif;

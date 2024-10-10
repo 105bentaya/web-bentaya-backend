@@ -25,5 +25,6 @@ public class BookingDocument {
     private byte[] fileData;
     private String fileName;
     @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "varchar")
     private BookingDocumentStatus status;
 }

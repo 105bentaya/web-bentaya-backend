@@ -39,9 +39,9 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
         if ((token != null && !token.isEmpty()) && token.startsWith(SecurityConstant.TOKEN_PREFIX)) {
             Jws<Claims> parsedToken = JwtUtils.decodeJwtToken(token, jwt);
             if (parsedToken != null) {
-                String username = parsedToken.getBody().getSubject();
+                String username = parsedToken.getPayload().getSubject();
                 if (username != null && !username.isEmpty()) {
-                    List<SimpleGrantedAuthority> authorities = ((List<?>) parsedToken.getBody()
+                    List<SimpleGrantedAuthority> authorities = ((List<?>) parsedToken.getPayload()
                         .get("rol")).stream()
                         .map(authority -> new SimpleGrantedAuthority((String) authority))
                         .toList();

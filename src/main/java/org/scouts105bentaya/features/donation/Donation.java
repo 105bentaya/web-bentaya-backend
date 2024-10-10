@@ -1,5 +1,6 @@
 package org.scouts105bentaya.features.donation;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -43,8 +44,10 @@ public class Donation {
     private Integer amount;
     @NotNull
     @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "varchar")
     private DonationFrequency frequency;
     @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "varchar")
     private SingleDonationPaymentType singleDonationPaymentType;
     private String iban;
     private ZonedDateTime creationDate;

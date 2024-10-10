@@ -1,7 +1,5 @@
 package org.scouts105bentaya.shared.util;
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
@@ -41,6 +39,6 @@ public class FormUtils {
 
     //todo check if it can be replaced by utf encoding
     public static String removeSpecialCharacters(String str) {
-        return StringUtils.stripAccents(str).replaceAll(", ", "_").replaceAll("[, ]", "_");
+        return str.replaceAll("[, ]+", "_");
     }
 }

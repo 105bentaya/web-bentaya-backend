@@ -6,10 +6,13 @@ import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.crypto.SecretKey;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,9 +26,11 @@ public final class JwtUtils {
 
     public static Jws<Claims> decodeJwtToken(String token, String secret) {
         try {
+            SecretKey secretKey = Keys.hmacShaKeyFor(secret.getBytes());
             return Jwts.parser()
-                .setSigningKey(secret.getBytes())
-                .parseClaimsJws(BEARER.matcher(token).replaceAll(Matcher.quoteReplacement("")));
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(BEARER.matcher(token).replaceAll(Matcher.quoteReplacement("")));
         } catch (UnsupportedJwtException exception) {
             log.warn("Request to parse unsupported JWT : {} failed : {}", token, exception.getMessage());
         } catch (MalformedJwtException exception) {
@@ -35,6 +40,7 @@ public final class JwtUtils {
         } catch (IllegalArgumentException exception) {
             log.warn("Request to parse empty or null JWT : {} failed : {}", token, exception.getMessage());
         } catch (ExpiredJwtException ignore) {
+            //ignore
         }
         return null;
     }

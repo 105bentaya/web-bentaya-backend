@@ -71,10 +71,12 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         Date expirationDate = new Date(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(8));
         String token = Jwts.builder()
             .signWith(key)
-            .setHeaderParam("typ", SecurityConstant.TOKEN_TYPE)
-            .setSubject(user.getUsername())
-            .setIssuedAt(new Date(System.currentTimeMillis()))
-            .setExpiration(expirationDate)
+            .header()
+            .type(SecurityConstant.TOKEN_TYPE)
+            .and()
+            .subject(user.getUsername())
+            .issuedAt(new Date(System.currentTimeMillis()))
+            .expiration(expirationDate)
             .claim("rol", roles)
             .compact();
 
