@@ -10,14 +10,16 @@ public class FormUtils {
 
     public static String getGroup(String date, boolean fullName, int firstYearOfTerm) {
         int scoutBirthYear = LocalDate.parse(date, DateTimeFormatter.ofPattern("dd/MM/yyyy")).getYear();
-
         int yearDifference = firstYearOfTerm - scoutBirthYear;
-        if (yearDifference > 20 || yearDifference < 6) return fullName ? "NINGÚN GRUPO" : "NaG";
-        if (yearDifference >= 17) return fullName ? "ROVER" : "ROV";
-        if (yearDifference >= 14) return fullName ? "ESCULTA" : "ESC";
-        if (yearDifference >= 11) return fullName ? "SCOUT" : "SCT";
-        if (yearDifference >= 8) return fullName ? "LOBATO" : "LOB";
-        return fullName ? "CASTOR" : "CAS";
+
+        return switch (yearDifference) {
+            case 6, 7 -> fullName ? "CASTOR" : "CAS";
+            case 8, 9, 10 -> fullName ? "LOBATO" : "LOB";
+            case 11, 12, 13 -> fullName ? "SCOUT" : "SCT";
+            case 14, 15, 16 -> fullName ? "ESCULTA" : "ESC";
+            case 17, 18, 19, 20 -> fullName ? "ROVER" : "ROV";
+            default -> fullName ? "NINGÚN GRUPO" : "NaG";
+        };
     }
 
     public static String getPriority(int priorityGroup, int year) {
