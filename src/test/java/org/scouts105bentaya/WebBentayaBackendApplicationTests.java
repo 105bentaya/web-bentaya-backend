@@ -8,6 +8,6 @@ class WebBentayaBackendApplicationTests {
 
     @Test
     void contextLoads() {
+        //checks that no error occurs
     }
-
 }

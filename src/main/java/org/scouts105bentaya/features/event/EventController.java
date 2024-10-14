@@ -32,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("api/event")
@@ -58,12 +59,11 @@ public class EventController {
         this.eventConverter = eventConverter;
     }
 
-    @PostFilter("hasAnyRole('SCOUTER', 'GROUP_SCOUTER', 'ADMIN') ? true : @authLogic.groupIdIsUserAuthorized(filterObject.groupId)")
+    @PreAuthorize("hasAnyRole('SCOUTER', 'GROUP_SCOUTER', 'USER')")
+    @PostFilter("hasAnyRole('SCOUTER', 'GROUP_SCOUTER') ? true : @authLogic.groupIdIsUserAuthorized(filterObject.groupId)")
     @GetMapping
     public List<EventCalendarDto> findAll() {
-        return eventService.findAll().stream()
-            .map(eventCalendarConverter::convertFromEntity).
-            toList();
+        return eventCalendarConverter.convertEntityCollectionToDtoList(eventService.findAll());
     }
 
     @PreAuthorize("hasAnyRole('SCOUTER', 'GROUP_SCOUTER', 'USER')")
