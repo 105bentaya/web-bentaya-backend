@@ -7,6 +7,8 @@ import org.scouts105bentaya.shared.GenericConverter;
 import org.scouts105bentaya.shared.Group;
 import org.springframework.stereotype.Component;
 
+import java.util.stream.Collectors;
+
 @Component
 public class ScoutConverter extends GenericConverter<Scout, ScoutDto> {
 
@@ -34,7 +36,7 @@ public class ScoutConverter extends GenericConverter<Scout, ScoutDto> {
         scout.setMunicipality(dto.municipality());
         scout.setCensus(dto.census());
         scout.setEnabled(dto.enabled());
-        scout.setContactList(dto.contactList().stream().map(contactConverter::convertFromDto).toList());
+        scout.setContactList(dto.contactList().stream().map(contactConverter::convertFromDto).collect(Collectors.toList()));
         return scout;
     }
 

@@ -90,7 +90,7 @@ public class ScoutService {
             contact.setScout(savedScout);
             contactRepository.save(contact);
         });
-        this.createConfirmationFromExistingEvents(savedScout);
+        this.createConfirmationForFutureEvents(savedScout);
         return savedScout;
     }
 
@@ -127,8 +127,8 @@ public class ScoutService {
         Scout savedScout = scoutRepository.save(scoutDB);
 
         if (hasChangedGroup) {
-            confirmationService.deleteAll(scoutDB.getConfirmationList());
-            this.createConfirmationFromExistingEvents(scoutDB);
+            this.deleteFutureConfirmations(savedScout);
+            this.createConfirmationForFutureEvents(scoutDB);
         }
 
         return savedScout;
@@ -161,7 +161,14 @@ public class ScoutService {
         ).forEach(contactRepository::delete);
     }
 
-    private void createConfirmationFromExistingEvents(Scout scout) {
+    private void deleteFutureConfirmations(Scout scout) {
+        confirmationService.deleteAll(scout.getConfirmationList().stream()
+            .filter(confirmation -> !confirmation.getEvent().eventHasEnded())
+            .toList()
+        );
+    }
+
+    private void createConfirmationForFutureEvents(Scout scout) {
         eventService.findAllByGroupId(scout.getGroupId()).stream()
             .filter(event -> event.isActiveAttendanceList() && !event.eventHasEnded())
             .forEach(e -> {
@@ -199,22 +206,7 @@ public class ScoutService {
     public void disable(Integer id) {
         Scout scout = this.findById(id);
         scout.getUserList().forEach(user -> userService.removeScout(user, scout));
-        confirmationService.deleteAll(scout.getConfirmationList().stream()
-            .filter(confirmation -> confirmation.getAttending() == null || !confirmation.getEvent().eventHasEnded())
-            .toList()
-        );
-
-        /*todo check lpd
-        contactRepository.deleteAll(scout.getContactList());
-        scout.setContactList(null);
-        scout.setDni(null);
-        scout.setBirthday(null);
-        scout.setMedicalData(null);
-        scout.setShirtSize(null);
-        scout.setMunicipality(null);
-        scout.setProgressions(null);
-        scout.setObservations(null);*/
-
+        this.deleteFutureConfirmations(scout);
         scout.setEnabled(false);
         scoutRepository.save(scout);
     }
