@@ -27,7 +27,7 @@ public class ResetPasswordService {
         this.userService = userService;
         this.emailService = emailService;
         tokenCache = CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build();
-        usernameHasChangedPswCache = CacheBuilder.newBuilder().expireAfterWrite(4, TimeUnit.HOURS).build();
+        usernameHasChangedPswCache = CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build();
     }
 
     public void requestPasswordChange(String username) {
@@ -35,7 +35,7 @@ public class ResetPasswordService {
             userService.findByUsername(username);
             if (usernameHasChangedPassword(username)) {
                 throw new UserHasAlreadyChangedPasswordException(
-                        "La contraseña ha sido restablecida recientemente. Vuelva a intentarlo más tarde");
+                        "La contraseña ha sido restablecida recientemente. Vuelva a intentarlo en 5 minutos");
             }
             String token = generateToken();
             tokenCache.put(token, username);
