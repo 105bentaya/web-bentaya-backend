@@ -28,7 +28,7 @@ public class UserConverter extends GenericConverter<User, UserDto> {
         user.setEnabled(dto.enabled());
         user.setId(dto.id());
         user.setGroupId(Group.valueOf(dto.groupId()));
-        user.setRoles(dto.roles().stream().map(role -> roleRepository.findByName(role).orElse(null)).toList());
+        user.setRoles(dto.roles().stream().map(role -> roleRepository.findByName(role).orElse(null)).collect(Collectors.toList()));
         user.setScoutList(dto.scoutList() != null ? dto.scoutList().stream().map(scoutUserConverter::convertFromDto).collect(Collectors.toSet()) : null);
         return user;
     }
@@ -39,10 +39,10 @@ public class UserConverter extends GenericConverter<User, UserDto> {
             user.getId(),
             user.getUsername(),
             GenericConstants.FAKE_PASSWORD,
-            user.getRoles().stream().map(Role::getName).toList(),
+            user.getRoles().stream().map(Role::getName).collect(Collectors.toList()),
             user.isEnabled(),
             Group.valueFrom(user.getGroupId()),
-            user.getScoutList() != null ? user.getScoutList().stream().map(scoutUserConverter::convertFromEntity).toList() : null
+            user.getScoutList() != null ? user.getScoutList().stream().map(scoutUserConverter::convertFromEntity).collect(Collectors.toList()) : null
         );
     }
 }
