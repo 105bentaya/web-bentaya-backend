@@ -6,16 +6,15 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.scouts105bentaya.core.exception.user.UserHasReachedMaxLoginAttemptsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import javax.crypto.SecretKey;
@@ -25,6 +24,9 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
+
+    private static final String BAD_CREDENTIALS_MESSAGE = "Usuario o contraseña incorrectos";
+    private static final String MAX_LOGIN_ATTEMPTS_MESSAGE = "Este dispositivo ha alcanzado el número máximo de intentos de inicio de sesión. Vuelva a intentarlo en varias horas.";
 
     private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     private final AuthenticationManager authenticationManager;
@@ -47,15 +49,9 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         }
 
         log.info("JwtAuthenticationFilter.attemptAuthentication as {}", loginDto.getUsername());
-
         Authentication authenticationToken = new UsernamePasswordAuthenticationToken(loginDto.getUsername(), loginDto.getPassword());
 
-        try {
-            return authenticationManager.authenticate(authenticationToken);
-        } catch (InternalAuthenticationServiceException ex) {
-            log.error(ex.getMessage());
-            throw new UsernameNotFoundException(ex.getMessage());
-        }
+        return authenticationManager.authenticate(authenticationToken);
     }
 
     @Override
@@ -81,5 +77,14 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
             .compact();
 
         response.addHeader(SecurityConstant.TOKEN_HEADER, SecurityConstant.TOKEN_PREFIX + token);
+    }
+
+    @Override
+    protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException {
+        log.info("Authentication failed: {}", failed.getMessage());
+        String exceptionMessage = failed.getCause() instanceof UserHasReachedMaxLoginAttemptsException ?
+            MAX_LOGIN_ATTEMPTS_MESSAGE : BAD_CREDENTIALS_MESSAGE;
+        ErrorResponseHandler.authErrorHandler(response, exceptionMessage);
+        response.getWriter().flush();
     }
 }

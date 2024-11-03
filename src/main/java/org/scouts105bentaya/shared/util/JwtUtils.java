@@ -3,12 +3,17 @@ package org.scouts105bentaya.shared.util;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
+import jakarta.annotation.Nullable;
+import jakarta.validation.constraints.NotNull;
+import lombok.NonNull;
+import org.scouts105bentaya.core.security.InvalidJwtException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +29,7 @@ public final class JwtUtils {
     private JwtUtils() {
     }
 
-    public static Jws<Claims> decodeJwtToken(String token, String secret) {
+    public static Jws<Claims> decodeJwtToken(String token, String secret) throws InvalidJwtException {
         try {
             SecretKey secretKey = Keys.hmacShaKeyFor(secret.getBytes());
             return Jwts.parser()
@@ -42,6 +47,6 @@ public final class JwtUtils {
         } catch (ExpiredJwtException ignore) {
             //ignore
         }
-        return null;
+        throw new InvalidJwtException();
     }
 }

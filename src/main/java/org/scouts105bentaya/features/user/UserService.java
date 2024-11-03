@@ -329,8 +329,7 @@ public class UserService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Optional<User> optionalUser = userRepository.findByUsername(username);
         if (loginAttemptService.isBlocked()) {
-            log.warn("Max login attempts reached by ip: {}", requestService.getClientIP());
-            throw new UserHasReachedMaxLoginAttemptsException("Max login attempts reached");
+            throw new UserHasReachedMaxLoginAttemptsException("Max login attempts reached by ip: %s".formatted(requestService.getClientIP()));
         }
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();

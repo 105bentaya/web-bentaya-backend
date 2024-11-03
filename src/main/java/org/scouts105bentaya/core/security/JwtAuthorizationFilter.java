@@ -19,6 +19,7 @@ import java.util.Optional;
 
 public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
 
+    private static final String EXCEPTION_MESSAGE = "Credenciales inválidas o caducadas. Vuelva a iniciar sesión.";
     private final String jwt;
 
     public JwtAuthorizationFilter(AuthenticationManager authenticationManager, String jwt) {
@@ -28,12 +29,16 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
-        Optional<UsernamePasswordAuthenticationToken> authenticationToken = getAuthentication(request);
-        authenticationToken.ifPresent(usernamePasswordAuthenticationToken -> SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken));
+        try {
+            Optional<UsernamePasswordAuthenticationToken> authenticationToken = this.getAuthentication(request);
+            authenticationToken.ifPresent(usernamePasswordAuthenticationToken -> SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken));
+        } catch (InvalidJwtException e) {
+            ErrorResponseHandler.authErrorHandler(response, EXCEPTION_MESSAGE);
+        }
         chain.doFilter(request, response);
     }
 
-    private Optional<UsernamePasswordAuthenticationToken> getAuthentication(HttpServletRequest request) {
+    private Optional<UsernamePasswordAuthenticationToken> getAuthentication(HttpServletRequest request) throws InvalidJwtException {
         String token = request.getHeader(SecurityConstant.TOKEN_HEADER);
         Optional<UsernamePasswordAuthenticationToken> usernamePasswordAuthenticationToken = Optional.empty();
         if ((token != null && !token.isEmpty()) && token.startsWith(SecurityConstant.TOKEN_PREFIX)) {
