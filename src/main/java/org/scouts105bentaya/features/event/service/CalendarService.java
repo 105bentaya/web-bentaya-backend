@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import net.fortuna.ical4j.data.CalendarOutputter;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.component.VEvent;
@@ -17,7 +18,11 @@ import net.fortuna.ical4j.model.property.Summary;
 import net.fortuna.ical4j.model.property.Uid;
 import net.fortuna.ical4j.model.property.immutable.ImmutableCalScale;
 import net.fortuna.ical4j.model.property.immutable.ImmutableVersion;
-import org.scouts105bentaya.core.exception.WebBentayaException;
+import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
+import org.scouts105bentaya.core.exception.WebBentayaErrorException;
+import org.scouts105bentaya.core.exception.WebBentayaForbiddenException;
+import org.scouts105bentaya.core.exception.WebBentayaUnauthorizedException;
+import org.scouts105bentaya.core.security.InvalidJwtException;
 import org.scouts105bentaya.features.event.Event;
 import org.scouts105bentaya.features.scout.Scout;
 import org.scouts105bentaya.features.user.Roles;
@@ -39,10 +44,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+@Slf4j
 @Service
 public class CalendarService {
 
     private static final String TOKEN_USER_GROUPS_KEY = "userGroups";
+
     private final UserService userService;
     private final EventService eventService;
     private final AuthService authService;
@@ -60,15 +67,29 @@ public class CalendarService {
     }
 
     public byte[] getIcsCalendar(String jwtToken) {
-        Jws<Claims> parsedToken = JwtUtils.decodeJwtToken(jwtToken, secret);
+        try {
+            return this.getIcsCalendarAsByteArray(jwtToken);
+        } catch (InvalidJwtException e) {
+            throw new WebBentayaBadRequestException("No se ha podido generar el calendario");
+        } catch (IOException e) {
+            throw new WebBentayaErrorException("No se ha podido generar el calendario");
+        }
+    }
 
-        if (parsedToken == null) throw new WebBentayaException("No se ha podido generar el calendario");
-        if (parsedToken.getPayload().getIssuedAt() == null) throw new WebBentayaException("Este link es inválido");
+    private byte[] getIcsCalendarAsByteArray(String jwtToken) throws InvalidJwtException, IOException {
+        Jws<Claims> parsedToken = JwtUtils.decodeJwtToken(jwtToken, secret);
+        if (parsedToken.getPayload().getIssuedAt() == null) {
+            log.warn("getIcsCalendarAsByteArray - JWT token has no 'issued at' field");
+            throw new WebBentayaBadRequestException("Este link es inválido");
+        }
 
         User user = userService.findById(parsedToken.getPayload().get("usr", Integer.class));
-        if (!user.isEnabled()) throw new WebBentayaException("Usuario no autorizado");
+        if (!user.isEnabled()) {
+            log.warn("getIcsCalendarAsByteArray - user is not enabled");
+            throw new WebBentayaForbiddenException("Usuario deshabilitado");
+        }
 
-
+        log.info("getIcsCalendarAsByteArray - generating calendar for {}", user.getUsername());
         Calendar calendar = new Calendar();
         calendar.add(ImmutableVersion.VERSION_2_0);
         calendar.add(ImmutableCalScale.GREGORIAN);
@@ -79,15 +100,11 @@ public class CalendarService {
         List<Event> events = tokenGroups.stream().map(eventService::findAllByGroupId).flatMap(Collection::stream).toList();
         events.forEach(event -> calendar.add(this.generateICSEvent(event)));
 
-        try {
-            ByteArrayOutputStream output = new ByteArrayOutputStream();
-            CalendarOutputter outputWriter = new CalendarOutputter();
-            outputWriter.setValidating(false);
-            outputWriter.output(calendar, output);
-            return output.toByteArray();
-        } catch (IOException ioException) {
-            throw new WebBentayaException("No se ha podido generar el calendario");
-        }
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        CalendarOutputter outputWriter = new CalendarOutputter();
+        outputWriter.setValidating(false);
+        outputWriter.output(calendar, output);
+        return output.toByteArray();
     }
 
     private VEvent generateICSEvent(Event event) {
@@ -134,7 +151,9 @@ public class CalendarService {
     }
 
     private Set<Group> getTokenGroups(User user, Claims claims) {
-        if (!user.isMember()) throw new WebBentayaException("Usuario no autorizado");
+        if (!user.isMember()) {
+            throw new WebBentayaUnauthorizedException("Usuario no autorizado a acceder al calendario");
+        }
         Set<Group> groups = new HashSet<>();
 
         if (claims.containsKey(TOKEN_USER_GROUPS_KEY) && Boolean.TRUE.equals(claims.get(TOKEN_USER_GROUPS_KEY, Boolean.class))) {

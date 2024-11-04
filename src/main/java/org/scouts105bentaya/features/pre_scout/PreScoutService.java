@@ -1,9 +1,9 @@
 package org.scouts105bentaya.features.pre_scout;
 
 import jakarta.activation.DataSource;
-import org.scouts105bentaya.core.exception.NotFoundException;
-import org.scouts105bentaya.core.exception.PdfCreationException;
-import org.scouts105bentaya.core.exception.PreScoutNotFoundException;
+import lombok.extern.slf4j.Slf4j;
+import org.scouts105bentaya.core.exception.WebBentayaErrorException;
+import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.pre_scout.dto.PreScoutAssignationDto;
 import org.scouts105bentaya.features.pre_scout.dto.PreScoutDto;
 import org.scouts105bentaya.features.pre_scout.entity.PreScout;
@@ -23,6 +23,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
@@ -30,6 +31,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class PreScoutService {
 
@@ -69,11 +71,11 @@ public class PreScoutService {
     }
 
     public PreScout findById(int id) {
-        return this.preScoutRepository.findById(id).orElseThrow(PreScoutNotFoundException::new);
+        return this.preScoutRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
     }
 
     public List<PreScout> findAllAssignedByLoggedScouter() {
-        Group group = Optional.ofNullable(this.authService.getLoggedUser().getGroupId()).orElseThrow(NotFoundException::new);
+        Group group = Optional.ofNullable(this.authService.getLoggedUser().getGroupId()).orElseThrow(WebBentayaNotFoundException::new);
         return this.preScoutRepository.findAllByPreScoutAssignation_GroupId(group);
     }
 
@@ -126,7 +128,7 @@ public class PreScoutService {
     }
 
     public void updateAssignation(PreScoutAssignationDto dto) {
-        PreScoutAssignation preScoutAssignation = preScoutAssignationRepository.findById(dto.preScoutId()).orElseThrow(PreScoutNotFoundException::new);
+        PreScoutAssignation preScoutAssignation = preScoutAssignationRepository.findById(dto.preScoutId()).orElseThrow(WebBentayaNotFoundException::new);
         if (dto.status() == -1) {
             PreScout preScout = preScoutAssignation.getPreScout();
             preScout.setPreScoutAssignation(null);
@@ -164,16 +166,16 @@ public class PreScoutService {
     }
 
     public ResponseEntity<byte[]> getPDF(Integer id) {
-        PreScout preScout = this.findById(id);
         try {
-            byte[] pdf = pdfService.generatePreScoutPDF(preScout).getInputStream().readAllBytes();
+            PreScout preScout = this.findById(id);
             return ResponseEntity
                 .ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .header(HttpHeaders.CONTENT_DISPOSITION)
-                .body(pdf);
-        } catch (Exception ignored) {
-            throw new PdfCreationException();
+                .body(pdfService.generatePreScoutPDF(preScout).getInputStream().readAllBytes());
+        } catch (IOException e) {
+            log.error("getPDF - {}", e.getMessage());
+            throw new WebBentayaErrorException("Error al generar el PDF");
         }
     }
 

@@ -1,17 +1,15 @@
 package org.scouts105bentaya.features.payment;
 
 import jakarta.transaction.Transactional;
-import org.scouts105bentaya.core.exception.WebBentayaException;
-import org.scouts105bentaya.core.exception.payment.PaymentEncryptionException;
+import lombok.extern.slf4j.Slf4j;
+import org.scouts105bentaya.core.exception.WebBentayaConflictException;
+import org.scouts105bentaya.core.exception.WebBentayaErrorException;
 import org.scouts105bentaya.core.exception.payment.PaymentException;
-import org.scouts105bentaya.core.exception.payment.PaymentNotFoundException;
-import org.scouts105bentaya.core.exception.payment.UnauthorizedPaymentNotificationException;
+import org.scouts105bentaya.core.exception.payment.WebBentayaPaymentNotFoundException;
 import org.scouts105bentaya.features.donation.DonationService;
-import org.scouts105bentaya.features.payment.dto.PaymentFormDataDto;
 import org.scouts105bentaya.features.payment.dto.PaymentFormDataRequestDto;
 import org.scouts105bentaya.features.payment.dto.PaymentInfoDto;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.scouts105bentaya.features.payment.dto.PaymentRedsysFormDataDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -29,11 +27,11 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+@Slf4j
 @Service
 public class PaymentService {
 
     private static final DateTimeFormatter DATE_AND_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyMMdd");
-    private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
     private final PaymentRepository paymentRepository;
     private final DonationService donationService;
     @Value("${tpv.shop.key}")
@@ -56,7 +54,7 @@ public class PaymentService {
     }
 
     public Payment findById(Integer id) {
-        return this.paymentRepository.findById(id).orElseThrow(PaymentNotFoundException::new);
+        return this.paymentRepository.findById(id).orElseThrow(WebBentayaPaymentNotFoundException::new);
     }
 
     public Payment savePayment(Payment payment) {
@@ -79,16 +77,16 @@ public class PaymentService {
         return this.paymentRepository.save(savedPayment);
     }
 
-    public PaymentFormDataDto getPaymentFormData(PaymentFormDataRequestDto requestDto) {
+    public PaymentRedsysFormDataDto getPaymentAsRedsysFormData(PaymentFormDataRequestDto requestDto) {
         Payment payment = requestDto.payment();
 
         if (payment.getStatus() != -1) {
-            log.error("Payment {} has already been processed", payment.getId());
-            throw new WebBentayaException("Este pago ya ha sido procesado");
+            log.warn("Payment {} has already been processed", payment.getId());
+            throw new WebBentayaConflictException("Este pago ya ha sido procesado");
         }
         try {
             ApiMacSha256 apiMacSha256 = getApiMacSha256(payment, requestDto.okUrl(), requestDto.koUrl());
-            return new PaymentFormDataDto(
+            return new PaymentRedsysFormDataDto(
                 "HMAC_SHA256_V1",
                 apiMacSha256.createMerchantParameters(),
                 apiMacSha256.createMerchantSignature(key)
@@ -98,12 +96,11 @@ public class PaymentService {
                  BadPaddingException e
         ) {
             log.error("METHOD getPaymentFormData: Error whilst encrypting payment form info: {}", e.getMessage());
-            throw new PaymentEncryptionException();
+            throw new WebBentayaErrorException("No se han podido generar los datos para realizar el pago");
         }
     }
 
-    //todo comments
-    public void paymentConfirmation(PaymentFormDataDto response, PaymentTypeEnum type) {
+    public void handleRedsysNotification(PaymentRedsysFormDataDto response, PaymentTypeEnum type) {
         ApiMacSha256 apiMacSha256 = new ApiMacSha256();
         try {
             apiMacSha256.decodeMerchantParameters(response.Ds_MerchantParameters());
@@ -112,26 +109,26 @@ public class PaymentService {
                 Integer status = Integer.valueOf(apiMacSha256.getParameter("Ds_Response"));
                 this.updatePayment(order, status, type);
             } else {
-                log.warn("METHOD paymentConfirmation: response with invalid signature for parameters {} and signature {}", response.Ds_MerchantParameters(), response.Ds_Signature());
-                //enviar correo
-                throw new UnauthorizedPaymentNotificationException("Response with invalid signature");
+                log.error("paymentConfirmation - response with invalid signature for parameters {} and signature {}", response.Ds_MerchantParameters(), response.Ds_Signature());
+                throw new PaymentException();
             }
 
         } catch (InvalidAlgorithmParameterException | UnsupportedEncodingException | NoSuchPaddingException |
                  IllegalBlockSizeException | NoSuchAlgorithmException | BadPaddingException | InvalidKeyException e) {
             log.error("METHOD paymentConfirmation: error whilst decrypting payment confirmation: {}", e.getMessage());
-            //enviar correo
-            throw new PaymentEncryptionException();
+            throw new PaymentException();
         } catch (Exception e) {
             log.error("METHOD paymentConfirmation: error whilst processing payment confirmation: {}", e.getMessage());
-            //enviar correo
-            //throw new ();
+            throw new PaymentException();
         }
     }
 
     private void updatePayment(String order, Integer status, PaymentTypeEnum type) {
-        Payment payment = this.paymentRepository.findByOrderNumber(order).orElseThrow(PaymentNotFoundException::new);
-        if (payment.getPaymentType() != type) throw new PaymentException("Payment type does not match database type");
+        Payment payment = this.paymentRepository.findByOrderNumber(order).orElseThrow(WebBentayaPaymentNotFoundException::new);
+        if (payment.getPaymentType() != type) {
+            log.error("updatePayment - payment {} with type {} does not match type {}", payment.getId(), payment.getPaymentType(), type);
+            throw new WebBentayaConflictException("Invalid payment type");
+        }
         payment.setStatus(status);
         payment.setModificationDate(ZonedDateTime.now());
         paymentRepository.save(payment);

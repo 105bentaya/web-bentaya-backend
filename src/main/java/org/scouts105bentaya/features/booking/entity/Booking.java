@@ -1,5 +1,6 @@
 package org.scouts105bentaya.features.booking.entity;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -47,6 +48,7 @@ public class Booking {
     private String contactPhone;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
+    @Nullable
     private String observations;
     private String statusObservations;
     private Float price;

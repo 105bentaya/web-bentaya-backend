@@ -1,37 +1,31 @@
 package org.scouts105bentaya.features.poll;
 
 
-import org.scouts105bentaya.core.exception.WebBentayaException;
+import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.features.contact_message.ContactMessage;
 import org.scouts105bentaya.features.poll.dto.PublicPollDto;
 import org.scouts105bentaya.features.poll.entity.Poll;
 import org.scouts105bentaya.shared.service.EmailService;
 import org.scouts105bentaya.shared.util.SecurityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Map;
 
+@Slf4j
 @PreAuthorize("hasRole('ADMIN')")
 @RestController
 @RequestMapping("api/poll")
 public class PollController {
 
-    private static final Logger log = LoggerFactory.getLogger(PollController.class);
     private final PollService pollService;
     private final EmailService emailService;
     private final PublicPollConverter publicPollConverter;
@@ -91,11 +85,5 @@ public class PollController {
             %s con correo %s nos envía la canción %s:
             %s
             """, contactMessage.getName(), contactMessage.getEmail(), contactMessage.getSubject(), contactMessage.getMessage()));
-    }
-
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(WebBentayaException.class)
-    public Map<String, String> handlePdfException(WebBentayaException e) {
-        return Map.of("bentayaMessage", e.getMessage());
     }
 }

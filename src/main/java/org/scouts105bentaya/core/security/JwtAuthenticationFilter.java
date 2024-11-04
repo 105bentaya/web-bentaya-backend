@@ -6,9 +6,7 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.scouts105bentaya.core.exception.user.UserHasReachedMaxLoginAttemptsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -23,12 +21,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
     private static final String BAD_CREDENTIALS_MESSAGE = "Usuario o contraseña incorrectos";
     private static final String MAX_LOGIN_ATTEMPTS_MESSAGE = "Este dispositivo ha alcanzado el número máximo de intentos de inicio de sesión. Vuelva a intentarlo en varias horas.";
 
-    private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     private final AuthenticationManager authenticationManager;
     private final String jwt;
 

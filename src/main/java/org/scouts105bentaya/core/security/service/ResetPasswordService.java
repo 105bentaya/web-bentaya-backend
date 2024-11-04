@@ -2,10 +2,11 @@ package org.scouts105bentaya.core.security.service;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import org.scouts105bentaya.core.exception.InvalidTokenException;
-import org.scouts105bentaya.core.exception.PasswordsNotMatchException;
-import org.scouts105bentaya.core.exception.UserHasAlreadyChangedPasswordException;
-import org.scouts105bentaya.core.exception.user.UserNotFoundException;
+import lombok.extern.slf4j.Slf4j;
+import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
+import org.scouts105bentaya.core.exception.WebBentayaConflictException;
+import org.scouts105bentaya.core.exception.WebBentayaUnauthorizedException;
+import org.scouts105bentaya.core.exception.WebBentayaUserNotFoundException;
 import org.scouts105bentaya.features.user.ForgotPasswordDto;
 import org.scouts105bentaya.features.user.UserService;
 import org.scouts105bentaya.shared.service.EmailService;
@@ -15,6 +16,7 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @Service
 public class ResetPasswordService {
 
@@ -37,31 +39,32 @@ public class ResetPasswordService {
         try {
             userService.findByUsername(username);
             if (usernameHasChangedPassword(username)) {
-                throw new UserHasAlreadyChangedPasswordException(
-                    "La contraseña ha sido restablecida recientemente. Vuelva a intentarlo más tarde");
+                throw new WebBentayaConflictException("La contraseña ha sido restablecida recientemente. Vuelva a intentarlo en 5 minutos");
             }
             String token = generateToken();
             tokenCache.put(token, username);
             emailService.sendSimpleEmail(
                 username,
                 "Restablecer contraseña - 105 Bentaya",
-                String.format("""
+                """
                     Link para restablecer la contraseña: 105bentaya.org/reset-password/%s
-                    Este link caducará en 5 minutos.
-                    """, token)
+                    Este link caducará en 5 minutos. En caso de que ya haya caducado, puede volver a solicitar el \
+                    restablecimiento de la contraseña desde el portal de inicio de sesión.
+                    """.formatted(token)
             );
-        } catch (UserNotFoundException ignored) {
+        } catch (WebBentayaUserNotFoundException ignored) {
             //ignored
+            log.warn("requestPasswordChange - user {} does not exist", username);
         }
     }
 
     public void resetPassword(ForgotPasswordDto dto) {
         String username = tokenCache.getIfPresent(dto.token());
         if (username == null || usernameHasChangedPassword(username)) {
-            throw new InvalidTokenException("El token es inválido o ha expirado");
+            throw new WebBentayaUnauthorizedException("El link es inválido o ha expirado");
         }
         if (!dto.newPassword().equals(dto.newPasswordRepeat())) {
-            throw new PasswordsNotMatchException("Las contraseñas no coinciden");
+            throw new WebBentayaBadRequestException("Las contraseñas no coinciden");
         }
         tokenCache.invalidate(dto.token());
         userService.changeForgottenPassword(username, dto.newPassword());

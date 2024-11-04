@@ -1,7 +1,8 @@
 package org.scouts105bentaya.features.donation;
 
-import jakarta.persistence.EntityNotFoundException;
-import org.scouts105bentaya.core.exception.payment.PaymentException;
+import lombok.extern.slf4j.Slf4j;
+import org.scouts105bentaya.core.exception.WebBentayaConflictException;
+import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.donation.converter.DonationFormConverter;
 import org.scouts105bentaya.features.donation.dto.DonationFormDto;
 import org.scouts105bentaya.features.donation.enums.DonationFrequency;
@@ -9,9 +10,9 @@ import org.scouts105bentaya.features.donation.enums.SingleDonationPaymentType;
 import org.scouts105bentaya.features.payment.Payment;
 import org.scouts105bentaya.features.payment.PaymentService;
 import org.scouts105bentaya.features.payment.PaymentTypeEnum;
-import org.scouts105bentaya.features.payment.dto.PaymentFormDataDto;
 import org.scouts105bentaya.features.payment.dto.PaymentFormDataRequestDto;
 import org.scouts105bentaya.features.payment.dto.PaymentInfoDto;
+import org.scouts105bentaya.features.payment.dto.PaymentRedsysFormDataDto;
 import org.scouts105bentaya.features.payment.dto.PaymentUrlsDto;
 import org.scouts105bentaya.shared.service.EmailService;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,6 +23,7 @@ import org.thymeleaf.context.Context;
 import java.time.ZonedDateTime;
 import java.util.List;
 
+@Slf4j
 @Service
 public class DonationService {
 
@@ -69,11 +71,12 @@ public class DonationService {
     }
 
     //TODO: i dont like this, too public
-    public PaymentFormDataDto getDonationPaymentData(Integer donationId, PaymentUrlsDto urls) {
-        Payment payment = donationRepository.findById(donationId).orElseThrow(EntityNotFoundException::new).getPayment();
+    public PaymentRedsysFormDataDto getDonationPaymentAsRedsysData(Integer donationId, PaymentUrlsDto urls) {
+        Payment payment = donationRepository.findById(donationId).orElseThrow(WebBentayaNotFoundException::new).getPayment();
 
         if (payment.getPaymentType() != PaymentTypeEnum.DONATION) {
-            throw new PaymentException("Acceso al pago no permitido");
+            log.warn("getDonationPaymentAsRedsysData - payment {} is not a donation ", payment.getId());
+            throw new WebBentayaConflictException("Acceso al pago no permitido");
         }
 
         PaymentFormDataRequestDto requestDto = new PaymentFormDataRequestDto(
@@ -81,7 +84,7 @@ public class DonationService {
             urls.okUrl(),
             urls.koUrl()
         );
-        return this.paymentService.getPaymentFormData(requestDto);
+        return this.paymentService.getPaymentAsRedsysFormData(requestDto);
     }
 
     public void confirmDonationPayment(Donation donation) {

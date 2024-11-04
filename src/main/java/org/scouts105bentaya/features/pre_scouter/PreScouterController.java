@@ -1,8 +1,7 @@
 package org.scouts105bentaya.features.pre_scouter;
 
+import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.shared.util.SecurityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -15,11 +14,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("api/pre-scouter")
 public class PreScouterController {
 
-    private static final Logger log = LoggerFactory.getLogger(PreScouterController.class);
     private final PreScouterService preScouterService;
     private final PreScouterConverter preScouterConverter;
 

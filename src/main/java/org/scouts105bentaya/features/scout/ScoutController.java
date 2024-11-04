@@ -1,13 +1,12 @@
 package org.scouts105bentaya.features.scout;
 
+import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.features.scout.converter.ScoutConverter;
 import org.scouts105bentaya.features.scout.converter.ScoutUserConverter;
 import org.scouts105bentaya.features.scout.dto.ScoutDto;
 import org.scouts105bentaya.features.scout.dto.ScoutFormUserUpdateDto;
 import org.scouts105bentaya.features.scout.dto.ScoutUserDto;
 import org.scouts105bentaya.shared.util.SecurityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,11 +21,11 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Collections;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("api/scout")
 public class ScoutController {
 
-    private static final Logger log = LoggerFactory.getLogger(ScoutController.class);
     private final ScoutService scoutService;
     private final ScoutConverter scoutConverter;
     private final ScoutUserConverter scoutUserConverter;

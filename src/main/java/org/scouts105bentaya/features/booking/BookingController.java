@@ -1,7 +1,7 @@
 package org.scouts105bentaya.features.booking;
 
 import jakarta.validation.Valid;
-import org.scouts105bentaya.core.exception.BasicMessageException;
+import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.features.booking.converter.BookingConverter;
 import org.scouts105bentaya.features.booking.converter.BookingDocumentConverter;
 import org.scouts105bentaya.features.booking.dto.BookingDateDto;
@@ -15,13 +15,9 @@ import org.scouts105bentaya.features.booking.dto.SimpleBookingDto;
 import org.scouts105bentaya.features.booking.enums.BookingDocumentStatus;
 import org.scouts105bentaya.features.booking.service.BookingService;
 import org.scouts105bentaya.shared.util.SecurityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,18 +25,16 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("api/booking")
 public class BookingController {
 
-    private static final Logger log = LoggerFactory.getLogger(BookingController.class);
     private final BookingService bookingService;
     private final BookingConverter bookingConverter;
     private final BookingDocumentConverter bookingDocumentConverter;
@@ -184,11 +178,5 @@ public class BookingController {
     public void saveBookingForm(@RequestBody @Valid BookingFormDto bookingFormDto) {
         log.info("METHOD BookingController.saveBookingForm");
         this.bookingService.saveFromForm(bookingFormDto);
-    }
-
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(BasicMessageException.class)
-    public Map<String, String> exceptionHandler(BasicMessageException e) {
-        return Map.of("message", e.getMessage());
     }
 }

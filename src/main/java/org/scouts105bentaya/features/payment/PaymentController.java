@@ -1,10 +1,9 @@
 package org.scouts105bentaya.features.payment;
 
+import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.features.payment.dto.PaymentDto;
-import org.scouts105bentaya.features.payment.dto.PaymentFormDataDto;
+import org.scouts105bentaya.features.payment.dto.PaymentRedsysFormDataDto;
 import org.scouts105bentaya.shared.util.SecurityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,11 +13,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("api/tpv")
 public class PaymentController {
 
-    private static final Logger log = LoggerFactory.getLogger(PaymentController.class);
     private final PaymentService paymentService;
     private final PaymentConverter paymentConverter;
 
@@ -38,8 +37,8 @@ public class PaymentController {
     }
 
     @PostMapping("/notification/{type}")
-    public void updatePaymentAfterNotification(PaymentFormDataDto paymentFormDataDto, @PathVariable PaymentTypeEnum type) {
+    public void updatePaymentAfterNotification(PaymentRedsysFormDataDto paymentRedsysFormDataDto, @PathVariable PaymentTypeEnum type) {
         log.info("METHOD PaymentController.updatePaymentAfterNotification --- PARAMS type: {}", type);
-        this.paymentService.paymentConfirmation(paymentFormDataDto, type);
+        this.paymentService.handleRedsysNotification(paymentRedsysFormDataDto, type);
     }
 }

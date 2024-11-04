@@ -1,8 +1,9 @@
 package org.scouts105bentaya.features.scout;
 
 import jakarta.transaction.Transactional;
-import org.scouts105bentaya.core.exception.ScoutNotFoundException;
-import org.scouts105bentaya.core.exception.user.UserNotFoundException;
+import lombok.extern.slf4j.Slf4j;
+import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
+import org.scouts105bentaya.core.exception.WebBentayaUserNotFoundException;
 import org.scouts105bentaya.features.confirmation.Confirmation;
 import org.scouts105bentaya.features.confirmation.service.ConfirmationService;
 import org.scouts105bentaya.features.event.service.EventService;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Set;
 
+@Slf4j
 @Service
 public class ScoutService {
 
@@ -79,7 +81,7 @@ public class ScoutService {
     }
 
     public Scout findById(Integer id) {
-        return scoutRepository.findByIdAndEnabledIsTrue(id).orElseThrow(ScoutNotFoundException::new);
+        return scoutRepository.findByIdAndEnabledIsTrue(id).orElseThrow(WebBentayaNotFoundException::new);
     }
 
     public Scout save(ScoutDto scoutDto) {
@@ -146,8 +148,10 @@ public class ScoutService {
             if (scout.getUserList().stream().noneMatch(user -> user.getUsername().equalsIgnoreCase(username))) {
                 try {
                     User user = userService.findByUsername(username.toLowerCase());
+                    log.info("updateScoutUsers - adding scout to user {}", username);
                     userService.addScout(user, scout);
-                } catch (UserNotFoundException exception) {
+                } catch (WebBentayaUserNotFoundException ex) {
+                    log.info("updateScoutUsers - user {} does not exist, creating new user", username);
                     userService.addNewUserRoleUser(username.toLowerCase(), scout);
                 }
             }
@@ -190,16 +194,17 @@ public class ScoutService {
         } else {
             result.setAddedUsers(newUsers);
         }
-        result.setAddedNewUsers(result.getAddedUsers().stream().filter(username -> {
-            try {
-                userService.findByUsername(username);
-            } catch (UserNotFoundException e) {
-                return true;
-            }
-            return false;
-        }).toList());
-
+        result.setAddedNewUsers(result.getAddedUsers().stream().filter(this::userDoesNotExist).toList());
         return result;
+    }
+
+    private boolean userDoesNotExist(String username) {
+        try {
+            userService.findByUsername(username);
+        } catch (WebBentayaUserNotFoundException e) {
+            return true;
+        }
+        return false;
     }
 
     @Transactional
@@ -213,7 +218,7 @@ public class ScoutService {
 
     @Transactional
     public void delete(Integer id) {
-        Scout scout = scoutRepository.findById(id).orElseThrow(ScoutNotFoundException::new);
+        Scout scout = scoutRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
         scout.getUserList().forEach(user -> userService.removeScout(user, scout));
         scoutRepository.deleteById(id);
     }

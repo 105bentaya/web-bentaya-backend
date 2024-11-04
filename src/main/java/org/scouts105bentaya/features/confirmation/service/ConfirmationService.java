@@ -1,7 +1,8 @@
 package org.scouts105bentaya.features.confirmation.service;
 
-import org.scouts105bentaya.core.exception.ConfirmationNotFoundException;
-import org.scouts105bentaya.core.exception.EntityUnauthorizedAccessException;
+import lombok.extern.slf4j.Slf4j;
+import org.scouts105bentaya.core.exception.WebBentayaForbiddenException;
+import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.confirmation.Confirmation;
 import org.scouts105bentaya.features.confirmation.ConfirmationId;
 import org.scouts105bentaya.features.confirmation.ConfirmationRepository;
@@ -15,17 +16,14 @@ import org.scouts105bentaya.features.event.service.EventService;
 import org.scouts105bentaya.features.scout.Scout;
 import org.scouts105bentaya.features.user.User;
 import org.scouts105bentaya.shared.service.AuthService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Slf4j
 @Service
 public class ConfirmationService {
-
-    private static final Logger log = LoggerFactory.getLogger(ConfirmationService.class);
 
     private final ConfirmationRepository confirmationRepository;
     private final EventService eventService;
@@ -44,7 +42,7 @@ public class ConfirmationService {
     public Confirmation findById(Integer scoutId, Integer eventId) {
         return confirmationRepository
             .findById(new ConfirmationId(scoutId, eventId))
-            .orElseThrow(ConfirmationNotFoundException::new);
+            .orElseThrow(WebBentayaNotFoundException::new);
     }
 
     public List<Confirmation> findAllByEventId(Integer id) {
@@ -141,25 +139,33 @@ public class ConfirmationService {
             confirmationDB.setAttending(confirmation.attending());
             return confirmationRepository.save(confirmationDB);
         }
-        log.warn("Trying to edit closed confirmation");
+        log.warn("updateByUser - trying to edit closed confirmation");
         return confirmationDB;
     }
 
     public Confirmation updateByScouter(ConfirmationDto confirmationDto) {
-        Confirmation confirmationDB = confirmationRepository.findById(new ConfirmationId(confirmationDto.scoutId(), confirmationDto.eventId())).orElseThrow(ConfirmationNotFoundException::new);
-        User loggedUser = this.authService.getLoggedUser();
-        if (loggedUser.getGroupId().equals(confirmationDB.getEvent().getGroupId()) &&
-            loggedUser.getGroupId().equals(confirmationDB.getScout().getGroupId())) {
-            confirmationDB.setText(confirmationDto.text());
-            confirmationDB.setAttending(confirmationDto.attending());
-            if (confirmationDB.getEvent().isActiveAttendancePayment()) {
-                confirmationDB.setPayed(confirmationDto.payed() != null && confirmationDto.payed());
-            } else {
-                confirmationDB.setPayed(null);
-            }
-            return confirmationRepository.save(confirmationDB);
+        Confirmation confirmationDB = confirmationRepository
+            .findById(new ConfirmationId(confirmationDto.scoutId(), confirmationDto.eventId()))
+            .orElseThrow(WebBentayaNotFoundException::new);
+        this.validateScouterScoutAccess(confirmationDB);
+        confirmationDB.setText(confirmationDto.text());
+        confirmationDB.setAttending(confirmationDto.attending());
+        if (confirmationDB.getEvent().isActiveAttendancePayment()) {
+            confirmationDB.setPayed(confirmationDto.payed() != null && confirmationDto.payed());
+        } else {
+            confirmationDB.setPayed(null);
         }
-        throw new EntityUnauthorizedAccessException("Acceso no autorizado a este scout");
+        return confirmationRepository.save(confirmationDB);
+
+
+    }
+
+    private void validateScouterScoutAccess(Confirmation confirmation) {
+        User loggedUser = this.authService.getLoggedUser();
+        if (loggedUser.getGroupId().equals(confirmation.getEvent().getGroupId()) &&
+            loggedUser.getGroupId().equals(confirmation.getScout().getGroupId())) {
+            throw new WebBentayaForbiddenException("Acceso no autorizado a este scout");
+        }
     }
 
     public void deleteAll(List<Confirmation> confirmations) {

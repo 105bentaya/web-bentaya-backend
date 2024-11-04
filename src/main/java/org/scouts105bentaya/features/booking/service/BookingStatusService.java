@@ -2,13 +2,12 @@ package org.scouts105bentaya.features.booking.service;
 
 import jakarta.activation.DataSource;
 import jakarta.mail.util.ByteArrayDataSource;
+import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.booking.enums.BookingStatus;
 import org.scouts105bentaya.features.booking.repository.BookingRepository;
 import org.scouts105bentaya.features.user.UserService;
 import org.scouts105bentaya.shared.service.EmailService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
@@ -17,11 +16,12 @@ import org.thymeleaf.context.Context;
 
 import java.io.IOException;
 import java.time.ZonedDateTime;
+import java.util.Optional;
 
+@Slf4j
 @Service
 public class BookingStatusService {
 
-    private static final Logger log = LoggerFactory.getLogger(BookingStatusService.class);
     private final BookingRepository bookingRepository;
     private final TemplateEngine htmlTemplateEngine;
     private final EmailService emailService;
@@ -267,7 +267,10 @@ public class BookingStatusService {
         context.setVariable("startDate", booking.getStartDate());
         context.setVariable("endDate", booking.getEndDate());
         context.setVariable("exclusiveness", booking.isExclusiveReservation());
-        context.setVariable("observations", booking.getObservations().isBlank() ? "Ninguna" : booking.getObservations());
+        context.setVariable("observations", Optional.ofNullable(booking.getObservations())
+            .filter(observations -> !observations.isBlank())
+            .orElse("Ninguna")
+        );
 
         final String infoHtmlContent = this.htmlTemplateEngine.process("booking-new-reservation.html", context);
 

@@ -1,9 +1,10 @@
 package org.scouts105bentaya.features.booking.service;
 
-import jakarta.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.joda.time.Interval;
-import org.scouts105bentaya.core.exception.BasicMessageException;
-import org.scouts105bentaya.core.exception.PdfCreationException;
+import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
+import org.scouts105bentaya.core.exception.WebBentayaErrorException;
+import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.booking.ScoutCenter;
 import org.scouts105bentaya.features.booking.converter.BookingFormConverter;
 import org.scouts105bentaya.features.booking.dto.BookingDateDto;
@@ -32,6 +33,7 @@ import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.List;
 
+@Slf4j
 @Service
 public class BookingService {
 
@@ -65,11 +67,11 @@ public class BookingService {
 
     public Booking findLatestByCurrentUser() {
         return bookingRepository.findFirstByUserIdOrderByCreationDateDesc(authService.getLoggedUser().getId())
-            .orElseThrow(() -> new BasicMessageException("No se han encontrado reservas asociadas a este usuario"));
+            .orElseThrow(() -> new WebBentayaNotFoundException("No se han encontrado reservas asociadas a este usuario"));
     }
 
     public Booking findById(Integer id) {
-        return bookingRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+        return bookingRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
     }
 
     public List<BookingDocument> findDocumentsByBookingId(Integer id) {
@@ -81,7 +83,8 @@ public class BookingService {
     public Booking updateStatusByManager(BookingStatusUpdateDto newStatusDto) {
         Booking currentBooking = this.findById(newStatusDto.getId());
         if (currentBooking.isOwnBooking()) {
-            throw new BasicMessageException("No se puede actualizar una reserva propia");
+            log.warn("updateStatusByManager - booking is own booking");
+            throw new WebBentayaBadRequestException("No se puede actualizar una reserva propia");
         }
         if (currentBooking.getStatus() == BookingStatus.NEW) {
             if (newStatusDto.getNewStatus() == BookingStatus.REJECTED) {
@@ -109,13 +112,15 @@ public class BookingService {
             return this.bookingStatusService.bookingToFinished(currentBooking, newStatusDto.getObservations());
         }
 
-        throw new BasicMessageException("Estado inválido");
+        log.warn("updateStatusByManager - new booking status is invalid");
+        throw new WebBentayaBadRequestException("No se puede actualizar la reserva al estado solicitado");
     }
 
     public Booking updateStatusByUser(BookingStatusUpdateDto newStatusDto) {
         Booking currentBooking = this.findById(newStatusDto.getId());
         if (currentBooking.isOwnBooking()) {
-            throw new BasicMessageException("No se puede actualizar una reserva propia");
+            log.warn("updateStatusByUser - booking is own booking");
+            throw new WebBentayaBadRequestException("No se puede actualizar una reserva propia");
         }
         if (currentBooking.getStatus() == BookingStatus.NEW) {
             if (newStatusDto.getNewStatus() == BookingStatus.CANCELED) {
@@ -134,7 +139,9 @@ public class BookingService {
                 return this.bookingStatusService.bookingFromOccupiedToLeftByUser(currentBooking, newStatusDto.getObservations());
             }
         }
-        throw new BasicMessageException("Estado inválido");
+
+        log.warn("updateStatusByUser - new booking status is invalid");
+        throw new WebBentayaBadRequestException("No se puede actualizar la reserva al estado solicitado");
     }
 
     public List<SimpleBookingDto> getReservationDates(ScoutCenter scoutCenter) {
@@ -169,8 +176,11 @@ public class BookingService {
     }
 
     public void updateOwnBooking(OwnBookingFormDto dto, Integer id) {
-        Booking booking = this.bookingRepository.findById(id).orElseThrow(EntityNotFoundException::new);
-        if (!booking.isOwnBooking()) throw new BasicMessageException("No se puede editar una reserva ajena");
+        Booking booking = this.bookingRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
+        if (!booking.isOwnBooking()) {
+            log.warn("updateOwnBooking - booking is not own booking");
+            throw new WebBentayaBadRequestException("No se puede editar una reserva ajena");
+        }
         this.saveOwnBooking(dto, booking);
     }
 
@@ -183,12 +193,7 @@ public class BookingService {
         booking.setExclusiveReservation(dto.exclusiveReservation());
         booking.setOwnBooking(true);
 
-        if (!dto.endDate().isAfter(dto.startDate())) {
-            throw new BasicMessageException("La fecha de salida no puede ser posterior a la de entrada.");
-        }
-        if (this.dateIsAlreadyTaken(booking)) {
-            throw new BasicMessageException("Algunas de las fechas seleccionadas no están disponibles.");
-        }
+        this.validateBookingDates(booking);
 
         booking.setStatus(dto.exclusiveReservation() ? BookingStatus.FULLY_OCCUPIED : BookingStatus.OCCUPIED);
         booking.setCreationDate(ZonedDateTime.now());
@@ -197,10 +202,15 @@ public class BookingService {
     }
 
     public Booking cancelOwnBooking(Integer id, String reason) {
-        Booking booking = this.bookingRepository.findById(id).orElseThrow(EntityNotFoundException::new);
-        if (!booking.isOwnBooking()) throw new BasicMessageException("No se puede cancelar una reserva ajena");
-        if (booking.getStatus() == BookingStatus.CANCELED)
-            throw new BasicMessageException("No se puede cancelar una reserva cancelada");
+        Booking booking = this.bookingRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
+        if (!booking.isOwnBooking()) {
+            log.warn("cancelOwnBooking - booking is not own booking");
+            throw new WebBentayaBadRequestException("No se puede cancelar una reserva ajena");
+        }
+        if (booking.getStatus() == BookingStatus.CANCELED) {
+            log.warn("cancelOwnBooking - booking is already canceled");
+            throw new WebBentayaBadRequestException("No se puede cancelar una reserva cancelada");
+        }
         booking.setStatus(BookingStatus.CANCELED);
         booking.setStatusObservations(reason);
         return bookingRepository.save(booking);
@@ -208,24 +218,24 @@ public class BookingService {
 
     public void saveFromForm(BookingFormDto dto) {
         Booking booking = bookingFormConverter.convertFromDto(dto);
-
-        if (!dto.endDate().isAfter(dto.startDate())) {
-            throw new BasicMessageException("La fecha de salida no puede ser posterior a la de entrada.");
-        }
-        if (dateIsAlreadyTaken(booking)) {
-            throw new BasicMessageException("Algunas de las fechas seleccionadas no están disponibles.");
-        }
-
+        this.validateBookingDates(booking);
         this.bookingStatusService.saveFromForm(booking);
     }
 
-    private boolean dateIsAlreadyTaken(Booking booking) {
+    private void validateBookingDates(Booking booking) {
+        if (!booking.getEndDate().isAfter(booking.getStartDate())) {
+            log.warn("validateBookingDates - booking end date is not after start date");
+            throw new WebBentayaBadRequestException("La fecha de salida no puede ser posterior a la de entrada.");
+        }
         List<Booking> sameCenterBookings = this.bookingRepository.findBookingByScoutCenterAndEndDateIsAfterAndStartDateIsBefore(
             booking.getScoutCenter(), booking.getStartDate().minusMinutes(1), booking.getEndDate().plusMinutes(1)
         );
         Interval mainInterval = IntervalUtils.intervalFromBooking(booking);
         BookingIntervalHelper helper = new BookingIntervalHelper(sameCenterBookings, mainInterval);
-        return helper.overlapsWithFullyOccupiedBooking();
+        if (helper.overlapsWithFullyOccupiedBooking()) {
+            log.warn("validateBookingDates - selected date is taken");
+            throw new WebBentayaBadRequestException("Algunas de las fechas seleccionadas no están disponibles");
+        }
     }
 
     public List<SimpleBookingDto> getBookingDatesForm(BookingDateFormDto dto) {
@@ -240,10 +250,14 @@ public class BookingService {
     public void saveBookingDocument(Integer bookingId, MultipartFile file) {
         try {
             Booking booking = this.findById(bookingId);
-            if (booking.getStatus() != BookingStatus.RESERVED && booking.getStatus() != BookingStatus.OCCUPIED && booking.getStatus() != BookingStatus.FULLY_OCCUPIED)
-                throw new BasicMessageException("No se añadir documentos en este paso de la reserva");
-            if (booking.getStatus() == BookingStatus.RESERVED && booking.isUserConfirmedDocuments())
-                throw new BasicMessageException("No se pueden añadir más documentos si ya los ha confirmado");
+            if (booking.getStatus() != BookingStatus.RESERVED && booking.getStatus() != BookingStatus.OCCUPIED && booking.getStatus() != BookingStatus.FULLY_OCCUPIED) {
+                log.warn("saveBookingDocument - booking status {} is not valid for uploading documents", booking.getStatus());
+                throw new WebBentayaBadRequestException("No se añadir documentos en este paso de la reserva");
+            }
+            if (booking.getStatus() == BookingStatus.RESERVED && booking.isUserConfirmedDocuments()) {
+                log.warn("saveBookingDocument - booking documents are already confirmed");
+                throw new WebBentayaBadRequestException("No se pueden añadir más documentos si ya los ha confirmado");
+            }
             BookingDocument document = new BookingDocument();
             document.setBooking(booking);
             document.setFileName(file.getOriginalFilename());
@@ -251,12 +265,13 @@ public class BookingService {
             document.setFileData(file.getBytes());
             bookingDocumentRepository.save(document);
         } catch (IOException e) {
-            throw new BasicMessageException("File could not be saved");
+            log.error(e.getMessage());
+            throw new WebBentayaErrorException("Ha ocurrido un error interno al guardar el documento"); //todo check for file size
         }
     }
 
     private BookingDocument findBookingDocumentById(Integer documentId) {
-        return this.bookingDocumentRepository.findById(documentId).orElseThrow(() -> new BasicMessageException("Booking Document not found"));
+        return this.bookingDocumentRepository.findById(documentId).orElseThrow(() -> new WebBentayaBadRequestException("Booking Document not found"));
     }
 
     public void updateBookingDocument(Integer id, BookingDocumentStatus status) {
@@ -271,14 +286,10 @@ public class BookingService {
 
     public ResponseEntity<byte[]> getPDF(Integer id) {
         BookingDocument bookingDocument = this.findBookingDocumentById(id);
-        try {
-            return ResponseEntity
-                .ok()
-                .contentType(MediaType.APPLICATION_PDF)
-                .header(HttpHeaders.CONTENT_DISPOSITION)
-                .body(bookingDocument.getFileData());
-        } catch (Exception ignored) {
-            throw new PdfCreationException();
-        }
+        return ResponseEntity
+            .ok()
+            .contentType(MediaType.APPLICATION_PDF)
+            .header(HttpHeaders.CONTENT_DISPOSITION)
+            .body(bookingDocument.getFileData());
     }
 }

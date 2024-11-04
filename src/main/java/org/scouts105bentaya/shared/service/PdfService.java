@@ -14,12 +14,11 @@ import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfString;
 import com.lowagie.text.pdf.PdfWriter;
 import jakarta.mail.util.ByteArrayDataSource;
+import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.features.complaint.Complaint;
 import org.scouts105bentaya.features.pre_scout.entity.PreScout;
 import org.scouts105bentaya.features.pre_scouter.PreScouter;
 import org.scouts105bentaya.shared.util.FormUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
@@ -27,10 +26,10 @@ import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+@Slf4j
 @Service
 public class PdfService {
 
-    private static final Logger log = LoggerFactory.getLogger(PdfService.class);
     private static final String LOGO_IMG = "img/logo.JPG";
     private static final Color HEADER_COLOR = WebColors.getRGBColor("#03569C");
 

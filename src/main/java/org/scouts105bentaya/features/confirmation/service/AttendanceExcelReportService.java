@@ -1,5 +1,6 @@
 package org.scouts105bentaya.features.confirmation.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.BuiltinFormats;
 import org.apache.poi.ss.usermodel.Cell;
@@ -38,8 +39,6 @@ import org.scouts105bentaya.features.setting.SettingService;
 import org.scouts105bentaya.features.user.User;
 import org.scouts105bentaya.shared.service.AuthService;
 import org.scouts105bentaya.shared.util.ExcelUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
@@ -60,10 +59,10 @@ import java.util.regex.Pattern;
 //todo: change excel template and remove empty cells with width, set this width at runtime
 //todo: create helper to avoid stateful variables
 //todo: insignia kaa
+@Slf4j
 @Service
 public class AttendanceExcelReportService {
 
-    private static final Logger log = LoggerFactory.getLogger(AttendanceExcelReportService.class);
     private static final int FIRST_EVENT_COLUMN_INDEX = 3;
     private static final int EVENT_ROW_INDEX = 1;
     private static final int FIRST_SCOUT_ROW_INDEX = 4;

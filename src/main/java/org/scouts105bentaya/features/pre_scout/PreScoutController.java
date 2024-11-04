@@ -1,34 +1,28 @@
 package org.scouts105bentaya.features.pre_scout;
 
 import jakarta.validation.Valid;
-import org.scouts105bentaya.core.exception.PdfCreationException;
+import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.features.pre_scout.dto.PreScoutAssignationDto;
 import org.scouts105bentaya.features.pre_scout.dto.PreScoutDto;
 import org.scouts105bentaya.shared.util.SecurityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("api/pre-scout")
 public class PreScoutController {
 
-    private static final Logger log = LoggerFactory.getLogger(PreScoutController.class);
     private final PreScoutService preScoutService;
     private final PreScoutConverter preScoutConverter;
 
@@ -87,11 +81,5 @@ public class PreScoutController {
     public void delete(@PathVariable Integer id) {
         log.info("METHOD PreScoutController.delete --- PARAMS id:{}{}", id, SecurityUtils.getLoggedUserUsernameForLog());
         this.preScoutService.delete(id);
-    }
-
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(PdfCreationException.class)
-    public Map<String, String> handlePdfException() {
-        return Map.of("message", "Error al generar el pdf");
     }
 }

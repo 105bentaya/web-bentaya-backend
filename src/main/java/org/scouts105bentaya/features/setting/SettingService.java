@@ -1,6 +1,6 @@
 package org.scouts105bentaya.features.setting;
 
-import org.scouts105bentaya.core.exception.SettingNotFoundException;
+import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,7 +19,7 @@ public class SettingService {
     }
 
     public Setting findByName(String name) {
-        return this.settingsRepository.findByName(name).orElseThrow(SettingNotFoundException::new);
+        return this.settingsRepository.findByName(name).orElseThrow(WebBentayaNotFoundException::new);
     }
 
     public Setting updateValue(String value, String name) {

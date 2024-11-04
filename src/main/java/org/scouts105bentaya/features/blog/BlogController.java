@@ -1,12 +1,11 @@
 package org.scouts105bentaya.features.blog;
 
+import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.features.blog.converter.BlogConverter;
 import org.scouts105bentaya.features.blog.converter.BlogInfoConverter;
 import org.scouts105bentaya.features.blog.dto.BlogDto;
 import org.scouts105bentaya.features.blog.dto.BlogInfoDto;
 import org.scouts105bentaya.shared.util.SecurityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,11 +17,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("api/blog")
 public class BlogController {
 
-    private static final Logger log = LoggerFactory.getLogger(BlogController.class);
     private final BlogService blogService;
     private final BlogConverter blogConverter;
     private final BlogInfoConverter blogInfoConverter;

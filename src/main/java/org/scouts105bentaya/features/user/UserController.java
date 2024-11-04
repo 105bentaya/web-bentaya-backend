@@ -2,14 +2,13 @@ package org.scouts105bentaya.features.user;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.core.security.service.ResetPasswordService;
 import org.scouts105bentaya.features.user.dto.ChangePasswordDto;
 import org.scouts105bentaya.features.user.dto.UserDto;
 import org.scouts105bentaya.features.user.specification.UserSpecificationFilter;
 import org.scouts105bentaya.shared.specification.PageDto;
 import org.scouts105bentaya.shared.util.SecurityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,11 +22,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
 
+@Slf4j
 @RestController
 @RequestMapping("api/user")
 public class UserController {
 
-    private static final Logger log = LoggerFactory.getLogger(UserController.class);
     private final UserService userService;
     private final ResetPasswordService resetPasswordService;
     private final UserConverter userConverter;

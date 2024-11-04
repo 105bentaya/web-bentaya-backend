@@ -1,7 +1,7 @@
 package org.scouts105bentaya.features.poll;
 
-import org.scouts105bentaya.core.exception.NotFoundException;
-import org.scouts105bentaya.core.exception.WebBentayaException;
+import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
+import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.core.security.service.RequestService;
 import org.scouts105bentaya.features.poll.entity.Poll;
 import org.scouts105bentaya.features.poll.entity.PollOption;
@@ -39,28 +39,28 @@ public class PollService {
     }
 
     public Poll findById(Integer id) {
-        return pollRepository.findById(id).orElseThrow(NotFoundException::new);
+        return pollRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
     }
 
     public void vote(Integer optionId) {
-        PollOption option = pollOptionRepository.findById(optionId).orElseThrow(NotFoundException::new);
+        PollOption option = pollOptionRepository.findById(optionId).orElseThrow(WebBentayaNotFoundException::new);
         if (!optionHasBeenVoted(option)) {
             PollVote newVote = new PollVote();
             newVote.setPollOption(option);
             newVote.setIp(requestService.getClientIP());
             pollVoteRepository.save(newVote);
         } else {
-            throw new WebBentayaException("Ya has votado esta opción");
+            throw new WebBentayaBadRequestException("Ya has votado esta opción");
         }
     }
 
     public void deleteVote(Integer optionId) {
-        PollOption option = pollOptionRepository.findById(optionId).orElseThrow(NotFoundException::new);
+        PollOption option = pollOptionRepository.findById(optionId).orElseThrow(WebBentayaNotFoundException::new);
         Optional<PollVote> vote = getVote(option);
         if (vote.isPresent()) {
             pollVoteRepository.delete(vote.get());
         } else {
-            throw new WebBentayaException("Ya has votado esta opción");
+            throw new WebBentayaBadRequestException("Ya has votado esta opción");
         }
     }
 

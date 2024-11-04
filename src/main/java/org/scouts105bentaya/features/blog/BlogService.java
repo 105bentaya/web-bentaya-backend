@@ -1,19 +1,20 @@
 package org.scouts105bentaya.features.blog;
 
-import org.scouts105bentaya.core.exception.BlogAlreadyExistsException;
-import org.scouts105bentaya.core.exception.BlogNotFoundException;
-import org.scouts105bentaya.core.exception.WebBentayaException;
+import lombok.extern.slf4j.Slf4j;
+import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
+import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Objects;
 
+@Slf4j
 @Service
 public class BlogService {
+
     private final BlogRepository blogRepository;
 
     public BlogService(BlogRepository blogRepository) {
@@ -35,17 +36,18 @@ public class BlogService {
     }
 
     public Blog findById(int id) {
-        return blogRepository.findById(id).orElseThrow(BlogNotFoundException::new);
+        return blogRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
     }
 
     public Blog findPublishedByName(String name) {
-        return blogRepository.findPublishedByName(name).orElseThrow(BlogNotFoundException::new);
+        return blogRepository.findPublishedByName(name).orElseThrow(WebBentayaNotFoundException::new);
     }
 
     public Blog save(Blog blog) {
 
         if (blogRepository.findByTitle(blog.getTitle()).isPresent()) {
-            throw new BlogAlreadyExistsException("Ya existe una entrada con este nombre");
+            log.warn("save - Blog with title {} already exists", blog.getTitle());
+            throw new WebBentayaBadRequestException("Ya existe una entrada con el título %s".formatted(blog.getTitle()));
         }
 
         blog.setTitle(standardizeStringToURL(blog.getTitle()));
@@ -58,7 +60,8 @@ public class BlogService {
         Blog blogToUpdate = this.findById(id);
 
         if (!Objects.equals(blogToUpdate.getTitle(), blog.getTitle()) && blogRepository.findByTitle(blog.getTitle()).isPresent()) {
-            throw new BlogAlreadyExistsException("Ya existe una entrada con este nombre");
+            log.warn("update - Blog with title {} already exists", blog.getTitle());
+            throw new WebBentayaBadRequestException("Ya existe una entrada con el título %s".formatted(blog.getTitle()));
         }
 
         blogToUpdate.setTitle(standardizeStringToURL(blog.getTitle()));

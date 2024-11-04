@@ -1,15 +1,14 @@
 package org.scouts105bentaya.features.user;
 
+import lombok.extern.slf4j.Slf4j;
 import org.passay.CharacterData;
 import org.passay.CharacterRule;
 import org.passay.PasswordGenerator;
-import org.scouts105bentaya.core.exception.PasswordsNotMatchException;
-import org.scouts105bentaya.core.exception.RoleNotFoundException;
-import org.scouts105bentaya.core.exception.user.UserAlreadyExistsException;
-import org.scouts105bentaya.core.exception.user.UserHasNotGroupException;
-import org.scouts105bentaya.core.exception.user.UserHasNotScoutsException;
-import org.scouts105bentaya.core.exception.user.UserHasReachedMaxLoginAttemptsException;
-import org.scouts105bentaya.core.exception.user.UserNotFoundException;
+import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
+import org.scouts105bentaya.core.exception.WebBentayaConflictException;
+import org.scouts105bentaya.core.exception.WebBentayaRoleNotFoundException;
+import org.scouts105bentaya.core.exception.WebBentayaUserNotFoundException;
+import org.scouts105bentaya.core.security.UserHasReachedMaxLoginAttemptsException;
 import org.scouts105bentaya.core.security.service.LoginAttemptService;
 import org.scouts105bentaya.core.security.service.RequestService;
 import org.scouts105bentaya.features.scout.Scout;
@@ -20,8 +19,6 @@ import org.scouts105bentaya.features.user.specification.UserSpecificationFilter;
 import org.scouts105bentaya.shared.GenericConstants;
 import org.scouts105bentaya.shared.service.EmailService;
 import org.scouts105bentaya.shared.util.SecurityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.GrantedAuthority;
@@ -40,10 +37,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+@Slf4j
 @Service
 public class UserService implements UserDetailsService {
 
-    private static final Logger log = LoggerFactory.getLogger(UserService.class);
     private final UserRepository userRepository;
     private final UserConverter userConverter;
     private final PasswordEncoder passwordEncoder;
@@ -79,7 +76,7 @@ public class UserService implements UserDetailsService {
         if (user.isEmpty()) {
             log.error("User with id {} could not be found", id);
         }
-        return user.orElseThrow(UserNotFoundException::new);
+        return user.orElseThrow(WebBentayaUserNotFoundException::new);
     }
 
     public UserDto save(UserDto userDto) {
@@ -87,20 +84,19 @@ public class UserService implements UserDetailsService {
         User user = userConverter.convertFromDto(userDto);
 
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
-            log.error("User with username {} already exists", userDto.username());
-            throw new UserAlreadyExistsException("A user with this username already exists");
+            handleUserAlreadyExists(userDto.username());
         }
 
         if (!user.hasRole(Roles.ROLE_SCOUTER)) {
             user.setGroupId(null);
         } else if (user.getGroupId() == null) {
-            throw new UserHasNotGroupException("El usuario debe tener una unidad");
+            throw new WebBentayaBadRequestException("El usuario debe tener una unidad");
         }
 
         if (!user.hasRole(Roles.ROLE_USER)) {
             user.setScoutList(null);
         } else if (user.getScoutList() == null) {
-            throw new UserHasNotScoutsException("El usuario debe tener educandos");
+            throw new WebBentayaBadRequestException("El usuario debe tener educandos");
         }
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -111,8 +107,7 @@ public class UserService implements UserDetailsService {
     public void addNewUserRoleUser(String username, Scout scout) {
         Optional<User> usernameUser = userRepository.findByUsername(username);
         if (usernameUser.isPresent()) {
-            log.error("User with username {} already exists", username);
-            throw new UserAlreadyExistsException("A user with this username already exists");
+            handleUserAlreadyExists(username);
         }
 
         User newUser = new User();
@@ -145,7 +140,7 @@ public class UserService implements UserDetailsService {
             User existingUser = usernameUser.get();
             if (!existingUser.hasRole(Roles.ROLE_SCOUT_CENTER_REQUESTER)) {
                 existingUser.getRoles().add(roleRepository.findByName("ROLE_SCOUT_CENTER_REQUESTER")
-                    .orElseThrow(RoleNotFoundException::new)
+                    .orElseThrow(WebBentayaRoleNotFoundException::new)
                 );
             }
             return null;
@@ -213,8 +208,7 @@ public class UserService implements UserDetailsService {
             log.info("Trying to change user's {} username from {} to {}", id, userDB.getUsername(), userToUpdate.getUsername());
         }
         if (usernameUser.isPresent() && !usernameUser.get().getId().equals(userDB.getId())) {
-            log.error("User with username {} already exists", userToUpdate.getUsername());
-            throw new UserAlreadyExistsException("A user with this username already exists");
+            handleUserAlreadyExists(userToUpdate.getUsername());
         }
         userDB.setPassword(
             userToUpdate.getPassword() == null || userToUpdate.getPassword().isEmpty() ?
@@ -230,13 +224,13 @@ public class UserService implements UserDetailsService {
 
         if (userToUpdate.hasRole(Roles.ROLE_USER)) {
             if (userToUpdate.getScoutList() == null)
-                throw new UserHasNotScoutsException("El usuario debe tener educandos");
+                throw new WebBentayaBadRequestException("El usuario debe tener educandos");
             userDB.setScoutList(userToUpdate.getScoutList());
         }
 
         if (userToUpdate.hasRole(Roles.ROLE_SCOUTER)) {
             if (userToUpdate.getGroupId() == null)
-                throw new UserHasNotGroupException("El usuario debe tener una unidad");
+                throw new WebBentayaBadRequestException("El usuario debe tener una unidad");
             userDB.setGroupId(userToUpdate.getGroupId());
         } else {
             userDB.setGroupId(null);
@@ -256,7 +250,7 @@ public class UserService implements UserDetailsService {
                 user.setEnabled(true);
             }
             if (!user.hasRole(Roles.ROLE_USER)) {
-                user.getRoles().add(roleRepository.findByName(Roles.ROLE_USER.name()).orElseThrow(RoleNotFoundException::new));
+                user.getRoles().add(roleRepository.findByName(Roles.ROLE_USER.name()).orElseThrow(WebBentayaRoleNotFoundException::new));
             }
             user.getScoutList().add(scout);
             userRepository.save(user);
@@ -283,7 +277,7 @@ public class UserService implements UserDetailsService {
     }
 
     public User findByUsername(String username) {
-        return userRepository.findByUsername(username).orElseThrow(UserNotFoundException::new);
+        return userRepository.findByUsername(username).orElseThrow(WebBentayaUserNotFoundException::new);
     }
 
     public void delete(int id) {
@@ -300,14 +294,16 @@ public class UserService implements UserDetailsService {
         log.info("User {} with id {} trying to change password", user.getUsername(), user.getId());
 
         if (!changePasswordDto.newPassword().equals(changePasswordDto.newPasswordRepeat())) {
-            throw new PasswordsNotMatchException("Las contraseñas nuevas no coinciden");
+            log.warn("Passwords do not match");
+            throw new WebBentayaBadRequestException("Las contraseñas nuevas no coinciden");
         }
         if (changePasswordDto.newPassword().equals(GenericConstants.FAKE_PASSWORD)) {
-            throw new PasswordsNotMatchException("La nueva contraseña no es válida");
+            log.warn("New password is not valid");
+            throw new WebBentayaBadRequestException("La nueva contraseña no es válida");
         }
         if (!BCrypt.checkpw(changePasswordDto.currentPassword(), user.getPassword())) {
-            log.error("Current password is not valid");
-            throw new PasswordsNotMatchException("La contraseña actual no es válida");
+            log.warn("Current password is not valid");
+            throw new WebBentayaBadRequestException("La contraseña actual no es válida");
         }
         user.setPassword(passwordEncoder.encode(changePasswordDto.newPassword()));
         userRepository.save(user);
@@ -319,7 +315,8 @@ public class UserService implements UserDetailsService {
         log.info("Trying to change forgotten password for {}", username);
 
         if (newPassword.equals(GenericConstants.FAKE_PASSWORD)) {
-            throw new PasswordsNotMatchException("La nueva contraseña no es válida");
+            log.warn("New password is not valid");
+            throw new WebBentayaBadRequestException("La nueva contraseña no es válida");
         }
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
@@ -336,7 +333,8 @@ public class UserService implements UserDetailsService {
             return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), user.isEnabled(),
                 true, true, true, buildAuthorities(user.getRoles()));
         } else {
-            throw new UserNotFoundException("The user %s wasn't found in the database".formatted(username));
+            log.warn("The user {} wasn't found in the database", username);
+            throw new UsernameNotFoundException("The user %s wasn't found in the database".formatted(username));
         }
     }
 
@@ -346,5 +344,10 @@ public class UserService implements UserDetailsService {
             auths.add(new SimpleGrantedAuthority(role.getName()));
         }
         return new ArrayList<>(auths);
+    }
+
+    private void handleUserAlreadyExists(String username) {
+        log.warn("User with username {} already exists", username);
+        throw new WebBentayaConflictException("Ya existe un usuario con este correo electrónico");
     }
 }

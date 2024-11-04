@@ -1,8 +1,7 @@
 package org.scouts105bentaya.features.senior_section;
 
 import jakarta.validation.Valid;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,11 +13,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/senior")
 public class SeniorSectionController {
-    private static final Logger log = LoggerFactory.getLogger(SeniorSectionController.class);
-
     private final SeniorSectionService seniorSectionService;
     private final SeniorFormConverter seniorFormConverter;
 

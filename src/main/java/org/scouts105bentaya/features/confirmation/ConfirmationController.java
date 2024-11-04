@@ -1,5 +1,6 @@
 package org.scouts105bentaya.features.confirmation;
 
+import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.features.confirmation.converter.AttendanceInfoConverter;
 import org.scouts105bentaya.features.confirmation.converter.ConfirmationConverter;
 import org.scouts105bentaya.features.confirmation.dto.AttendanceInfoDto;
@@ -10,8 +11,6 @@ import org.scouts105bentaya.features.confirmation.dto.ConfirmationDto;
 import org.scouts105bentaya.features.confirmation.service.AttendanceExcelReportService;
 import org.scouts105bentaya.features.confirmation.service.ConfirmationService;
 import org.scouts105bentaya.shared.util.SecurityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,11 +23,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("api/confirmation")
 public class ConfirmationController {
 
-    private static final Logger log = LoggerFactory.getLogger(ConfirmationController.class);
     private final ConfirmationService confirmationService;
     private final ConfirmationConverter confirmationConverter;
     private final AttendanceInfoConverter attendanceInfoConverter;

@@ -3,27 +3,21 @@ package org.scouts105bentaya.shared.util;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
-import jakarta.annotation.Nullable;
-import jakarta.validation.constraints.NotNull;
-import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.core.security.InvalidJwtException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.crypto.SecretKey;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Slf4j
 public final class JwtUtils {
 
-    private static final Logger log = LoggerFactory.getLogger(JwtUtils.class);
     private static final Pattern BEARER = Pattern.compile("Bearer ", Pattern.LITERAL);
 
     private JwtUtils() {

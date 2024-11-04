@@ -1,7 +1,9 @@
 package org.scouts105bentaya.features.event.service;
 
-import org.scouts105bentaya.core.exception.EventNotFoundException;
-import org.scouts105bentaya.core.exception.WebBentayaException;
+import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
+import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
+import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.confirmation.Confirmation;
 import org.scouts105bentaya.features.confirmation.service.ConfirmationService;
 import org.scouts105bentaya.features.event.Event;
@@ -12,12 +14,12 @@ import org.scouts105bentaya.shared.GenericConstants;
 import org.scouts105bentaya.shared.Group;
 import org.springframework.stereotype.Service;
 
-import java.beans.Transient;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
+@Slf4j
 @Service
 public class EventService {
 
@@ -49,10 +51,10 @@ public class EventService {
     }
 
     public Event findById(Integer id) {
-        return eventRepository.findById(id).orElseThrow(EventNotFoundException::new);
+        return eventRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
     }
 
-    @Transient
+    @Transactional
     public Event save(EventFormDto eventForm) {
         Event newEvent = new Event();
         newEvent.setTitle(eventForm.title());
@@ -61,7 +63,7 @@ public class EventService {
         newEvent.setLocation(eventForm.location());
 
         if (newEvent.getGroupId().isNotUnit() && eventForm.activateAttendanceList()) {
-            throw new WebBentayaException("No se puede activar la asistencia para esta unidad");
+            throw new WebBentayaBadRequestException("No se puede activar la asistencia para esta unidad");
         }
 
         newEvent.setActiveAttendanceList(eventForm.activateAttendanceList());
@@ -82,7 +84,7 @@ public class EventService {
         return savedEvent;
     }
 
-    @Transient
+    @Transactional
     public Event update(EventFormDto eventForm) {
         Event eventDB = findById(eventForm.id());
 
@@ -102,19 +104,22 @@ public class EventService {
         event.setUnknownTime(eventForm.unknownTime());
         if (eventForm.unknownTime()) {
             if (eventForm.localStartDate() == null || eventForm.localEndDate() == null) {
-                throw new WebBentayaException("Fechas no especificadas");
+                log.warn("setEventDates - local start {} or end dates {} invalid", eventForm.localStartDate(), eventForm.localEndDate());
+                throw new WebBentayaBadRequestException("Fechas no especificadas");
             }
             event.setStartDate(ZonedDateTime.of(eventForm.localStartDate(), LocalTime.of(11, 0), GenericConstants.UTC_ZONE));
             event.setEndDate(ZonedDateTime.of(eventForm.localEndDate(), LocalTime.of(13, 0), GenericConstants.UTC_ZONE));
         } else {
             if (eventForm.startDate() == null || eventForm.endDate() == null) {
-                throw new WebBentayaException("Fechas no especificadas");
+                log.warn("setEventDates - start {} or end dates {} invalid", eventForm.startDate(), eventForm.startDate());
+                throw new WebBentayaBadRequestException("Fechas no especificadas");
             }
             event.setEndDate(eventForm.endDate().truncatedTo(ChronoUnit.MINUTES));
             event.setStartDate(eventForm.startDate().truncatedTo(ChronoUnit.MINUTES));
         }
         if (!event.getStartDate().isBefore(event.getEndDate())) {
-            throw new WebBentayaException("La fecha de fin no debe ser anterior a la de inicio");
+            log.warn("setEventDates - start date {} is not before end date {}", event.getStartDate(), event.getEndDate());
+            throw new WebBentayaBadRequestException("La fecha de fin no debe ser anterior a la de inicio");
         }
     }
 

@@ -1,6 +1,9 @@
 package org.scouts105bentaya.features.pre_scouter;
 
 import jakarta.activation.DataSource;
+import lombok.extern.slf4j.Slf4j;
+import org.scouts105bentaya.core.exception.WebBentayaErrorException;
+import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.shared.service.EmailService;
 import org.scouts105bentaya.shared.service.PdfService;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,11 +12,12 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Optional;
 
+@Slf4j
 @Service
 public class PreScouterService {
 
@@ -72,16 +76,16 @@ public class PreScouterService {
     }
 
     public ResponseEntity<byte[]> getPDF(Integer id) {
-        Optional<PreScouter> optionalPreScouter = this.preScouterRepository.findById(id);
-        if (optionalPreScouter.isPresent()) {
-            try {
-                byte[] pdf = pdfService.generatePreScouterPDF(optionalPreScouter.get()).getInputStream().readAllBytes();
-                return ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM).header(HttpHeaders.CONTENT_DISPOSITION).body(pdf);
-            } catch (Exception ignored) {
-                //ignored
-            }
+        try {
+            PreScouter preScouter = this.preScouterRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
+            return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_DISPOSITION)
+                .body(pdfService.generatePreScouterPDF(preScouter).getInputStream().readAllBytes());
+        } catch (IOException e) {
+            log.error("getPDF - {}", e.getMessage());
+            throw new WebBentayaErrorException("Error al generar el PDF");
         }
-        return ResponseEntity.badRequest().build();
     }
 
     public void delete(Integer id) {

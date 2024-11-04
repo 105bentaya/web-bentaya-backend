@@ -1,18 +1,17 @@
 package org.scouts105bentaya.features.senior_section;
 
+import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.shared.service.EmailService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import java.util.List;
 
+@Slf4j
 @Service
 public class SeniorSectionService {
 
-    private static final Logger log = LoggerFactory.getLogger(SeniorSectionService.class);
     private final SeniorFormConverter seniorFormConverter;
     private final TemplateEngine template;
     private final EmailService emailService;

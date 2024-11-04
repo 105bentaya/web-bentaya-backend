@@ -12,6 +12,7 @@ import lombok.Setter;
 @Setter
 @Entity
 public class Role {
+    //todo i dont like this entity >:(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
