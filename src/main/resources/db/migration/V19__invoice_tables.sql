@@ -84,7 +84,8 @@ VALUES (1, 'DGJ'),
        (10, 'SAGULPA'),
        (11, 'ASDE 0,7'),
        (12, 'ASDE Otras'),
-       (13, 'OTRAS');
+       (13, 'OTRAS'),
+       (14, 'Voluntariado');
 
 INSERT INTO invoice_payer(id, payer, group_id)
 VALUES (1, 'GARAJONAY', 1),
