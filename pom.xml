@@ -10,7 +10,7 @@
     </parent>
     <groupId>org.105bentaya</groupId>
     <artifactId>web-bentaya-backend</artifactId>
-    <version>1.2.0</version>
+    <version>1.2.1</version>
     <name>web-bentaya-backend</name>
     <description>Página Web del Grupo Scout 105 Bentaya</description>
     <properties>
