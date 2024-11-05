@@ -32,10 +32,11 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
         try {
             Optional<UsernamePasswordAuthenticationToken> authenticationToken = this.getAuthentication(request);
             authenticationToken.ifPresent(usernamePasswordAuthenticationToken -> SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken));
+            chain.doFilter(request, response);
         } catch (InvalidJwtException e) {
             ErrorResponseHandler.authErrorHandler(response, EXCEPTION_MESSAGE);
+            response.getWriter().flush();
         }
-        chain.doFilter(request, response);
     }
 
     private Optional<UsernamePasswordAuthenticationToken> getAuthentication(HttpServletRequest request) throws InvalidJwtException {
