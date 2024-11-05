@@ -8,17 +8,17 @@ import org.springframework.data.domain.Sort;
 
 @Getter
 @Setter
-public abstract class SpecificationFilter {
+public class SpecificationFilter {
     private String sortedBy = "id";
     private boolean asc = true;
     private int page;
     private int countPerPage;
 
     public Pageable getPageable() {
-        return page < 0 ? Pageable.unpaged() : PageRequest.of(page, countPerPage);
+        return page < 0 ? Pageable.unpaged(getSort()) : PageRequest.of(page, countPerPage, getSort());
     }
 
-    public Sort getSort() {
+    private Sort getSort() {
         return asc ?
             Sort.by(getSortedBy()).and(Sort.by("id")) :
             Sort.by(getSortedBy()).descending().and(Sort.by("id"));

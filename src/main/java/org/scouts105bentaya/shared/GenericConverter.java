@@ -24,4 +24,8 @@ public abstract class GenericConverter<E, D> {
     public PageDto<D> convertEntityPageToPageDto(Page<E> entityPage) {
         return new PageDto<>(entityPage.getTotalElements(), convertEntityCollectionToDtoList(entityPage.getContent()));
     }
+
+    public static <E> PageDto<E> convertListToPageDto(Page<E> entityPage) {
+        return new PageDto<>(entityPage.getTotalElements(), entityPage.getContent());
+    }
 }
