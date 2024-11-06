@@ -156,14 +156,12 @@ public class ConfirmationService {
             confirmationDB.setPayed(null);
         }
         return confirmationRepository.save(confirmationDB);
-
-
     }
 
     private void validateScouterScoutAccess(Confirmation confirmation) {
         User loggedUser = this.authService.getLoggedUser();
-        if (loggedUser.getGroupId().equals(confirmation.getEvent().getGroupId()) &&
-            loggedUser.getGroupId().equals(confirmation.getScout().getGroupId())) {
+        if (!loggedUser.getGroupId().equals(confirmation.getEvent().getGroupId()) ||
+            !loggedUser.getGroupId().equals(confirmation.getScout().getGroupId())) {
             throw new WebBentayaForbiddenException("Acceso no autorizado a este scout");
         }
     }
