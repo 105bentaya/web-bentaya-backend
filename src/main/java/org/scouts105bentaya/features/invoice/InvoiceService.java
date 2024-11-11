@@ -6,6 +6,8 @@ import org.scouts105bentaya.features.invoice.repository.InvoiceExpenseTypeReposi
 import org.scouts105bentaya.features.invoice.repository.InvoiceGrantRepository;
 import org.scouts105bentaya.features.invoice.repository.InvoicePayerRepository;
 import org.scouts105bentaya.features.invoice.repository.InvoiceRepository;
+import org.scouts105bentaya.features.invoice.specification.InvoiceSpecification;
+import org.scouts105bentaya.features.invoice.specification.InvoiceSpecificationFilter;
 import org.scouts105bentaya.shared.specification.SpecificationFilter;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -30,8 +32,8 @@ public class InvoiceService {
         this.invoicePayerRepository = invoicePayerRepository;
     }
 
-    public Page<Invoice> findAll(SpecificationFilter filter) {
-        return invoiceRepository.findAll(filter.getPageable());
+    public Page<Invoice> findAll(InvoiceSpecificationFilter filter) {
+        return invoiceRepository.findAll(new InvoiceSpecification(filter), filter.getPageable());
     }
 
     public Invoice findById(Integer id) {

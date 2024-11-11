@@ -3,6 +3,7 @@ package org.scouts105bentaya.features.invoice;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.features.invoice.entity.Invoice;
+import org.scouts105bentaya.features.invoice.specification.InvoiceSpecificationFilter;
 import org.scouts105bentaya.shared.GenericConverter;
 import org.scouts105bentaya.shared.specification.PageDto;
 import org.scouts105bentaya.shared.specification.SpecificationFilter;
@@ -30,7 +31,7 @@ public class InvoiceController {
     }
 
     @GetMapping
-    public PageDto<Invoice> getAllInvoices(SpecificationFilter filter) {
+    public PageDto<Invoice> getAllInvoices(InvoiceSpecificationFilter filter) {
         log.info("getAllInvoices - filter:{}{}", filter, SecurityUtils.getLoggedUserUsernameForLog());
         return GenericConverter.convertListToPageDto(invoiceService.findAll(filter));
     }
