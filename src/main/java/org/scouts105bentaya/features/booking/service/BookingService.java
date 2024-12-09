@@ -129,7 +129,7 @@ public class BookingService {
         } else if (currentBooking.getStatus() == BookingStatus.RESERVED) {
             if (newStatusDto.getNewStatus() == BookingStatus.CANCELED) {
                 return this.bookingStatusService.bookingCanceled(currentBooking, newStatusDto.getObservations());
-            } else if (newStatusDto.getNewStatus() == BookingStatus.RESERVED && !currentBooking.isUserConfirmedDocuments()) {
+            } else if (newStatusDto.getNewStatus() == BookingStatus.RESERVED) {
                 return this.bookingStatusService.bookingFromReservedToReservedByUser(currentBooking);
             }
         } else if (currentBooking.getStatus() == BookingStatus.OCCUPIED || currentBooking.getStatus() == BookingStatus.FULLY_OCCUPIED) {
@@ -253,10 +253,6 @@ public class BookingService {
             if (booking.getStatus() != BookingStatus.RESERVED && booking.getStatus() != BookingStatus.OCCUPIED && booking.getStatus() != BookingStatus.FULLY_OCCUPIED) {
                 log.warn("saveBookingDocument - booking status {} is not valid for uploading documents", booking.getStatus());
                 throw new WebBentayaBadRequestException("No se añadir documentos en este paso de la reserva");
-            }
-            if (booking.getStatus() == BookingStatus.RESERVED && booking.isUserConfirmedDocuments()) {
-                log.warn("saveBookingDocument - booking documents are already confirmed");
-                throw new WebBentayaBadRequestException("No se pueden añadir más documentos si ya los ha confirmado");
             }
             BookingDocument document = new BookingDocument();
             document.setBooking(booking);

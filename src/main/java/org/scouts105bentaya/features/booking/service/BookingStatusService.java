@@ -80,10 +80,14 @@ public class BookingStatusService {
     }
 
     public Booking bookingFromReservedToReservedByUser(Booking currentBooking) {
-        currentBooking.setUserConfirmedDocuments(true);
-        Booking savedBooking = bookingRepository.save(currentBooking);
+        if (!currentBooking.isUserConfirmedDocuments()) {
+            currentBooking.setUserConfirmedDocuments(true);
+            Booking savedBooking = bookingRepository.save(currentBooking);
+            this.sendNotifyDocumentsUploadedMail(savedBooking);
+            return savedBooking;
+        }
         this.sendNotifyDocumentsUploadedMail(currentBooking);
-        return savedBooking;
+        return currentBooking;
     }
 
     public Booking bookingFromReservedToReservedByManager(Booking currentBooking, String observations) {
