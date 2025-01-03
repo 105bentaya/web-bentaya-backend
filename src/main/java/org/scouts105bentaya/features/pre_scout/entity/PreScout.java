@@ -10,6 +10,7 @@ import jakarta.persistence.PrimaryKeyJoinColumn;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.ZonedDateTime;
 
@@ -17,6 +18,7 @@ import java.time.ZonedDateTime;
 @Getter
 @Setter
 @Entity
+@SQLRestriction("assigned <> true")
 public class PreScout {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,6 +45,8 @@ public class PreScout {
     private String parentsSurname;
     private String size;
     private Integer inscriptionYear;
+    //todo actualizar junto con el assignation rework
+    private boolean assigned;
     @OneToOne(mappedBy = "preScout", cascade = CascadeType.ALL)
     @PrimaryKeyJoinColumn
     private PreScoutAssignation preScoutAssignation;

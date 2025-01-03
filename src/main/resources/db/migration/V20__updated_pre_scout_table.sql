@@ -1,6 +1,9 @@
 ALTER TABLE pre_scout
     ADD priority_as_text VARCHAR(255);
 
+ALTER TABLE pre_scout
+    ADD assigned BOOLEAN DEFAULT FALSE;
+
 UPDATE pre_scout
 SET priority_as_text = '1. Tiene hermanos/as o es hija de scouters que están en el grupo en la Ronda Solar 2024/25'
 WHERE priority = 1;

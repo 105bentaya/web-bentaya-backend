@@ -98,7 +98,7 @@ public class ScoutService {
 
     public Scout saveFromPreScoutAndDelete(ScoutDto scoutDto, Integer preScoutId) {
         Scout scout = save(scoutDto);
-        this.preScoutService.delete(preScoutId);
+        this.preScoutService.saveAsAssigned(preScoutId);
         return scout;
     }
 

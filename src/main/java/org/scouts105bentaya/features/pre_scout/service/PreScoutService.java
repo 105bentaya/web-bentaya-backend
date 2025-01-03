@@ -222,6 +222,12 @@ public class PreScoutService {
         }
     }
 
+    public void saveAsAssigned(Integer id) {
+        PreScout preScout = this.findById(id);
+        preScout.setAssigned(true);
+        preScoutRepository.save(preScout);
+    }
+
     public void delete(Integer id) {
         this.preScoutRepository.deleteById(id);
     }
