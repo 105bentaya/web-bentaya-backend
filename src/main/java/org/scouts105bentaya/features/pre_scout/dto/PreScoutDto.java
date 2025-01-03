@@ -24,12 +24,12 @@ public record PreScoutDto(
     String comment,
     @NotNull Integer priority,
     String priorityInfo,
-    String creationDate,
+    ZonedDateTime creationDate,
     Integer status,
     Integer groupId,
     String assignationComment,
     ZonedDateTime assignationDate,
-    String inscriptionYear,
+    int inscriptionYear,
     @NotNull String size
 ) {
 }

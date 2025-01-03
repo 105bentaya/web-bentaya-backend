@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.scouts105bentaya.core.exception.WebBentayaErrorException;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
-import org.scouts105bentaya.features.pre_scout.PreScoutConverter;
+import org.scouts105bentaya.features.pre_scout.PreScoutUtils;
 import org.scouts105bentaya.features.pre_scout.dto.PreScoutAssignationDto;
 import org.scouts105bentaya.features.pre_scout.dto.PreScoutFormDto;
 import org.scouts105bentaya.features.pre_scout.entity.PreScout;
@@ -13,10 +13,10 @@ import org.scouts105bentaya.features.pre_scout.entity.PreScoutAssignation;
 import org.scouts105bentaya.features.pre_scout.repository.PreScoutAssignationRepository;
 import org.scouts105bentaya.features.pre_scout.repository.PreScoutRepository;
 import org.scouts105bentaya.features.setting.SettingService;
+import org.scouts105bentaya.shared.GenericConstants;
 import org.scouts105bentaya.shared.Group;
 import org.scouts105bentaya.shared.service.AuthService;
 import org.scouts105bentaya.shared.service.EmailService;
-import org.scouts105bentaya.features.pre_scout.PreScoutUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
@@ -27,7 +27,6 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -39,7 +38,6 @@ public class PreScoutService {
     private final EmailService emailService;
     private final PreScoutRepository preScoutRepository;
     private final PreScoutAssignationRepository preScoutAssignationRepository;
-    private final PreScoutConverter preScoutConverter;
     private final SettingService settingService;
     private final AuthService authService;
     private final Environment environment;
@@ -51,7 +49,6 @@ public class PreScoutService {
         EmailService emailService,
         PreScoutRepository preScoutRepository,
         PreScoutAssignationRepository preScoutAssignationRepository,
-        PreScoutConverter preScoutConverter,
         SettingService settingService,
         AuthService authService,
         Environment environment,
@@ -60,7 +57,6 @@ public class PreScoutService {
         this.emailService = emailService;
         this.preScoutRepository = preScoutRepository;
         this.preScoutAssignationRepository = preScoutAssignationRepository;
-        this.preScoutConverter = preScoutConverter;
         this.settingService = settingService;
         this.authService = authService;
         this.environment = environment;
@@ -105,14 +101,15 @@ public class PreScoutService {
             .setPriorityInfo(preScoutDto.priorityInfo())
             .setComment(preScoutDto.comment());
 
-        String secondYearOfTerm = settingService.findByName("currentFormYear").getValue();
-        int firstYearOfTerm = Integer.parseInt(secondYearOfTerm) - 1;
+        int secondYearOfTerm = Integer.parseInt(settingService.findByName("currentFormYear").getValue());
+        int firstYearOfTerm = secondYearOfTerm - 1;
         int preScoutBirthYear = LocalDate.parse(preScout.getBirthday(), DateTimeFormatter.ofPattern("dd/MM/yyyy")).getYear();
 
         preScout.setAge(String.valueOf(firstYearOfTerm - preScoutBirthYear));
         preScout.setInscriptionYear(secondYearOfTerm);
         preScout.setSection(PreScoutUtils.getGroup(preScout.getBirthday(), firstYearOfTerm));
-        preScout.setCreationDate(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss").format(LocalDateTime.now()));
+        preScout.setCreationDate(ZonedDateTime.now(GenericConstants.CANARY_ZONE_ID));
+        preScout.setPriorityAsText(PreScoutUtils.getPriority(preScout.getPriority(), secondYearOfTerm));
 
         return this.preScoutRepository.save(preScout);
     }

@@ -11,6 +11,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
+import java.time.ZonedDateTime;
+
 @Accessors(chain = true)
 @Getter
 @Setter
@@ -35,11 +37,12 @@ public class PreScout {
     private String email;
     private String comment;
     private Integer priority;
-    private String creationDate;
-    private String parentsSurname;
     private String priorityInfo;
+    private String priorityAsText;
+    private ZonedDateTime creationDate;
+    private String parentsSurname;
     private String size;
-    private String inscriptionYear;
+    private Integer inscriptionYear;
     @OneToOne(mappedBy = "preScout", cascade = CascadeType.ALL)
     @PrimaryKeyJoinColumn
     private PreScoutAssignation preScoutAssignation;

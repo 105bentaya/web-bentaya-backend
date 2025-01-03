@@ -4,6 +4,7 @@ import jakarta.activation.DataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.core.exception.WebBentayaErrorException;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
+import org.scouts105bentaya.shared.GenericConstants;
 import org.scouts105bentaya.shared.service.EmailService;
 import org.scouts105bentaya.shared.service.PdfService;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,7 +15,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Slf4j
@@ -51,7 +51,7 @@ public class PreScouterService {
 
     private PreScouter save(PreScouterDto preScouterDto) {
         PreScouter preScouter = preScouterConverter.convertFromDto(preScouterDto);
-        preScouter.setCreationDate(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss").format(LocalDateTime.now()));
+        preScouter.setCreationDate(GenericConstants.DATE_TIME_FORMATTER.format(LocalDateTime.now()));
         return this.preScouterRepository.save(preScouter);
     }
 
