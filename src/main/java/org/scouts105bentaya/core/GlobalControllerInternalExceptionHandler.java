@@ -1,5 +1,8 @@
 package org.scouts105bentaya.core;
 
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.core.exception.WebBentayaAuthServiceException;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
 import org.scouts105bentaya.core.exception.WebBentayaConflictException;
@@ -10,18 +13,44 @@ import org.scouts105bentaya.core.exception.WebBentayaRoleNotFoundException;
 import org.scouts105bentaya.core.exception.WebBentayaUnauthorizedException;
 import org.scouts105bentaya.core.exception.WebBentayaUserNotFoundException;
 import org.scouts105bentaya.core.exception.payment.WebBentayaPaymentNotFoundException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.context.request.ServletWebRequest;
+import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.util.Map;
 
+@Slf4j
 @ControllerAdvice
 public class GlobalControllerInternalExceptionHandler extends ResponseEntityExceptionHandler {
 
     private static final String WEB_BENTAYA_EXCEPTION = "webBentayaError";
+
+    @Override
+    protected ResponseEntity<Object> handleHttpRequestMethodNotSupported(
+        @NonNull HttpRequestMethodNotSupportedException ex,
+        @NonNull HttpHeaders headers,
+        @NonNull HttpStatusCode status,
+        @NonNull WebRequest request
+    ) {
+        if (request instanceof ServletWebRequest servletWebRequest) {
+            HttpServletRequest httpServletRequest = servletWebRequest.getRequest();
+            log.warn(
+                "Tried to request URI '{}' from address '{}'",
+                httpServletRequest.getRequestURI(),
+                httpServletRequest.getRemoteAddr()
+            );
+        } else {
+            log.warn("Tried to request: {}", request);
+        }
+        return super.handleHttpRequestMethodNotSupported(ex, headers, status, request);
+    }
 
     @ExceptionHandler(WebBentayaBadRequestException.class)
     public ResponseEntity<Map<String, String>> handleBadRequestException(WebBentayaBadRequestException ex) {
