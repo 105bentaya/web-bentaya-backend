@@ -7,7 +7,7 @@ import org.scouts105bentaya.core.exception.WebBentayaUserNotFoundException;
 import org.scouts105bentaya.features.confirmation.Confirmation;
 import org.scouts105bentaya.features.confirmation.service.ConfirmationService;
 import org.scouts105bentaya.features.event.service.EventService;
-import org.scouts105bentaya.features.pre_scout.PreScoutService;
+import org.scouts105bentaya.features.pre_scout.service.PreScoutService;
 import org.scouts105bentaya.features.scout.converter.ScoutConverter;
 import org.scouts105bentaya.features.scout.dto.ScoutDto;
 import org.scouts105bentaya.features.scout.dto.ScoutFormUserUpdateDto;

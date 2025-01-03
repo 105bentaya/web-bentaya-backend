@@ -4,6 +4,8 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.features.pre_scout.dto.PreScoutAssignationDto;
 import org.scouts105bentaya.features.pre_scout.dto.PreScoutDto;
+import org.scouts105bentaya.features.pre_scout.dto.PreScoutFormDto;
+import org.scouts105bentaya.features.pre_scout.service.PreScoutService;
 import org.scouts105bentaya.shared.util.SecurityUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -64,7 +66,7 @@ public class PreScoutController {
     }
 
     @PostMapping("/form")
-    public void sendAndSavePreScoutForm(@RequestBody @Valid PreScoutDto preScoutDto) {
+    public void sendAndSavePreScoutForm(@RequestBody @Valid PreScoutFormDto preScoutDto) {
         log.info("METHOD PreScoutController.sendAndSavePreScoutForm");
         this.preScoutService.saveAndSendEmail(preScoutDto);
     }

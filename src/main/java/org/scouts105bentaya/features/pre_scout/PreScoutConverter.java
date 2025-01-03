@@ -16,7 +16,7 @@ public class PreScoutConverter extends GenericConverter<PreScout, PreScoutDto> {
         PreScout preScout = new PreScout();
         preScout.setId(preScoutDto.id());
         preScout.setName(preScoutDto.name().toUpperCase());
-        preScout.setSurname(preScoutDto.surname().toUpperCase());
+        preScout.setSurname(preScoutDto.surname().toUpperCase().trim());
         preScout.setSection(preScoutDto.section());
         preScout.setBirthday(preScoutDto.birthday());
         preScout.setAge(preScoutDto.age());

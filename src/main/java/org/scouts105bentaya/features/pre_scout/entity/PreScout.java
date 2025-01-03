@@ -9,7 +9,9 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 
+@Accessors(chain = true)
 @Getter
 @Setter
 @Entity
