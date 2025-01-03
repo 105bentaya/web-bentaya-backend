@@ -25,7 +25,7 @@ public class ScoutFormScheduler {
         settingService.updateValue(String.valueOf(date.getYear() + 1), "currentFormYear");
     }
 
-    @Scheduled(cron = "0 0 0 16 AUG ?", zone = "Atlantic/Canary")
+    @Scheduled(cron = "0 0 0 1 AUG ?", zone = "Atlantic/Canary")
     private void closeScoutForm() {
         log.info("Closing scout form");
         settingService.updateValue("0", "formIsOpen");
