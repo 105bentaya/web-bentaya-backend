@@ -227,7 +227,7 @@ public class AttendanceExcelReportService {
 
         XSSFCell cell = row.createCell(2 + eventNumber);
         String firstCell = row.getCell(FIRST_EVENT_COLUMN).getReference();
-        String lastCell = lastRow.getCell(FIRST_EVENT_COLUMN + eventNumber - 1).getReference();
+        String lastCell = row.getCell(FIRST_EVENT_COLUMN + eventNumber - 1).getReference();
         cell.setCellFormula("AVERAGE(%1$s:%2$s)".formatted(firstCell, lastCell));
         cell.setCellStyle(style);
     }
