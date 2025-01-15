@@ -1,19 +1,14 @@
 package org.scouts105bentaya.features.confirmation.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.BorderStyle;
-import org.apache.poi.ss.usermodel.BuiltinFormats;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.Font;
-import org.apache.poi.ss.usermodel.HorizontalAlignment;
-import org.apache.poi.ss.usermodel.IndexedColors;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.VerticalAlignment;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.CellCopyPolicy;
+import org.apache.poi.ss.usermodel.DataValidation;
+import org.apache.poi.ss.usermodel.DataValidationConstraint;
+import org.apache.poi.ss.usermodel.DataValidationHelper;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.ss.util.CellRangeAddressList;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xddf.usermodel.chart.AxisCrosses;
 import org.apache.poi.xddf.usermodel.chart.AxisPosition;
@@ -26,19 +21,23 @@ import org.apache.poi.xddf.usermodel.chart.XDDFDataSource;
 import org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory;
 import org.apache.poi.xddf.usermodel.chart.XDDFNumericalDataSource;
 import org.apache.poi.xddf.usermodel.chart.XDDFValueAxis;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFChart;
 import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
+import org.apache.poi.xssf.usermodel.XSSFComment;
+import org.apache.poi.xssf.usermodel.XSSFDataValidation;
 import org.apache.poi.xssf.usermodel.XSSFDrawing;
+import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.scouts105bentaya.features.confirmation.Confirmation;
 import org.scouts105bentaya.features.event.Event;
 import org.scouts105bentaya.features.event.service.EventService;
 import org.scouts105bentaya.features.scout.Scout;
-import org.scouts105bentaya.features.setting.SettingService;
 import org.scouts105bentaya.features.user.User;
+import org.scouts105bentaya.shared.Group;
 import org.scouts105bentaya.shared.service.AuthService;
-import org.scouts105bentaya.shared.util.ExcelUtils;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
@@ -46,93 +45,237 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
-//todo: clean code
-//todo: change excel template and remove empty cells with width, set this width at runtime
-//todo: create helper to avoid stateful variables
-//todo: insignia kaa
+//todo clean a little bit
 @Slf4j
 @Service
 public class AttendanceExcelReportService {
 
-    private static final int FIRST_EVENT_COLUMN_INDEX = 3;
-    private static final int EVENT_ROW_INDEX = 1;
-    private static final int FIRST_SCOUT_ROW_INDEX = 4;
+    private static final int ATTENDING = 2;
+    private static final int NOT_ATTENDING_JUSTIFIED = 1;
+    private static final int NOT_ATTENDING = 0;
+    private static final String NOT_IN_GROUP = "-";
+
+    private static final CellCopyPolicy cellCopyPolicy = new CellCopyPolicy();
+
+    private static final CellReference GROUP_CELL = new CellReference("C2");
+    private static final int FIRST_SCOUT_ROW = 5;
+    private static final int FIRST_EVENT_ROW = 3;
+    private static final int FIRST_EVENT_COLUMN = 2;
+
+
     private final EventService eventService;
     private final AuthService authService;
-    private final SettingService settingService;
-    private Workbook workbook;
-    private Sheet sheet;
-    private CellStyle idCellStyle;
-    private CellStyle nameCellStyle;
-    private CellStyle dateCellStyle;
-    private CellStyle defaultStyle;
-    private List<Scout> scoutsInAttendanceList;
 
     public AttendanceExcelReportService(
         EventService eventService,
-        AuthService authService,
-        SettingService settingService
+        AuthService authService
     ) {
         this.eventService = eventService;
         this.authService = authService;
-        this.settingService = settingService;
     }
 
-    public ByteArrayOutputStream getGroupAttendanceAsExcel() {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    private XSSFCell getCell(XSSFSheet sheet, CellReference cellReference) {
+        return sheet.getRow(cellReference.getRow()).getCell(cellReference.getCol());
+    }
 
-        User loggedUser = authService.getLoggedUser();
-        List<Event> events = this.eventService.findAllByGroupIdAndActivatedAttendance(loggedUser.getGroupId());
+    private List<Event> getEvents(Group group) {
+        List<Event> events = this.eventService.findAllByGroupIdAndActivatedAttendance(group);
         events.sort(Comparator.comparing(Event::getStartDate));
+        return events;
+    }
 
-        this.scoutsInAttendanceList = events.stream()
+    private List<Scout> getScoutsInAttendanceList(List<Event> events) {
+        return events.stream()
             .map(Event::getConfirmationList)
             .flatMap(Collection::stream)
             .map(Confirmation::getScout)
             .distinct()
             .sorted(Comparator.comparing(Scout::getSurname).thenComparing(Scout::getName).thenComparing(Scout::getId))
             .toList();
+    }
 
-        try (InputStream file = new ClassPathResource("excel/groupAttendanceTemplate.xlsx").getInputStream()) {
-            this.workbook = new XSSFWorkbook(file);
-            this.sheet = this.workbook.getSheetAt(0);
+    private <T> void copyCellsInRow(XSSFSheet sheet, CellReference firstCellReference, List<T> values) {
+        XSSFRow row = sheet.getRow(firstCellReference.getRow());
+        XSSFCell cell = getCell(sheet, firstCellReference);
+        int width = sheet.getColumnWidth(cell.getColumnIndex());
+        setCellValue(cell, values.get(0));
 
-            this.generateCellStyles();
-
-            Map<String, String> variables = new HashMap<>(Map.of("group", loggedUser.getGroupId().name()));
-            replaceRowVariables(0, variables);
-            replaceRowVariables(1, variables);
-            variables.put("year", getCourseYear());
-            replaceRowVariables(2, variables);
-
-            addAllScoutsToExcel();
-            for (int i = 0; i < events.size(); i++) {
-                Event event = events.get(i);
-                String formattedDate = event.getStartDate().format(DateTimeFormatter.ofPattern("dd/MM"));
-                addNewEventColumn(FIRST_EVENT_COLUMN_INDEX + i, formattedDate);
-                markEventAttendance(event, formattedDate);
+        int col = firstCellReference.getCol();
+        for (int i = 1; i < values.size(); i++) {
+            cell = row.getCell(++col);
+            if (cell == null) {
+                cell = row.createCell(col);
             }
+            cell.copyCellFrom(row.getCell(col - 1), cellCopyPolicy);
+            sheet.setColumnWidth(col, width);
+            setCellValue(cell, values.get(i));
+        }
+    }
 
-            int totalEvents = events.size();
-            int totalScouts = scoutsInAttendanceList.size();
+    private <T> void setCellValue(XSSFCell cell, T value) {
+        if (value instanceof String string) {
+            cell.setCellValue(string);
+        } else if (value instanceof Integer integer) {
+            cell.setCellValue(integer);
+        } else {
+            throw new IllegalArgumentException("Unsupported value type: " + value.getClass());
+        }
+    }
 
-            ExcelUtils.mergeRowCells(sheet, 0, totalEvents + FIRST_EVENT_COLUMN_INDEX + 1);
 
-            createTotalAttendanceRow(totalScouts + FIRST_SCOUT_ROW_INDEX, totalEvents + FIRST_EVENT_COLUMN_INDEX);
-            createMeanCells(totalScouts + FIRST_SCOUT_ROW_INDEX, totalEvents + FIRST_EVENT_COLUMN_INDEX);
-            createScoutTotalAttendanceRow(totalEvents);
+    private void addEvents(XSSFSheet sheet, List<Event> events) {
+        CellReference firstEventReference = new CellReference(FIRST_EVENT_ROW, FIRST_EVENT_COLUMN);
+        CellReference firstEventNameReference = new CellReference(FIRST_EVENT_ROW + 1, FIRST_EVENT_COLUMN);
+        CellReference firstScoutAttendanceReference = new CellReference(FIRST_SCOUT_ROW, FIRST_EVENT_COLUMN);
 
-            Sheet barChartSheet = workbook.getSheetAt(1);
-            createAttendanceBarChart(barChartSheet, totalEvents + 2, totalScouts + FIRST_SCOUT_ROW_INDEX);
+        List<String> dates = events.stream()
+            .map(event -> event.getStartDate().format(DateTimeFormatter.ofPattern("dd/MM")))
+            .collect(Collectors.toList());
+        dates.add("");
+
+        List<String> eventNumbers = IntStream.range(1, events.size() + 1)
+            .mapToObj("Reu %d"::formatted)
+            .collect(Collectors.toList());
+        eventNumbers.add("Control");
+
+        List<Integer> attendanceMarking = Collections.nCopies(events.size() + 1, -1);
+
+        copyCellsInRow(sheet, firstEventReference, dates);
+        copyCellsInRow(sheet, firstEventNameReference, eventNumbers);
+        copyCellsInRow(sheet, firstScoutAttendanceReference, attendanceMarking);
+    }
+
+    private void generateScoutRow(XSSFSheet sheet, Scout scout, int index, List<Event> events) {
+        if (index > 0) sheet.copyRows(FIRST_SCOUT_ROW, FIRST_SCOUT_ROW, FIRST_SCOUT_ROW + index, cellCopyPolicy);
+        XSSFRow row = sheet.getRow(FIRST_SCOUT_ROW + index);
+        row.getCell(0).setCellValue(index + 1d);
+        row.getCell(1).setCellValue("%s, %s".formatted(scout.getSurname(), scout.getName()).toUpperCase());
+
+        List<Confirmation> confirmations = scout.getConfirmationList();
+
+        IntStream.range(0, events.size())
+            .forEach(i -> {
+                Event event = events.get(i);
+                addConfirmation(row, confirmations.stream().filter(c -> event.equals(c.getEvent())).findFirst(), i);
+            });
+
+        if (index < 1) {
+            XSSFCell cell = row.createCell(FIRST_EVENT_COLUMN + events.size());
+            XSSFCellStyle style = cell.getCellStyle().copy();
+            style.setBorderBottom(BorderStyle.THIN);
+            style.setBorderRight(BorderStyle.THIN);
+            style.setDataFormat(10);
+            cell.setCellStyle(style);
+        }
+
+        addConfirmationControl(row, events.size());
+    }
+
+    private void addConfirmationControl(XSSFRow row, int events) {
+        XSSFCell cell = row.getCell(FIRST_EVENT_COLUMN + events);
+        String firstCell = row.getCell(FIRST_EVENT_COLUMN).getReference();
+        String lastCell = row.getCell(FIRST_EVENT_COLUMN + events - 1).getReference();
+        cell.setCellFormula("COUNTIF(%1$s:%2$s,\"=\"&M2)/COUNTIF(%1$s:%2$s,\"<>\"&P2)".formatted(firstCell, lastCell));
+    }
+
+    private void addConfirmation(XSSFRow row, Optional<Confirmation> optionalConfirmation, int eventNumber) {
+        XSSFCell cell = row.getCell(eventNumber + FIRST_EVENT_COLUMN);
+        if (optionalConfirmation.isPresent()) {
+            Confirmation confirmation = optionalConfirmation.get();
+            if (Boolean.TRUE.equals(confirmation.getAttending())) {
+                cell.setCellValue(ATTENDING);
+            } else if (StringUtils.isBlank(confirmation.getText())) {
+                cell.setCellValue(NOT_ATTENDING);
+            } else {
+                cell.setCellValue(NOT_ATTENDING_JUSTIFIED);
+                XSSFComment comment = row.getSheet().createDrawingPatriarch().createCellComment(new XSSFClientAnchor());
+                comment.setString(confirmation.getText());
+                cell.setCellComment(comment);
+            }
+        } else {
+            cell.setCellValue(NOT_IN_GROUP);
+        }
+    }
+
+    private void addTotalRow(XSSFSheet sheet, int totalScouts, int eventNumber) {
+        int newRow = FIRST_SCOUT_ROW + totalScouts;
+        sheet.copyRows(FIRST_SCOUT_ROW, FIRST_SCOUT_ROW, newRow, cellCopyPolicy);
+        XSSFRow row = sheet.getRow(newRow);
+
+        XSSFCell totalCell = row.getCell(0);
+        totalCell.setCellValue("ASISTENCIA POR REUNIÓN Y MEDIA TOTAL");
+        XSSFCellStyle style = totalCell.getCellStyle();
+        sheet.addMergedRegion(new CellRangeAddress(newRow, newRow, 0, 1));
+
+        XSSFRow firstRow = sheet.getRow(FIRST_SCOUT_ROW);
+        XSSFRow lastRow = sheet.getRow(FIRST_SCOUT_ROW + totalScouts - 1);
+        for (int i = 0; i < eventNumber; i++) {
+            XSSFCell cell = row.createCell(2 + i);
+            String firstCell = firstRow.getCell(cell.getColumnIndex()).getReference();
+            String lastCell = lastRow.getCell(cell.getColumnIndex()).getReference();
+            cell.setCellFormula("COUNTIF(%1$s:%2$s,\"=\"&M2)".formatted(firstCell, lastCell));
+            cell.setCellStyle(style);
+        }
+
+        XSSFCell cell = row.createCell(2 + eventNumber);
+        String firstCell = row.getCell(FIRST_EVENT_COLUMN).getReference();
+        String lastCell = lastRow.getCell(FIRST_EVENT_COLUMN + eventNumber - 1).getReference();
+        cell.setCellFormula("AVERAGE(%1$s:%2$s)".formatted(firstCell, lastCell));
+        cell.setCellStyle(style);
+    }
+
+    private void updateValidationsAndFormats(XSSFSheet sheet, int scouts, int events) {
+        CellRangeAddress cellAddresses = new CellRangeAddress(FIRST_SCOUT_ROW, scouts + FIRST_SCOUT_ROW - 1, FIRST_EVENT_COLUMN, events + FIRST_EVENT_COLUMN - 1);
+        CellRangeAddressList cellRangeAddressList = new CellRangeAddressList();
+        cellRangeAddressList.addCellRangeAddress(cellAddresses);
+
+        XSSFDataValidation validation = sheet.getDataValidations().get(0);
+        DataValidationHelper helper = sheet.getDataValidationHelper();
+        DataValidationConstraint constraint = validation.getValidationConstraint();
+        DataValidation newValidation = helper.createValidation(constraint, cellRangeAddressList);
+        sheet.getDataValidations().remove(validation);
+        sheet.addValidationData(newValidation);
+
+        sheet.getSheetConditionalFormatting().getConditionalFormattingAt(0).setFormattingRanges(new CellRangeAddress[]{cellAddresses});
+        cellAddresses = new CellRangeAddress(FIRST_SCOUT_ROW, scouts + FIRST_SCOUT_ROW - 1, events + FIRST_EVENT_COLUMN, events + FIRST_EVENT_COLUMN);
+        sheet.getSheetConditionalFormatting().getConditionalFormattingAt(1).setFormattingRanges(new CellRangeAddress[]{cellAddresses});
+    }
+
+    private void addAttendances(XSSFSheet sheet, List<Scout> scouts, List<Event> events) {
+        IntStream.range(0, scouts.size()).forEach(i -> generateScoutRow(sheet, scouts.get(i), i, events));
+        addTotalRow(sheet, scouts.size(), events.size());
+
+        updateValidationsAndFormats(sheet, scouts.size(), events.size());
+
+        sheet.setColumnWidth(events.size() + FIRST_EVENT_COLUMN, 256 * 13);
+    }
+
+    public ByteArrayOutputStream getGroupAttendanceAsExcel() {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+        User loggedUser = authService.getLoggedUser();
+        List<Event> events = getEvents(loggedUser.getGroupId());
+        List<Scout> scouts = getScoutsInAttendanceList(events);
+
+        try (InputStream file = new ClassPathResource("excel/attendance_template.xlsx").getInputStream()) {
+            XSSFWorkbook workbook = new XSSFWorkbook(file);
+            XSSFSheet sheet = workbook.getSheetAt(0);
+
+            XSSFCell groupCell = getCell(sheet, GROUP_CELL);
+            groupCell.setCellValue(loggedUser.getGroupId().name());
+
+            addEvents(sheet, events);
+            addAttendances(sheet, scouts, events);
+
+            createAttendanceBarChart(workbook.getSheetAt(1), sheet, FIRST_EVENT_COLUMN + events.size() - 1, FIRST_SCOUT_ROW + scouts.size());
 
             workbook.write(outputStream);
         } catch (IOException e) {
@@ -141,227 +284,16 @@ public class AttendanceExcelReportService {
         return outputStream;
     }
 
-    private void markEventAttendance(Event event, String formattedDate) {
-        List<Scout> markedScouts = new ArrayList<>();
-        List<Confirmation> confirmations = event.getConfirmationList();
-        for (Confirmation scoutAttendance : confirmations) {
-            if (scoutAttendance.getAttending() != null && scoutAttendance.getAttending()) {
-                int scoutRow = getScoutRowIndex(scoutAttendance.getScout());
-                markAttendance(scoutRow, formattedDate);
-            }
-            markedScouts.add(scoutAttendance.getScout());
-        }
-
-        scoutsInAttendanceList.stream()
-            .filter(scout -> !markedScouts.contains(scout))
-            .forEach(scout -> markNotInGroup(getScoutRowIndex(scout), formattedDate));
-    }
-
-    private void generateCellStyles() {
-        idCellStyle = sheet.getRow(FIRST_SCOUT_ROW_INDEX).getCell(0).getCellStyle();
-        nameCellStyle = sheet.getRow(FIRST_SCOUT_ROW_INDEX).getCell(1).getCellStyle();
-        dateCellStyle = sheet.getRow(EVENT_ROW_INDEX).getCell(FIRST_EVENT_COLUMN_INDEX).getCellStyle();
-
-        defaultStyle = workbook.createCellStyle();
-        defaultStyle.setAlignment(HorizontalAlignment.CENTER);
-        defaultStyle.setVerticalAlignment(VerticalAlignment.CENTER);
-
-        Font font = workbook.createFont();
-        font.setFontHeightInPoints((short) 14);
-        defaultStyle.setFont(font);
-    }
-
-    private void addAllScoutsToExcel() {
-        for (int i = 0; i < scoutsInAttendanceList.size(); i++) {
-            Scout scout = scoutsInAttendanceList.get(i);
-            Row row = sheet.createRow(FIRST_SCOUT_ROW_INDEX + i);
-
-            Cell cell = row.createCell(0);
-            cell.setCellValue((double) i + 1);
-            cell.setCellStyle(idCellStyle);
-
-            cell = row.createCell(1);
-            cell.setCellValue(scout.getSurname());
-            cell.setCellStyle(nameCellStyle);
-
-            cell = row.createCell(2);
-            cell.setCellValue(scout.getName());
-            cell.setCellStyle(nameCellStyle);
-        }
-    }
-
-    private void addNewEventColumn(int newColumn, String formattedDate) {
-        Cell cell = this.sheet.getRow(EVENT_ROW_INDEX).createCell(newColumn);
-        cell.setCellValue(formattedDate);
-        cell.setCellStyle(dateCellStyle);
-    }
-
-
-    private void replaceRowVariables(int rowIndex, Map<String, String> variables) {
-        Pattern pattern = Pattern.compile("\\{\\{([^}]*)}}");
-
-        Row row = sheet.getRow(rowIndex);
-
-        row.forEach(cell -> {
-            if (cell.getCellType() == CellType.STRING) {
-                String cellValue = cell.getStringCellValue();
-                Matcher matcher = pattern.matcher(cellValue);
-                StringBuilder sb = new StringBuilder();
-                while (matcher.find()) {
-                    String key = matcher.group(1);
-                    if (variables.containsKey(key)) {
-                        String replacement = variables.get(key);
-                        matcher.appendReplacement(sb, replacement);
-                        matcher.appendTail(sb);
-                        cell.setCellValue(sb.toString());
-                    }
-                }
-            }
-        });
-    }
-
-    private void markAttendance(int rowIndex, String date) {
-        Row row = this.sheet.getRow(rowIndex);
-        int column = findCellToMarkAttendance(date);
-        if (column >= FIRST_EVENT_COLUMN_INDEX) {
-            Cell cell = row.createCell(column);
-            cell.setCellStyle(defaultStyle);
-            cell.setCellValue("X");
-        }
-    }
-
-    private void markNotInGroup(int rowIndex, String date) {
-        Row row = this.sheet.getRow(rowIndex);
-        int column = findCellToMarkAttendance(date);
-        if (column >= FIRST_EVENT_COLUMN_INDEX) {
-            Cell cell = row.createCell(column);
-            cell.setCellStyle(defaultStyle);
-            cell.setCellValue("-");
-        }
-    }
-
-    private int findCellToMarkAttendance(String date) {
-        Row datesRow = this.sheet.getRow(1);
-        for (int i = 2; i < datesRow.getLastCellNum(); i++) {
-            Cell dateCell = datesRow.getCell(i);
-            if (dateCell != null) {
-                String dateCellValue = dateCell.getStringCellValue();
-                if (dateCellValue.equals(date)) {
-                    return dateCell.getColumnIndex();
-                }
-            }
-        }
-        return -1;
-    }
-
-    private void createTotalAttendanceRow(int rowIndex, int lastColumn) {
-        Row row = sheet.getRow(rowIndex);
-        Cell totalCell = row.createCell(2);
-        totalCell.setCellValue("TOTAL");
-        totalCell.setCellStyle(ExcelUtils.getCellStyle(3, 2, sheet));
-
-        CellStyle formulaCellStyle = workbook.createCellStyle();
-        formulaCellStyle.cloneStyleFrom(defaultStyle);
-        formulaCellStyle.setBorderTop(BorderStyle.THIN);
-
-        for (int i = 3; i < lastColumn; i++) {
-            Cell currentCell = row.getCell(i);
-            if (currentCell == null) {
-                currentCell = row.createCell(i);
-            }
-            String firstCellInColumn = new CellReference(4, i).formatAsString();
-            String lastCellInColumn = new CellReference(rowIndex - 1, i).formatAsString();
-            String formula = "COUNTIF(%s:%s,\"X\")".formatted(firstCellInColumn, lastCellInColumn);
-            currentCell.setCellFormula(formula);
-
-            currentCell.setCellStyle(formulaCellStyle);
-        }
-    }
-
-    private void createScoutTotalAttendanceRow(int totalEvents) {
-        CellStyle formulaCellStyle = workbook.createCellStyle();
-        formulaCellStyle.cloneStyleFrom(defaultStyle);
-        formulaCellStyle.setBorderLeft(BorderStyle.THIN);
-
-        CellStyle percentageStyle = workbook.createCellStyle();
-        percentageStyle.cloneStyleFrom(defaultStyle);
-        percentageStyle.setDataFormat(workbook.createDataFormat().getFormat(BuiltinFormats.getBuiltinFormat(10)));
-
-
-        for (int i = 0; i < scoutsInAttendanceList.size(); i++) {
-            int scoutRowIndex = FIRST_SCOUT_ROW_INDEX + i;
-            Row row = sheet.getRow(scoutRowIndex);
-            Cell numberOfTimesCell = row.createCell(FIRST_SCOUT_ROW_INDEX + totalEvents - 1);
-            Cell percentageCell = row.createCell(FIRST_SCOUT_ROW_INDEX + totalEvents);
-            String firstCell = new CellReference(scoutRowIndex, FIRST_EVENT_COLUMN_INDEX).formatAsString();
-            String lastCell = new CellReference(scoutRowIndex, FIRST_EVENT_COLUMN_INDEX + totalEvents - 1).formatAsString();
-            numberOfTimesCell.setCellFormula("COUNTIF(%s:%s,\"X\")&\" / \"&COUNTIF(%s:%s,\"<>-\")".formatted(firstCell, lastCell, firstCell, lastCell));
-            percentageCell.setCellFormula("COUNTIF(%s:%s,\"X\") / COUNTIF(%s:%s,\"<>-\")".formatted(firstCell, lastCell, firstCell, lastCell));
-            numberOfTimesCell.setCellStyle(formulaCellStyle);
-            percentageCell.setCellStyle(percentageStyle);
-        }
-
-        sheet.setColumnWidth(FIRST_SCOUT_ROW_INDEX + totalEvents - 1, 256 * 11);
-        sheet.setColumnWidth(FIRST_SCOUT_ROW_INDEX + totalEvents, 256 * 11);
-    }
-
-    private void createMeanCells(int rowIndex, int col) {
-        CellStyle meanValueCellStyle = workbook.createCellStyle();
-        meanValueCellStyle.cloneStyleFrom(defaultStyle);
-
-        CellReference firstCellInRow = new CellReference(rowIndex, 3);
-        CellReference lastCellInRow = new CellReference(rowIndex, col - 1);
-
-        Row row = sheet.getRow(rowIndex + 1);
-        Cell meanCell = row.createCell(col);
-        String formula = "AVERAGE(" + firstCellInRow.formatAsString() + ":" + lastCellInRow.formatAsString() + ")";
-        meanCell.setCellFormula(formula);
-
-        meanValueCellStyle.setBorderBottom(BorderStyle.THIN);
-        meanValueCellStyle.setBorderLeft(BorderStyle.THIN);
-        meanValueCellStyle.setBorderRight(BorderStyle.THIN);
-        meanCell.setCellStyle(meanValueCellStyle);
-
-        CellStyle meanCellStyle = workbook.createCellStyle();
-        meanCellStyle.cloneStyleFrom(ExcelUtils.getCellStyle(0, 0, sheet));
-        meanCellStyle.setBorderLeft(BorderStyle.THIN);
-        meanCellStyle.setBorderRight(BorderStyle.THIN);
-        meanCellStyle.setBorderTop(BorderStyle.THIN);
-
-        Font meanFont = workbook.createFont();
-        meanFont.setFontName("Arial");
-        meanFont.setFontHeightInPoints((short) 12);
-        meanFont.setColor(IndexedColors.WHITE1.getIndex());
-        meanFont.setBold(true);
-        meanCellStyle.setFont(meanFont);
-
-        Row textRow = sheet.getRow(rowIndex);
-        Cell textCell = textRow.createCell(col);
-        textCell.setCellValue("MEDIA");
-        textCell.setCellStyle(meanCellStyle);
-    }
-
-    private int getScoutRowIndex(Scout scout) {
-        return scoutsInAttendanceList.indexOf(scout) + FIRST_SCOUT_ROW_INDEX;
-    }
-
-    private String getCourseYear() {
-        int lastYearOfCurrentTerm = Integer.parseInt(settingService.findByName("currentYear").getValue());
-        int firstYear = lastYearOfCurrentTerm - 1;
-        int centuryYear = lastYearOfCurrentTerm % 100;
-        return "%d/%d".formatted(firstYear, centuryYear);
-    }
-
-    private void createAttendanceBarChart(Sheet barChartSheet, int lastCol, int lastRow) {
-        XSSFDrawing drawing = (XSSFDrawing) barChartSheet.createDrawingPatriarch();
+    private void createAttendanceBarChart(XSSFSheet barChartSheet, XSSFSheet dataSheet, int lastCol, int lastRow) {
+        XSSFDrawing drawing = barChartSheet.createDrawingPatriarch();
         XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, 0, 1, 10, 25);
 
         XSSFChart chart = drawing.createChart(anchor);
         chart.setTitleText("ASISTENCIA DE EDUCANDAS");
         chart.setTitleOverlay(false);
 
-        XDDFDataSource<String> categories = XDDFDataSourcesFactory.fromStringCellRange((XSSFSheet) sheet, new CellRangeAddress(1, 1, 3, lastCol));
-        XDDFNumericalDataSource<Double> values = XDDFDataSourcesFactory.fromNumericCellRange((XSSFSheet) sheet, new CellRangeAddress(lastRow, lastRow, 3, lastCol));
+        XDDFDataSource<String> categories = XDDFDataSourcesFactory.fromStringCellRange(dataSheet, new CellRangeAddress(FIRST_EVENT_ROW, FIRST_EVENT_ROW, FIRST_EVENT_COLUMN, lastCol));
+        XDDFNumericalDataSource<Double> values = XDDFDataSourcesFactory.fromNumericCellRange(dataSheet, new CellRangeAddress(lastRow, lastRow, FIRST_EVENT_COLUMN, lastCol));
 
         XDDFCategoryAxis xAxis = chart.createCategoryAxis(AxisPosition.LEFT);
         XDDFValueAxis yAxis = chart.createValueAxis(AxisPosition.BOTTOM);
