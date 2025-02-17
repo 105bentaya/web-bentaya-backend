@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     permissions:
       contents: read #This is required for actions/checkout
@@ -21,34 +21,18 @@ jobs:
       - name: Set up Java version
         uses: actions/setup-java@v4
         with:
-          java-version: 'java21'
+          java-version: '17'
           distribution: 'microsoft'
+
+      - name: Install Redsys lib
+        run: mvn install:install-file -Dfile=\${project.basedir}/libs/apiSha256.jar -DgroupId=sis.redsys.api -DartifactId=api-sha256 -Dversion=2.3 -Dpackaging=jar
+
+      - name: Build with Maven
+        run: mvn clean package -DskipTests -Pprod
 
       - name: Build with Maven
         run: mvn clean install
 
-      - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v4
-        with:
-          name: java-app
-          path: '${{ github.workspace }}/target/*.jar'
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    environment:
-      name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-    permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
-  
-    steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v4
-        with:
-          name: java-app
-      
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -62,5 +46,4 @@ jobs:
         with:
           app-name: 'web-bentaya-test'
           slot-name: 'Production'
-          package: '*.jar'
-          
+          package: '${{ github.workspace }}/target/*.jar'
