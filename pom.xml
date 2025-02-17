@@ -201,11 +201,33 @@
         </profile>
 
         <profile>
+            <id>test</id>
+            <properties>
+                <activatedProperties>test</activatedProperties>
+                <packaging.type>jar</packaging.type>
+                <jarFileName>${project.artifactId}-test-${project.version}</jarFileName>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <version>2.7</version>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
             <id>local-mysql</id>
             <properties>
                 <activatedProperties>local-mysql</activatedProperties>
                 <packaging.type>jar</packaging.type>
-                <warFileName>${project.artifactId}-sql-${project.version}</warFileName>
+                <jarFileName>${project.artifactId}-sql-${project.version}</jarFileName>
             </properties>
             <build>
                 <plugins>
