@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<body>
+<div>
+  <p>
+    Se ha rechazado la preinscripción de <span th:text="${assignation.preScout.surname}">apellido</span>,
+    <span th:text="${assignation.preScout.name}">nombre</span>
+    (ID <span th:text="${assignation.preScout.id}">id</span>) -
+    <span th:text="${assignation.groupId}">grupo</span>
+    <span th:if="${assignation.comment != null && assignation.comment != ''}">por el siguiente motivo:</span>
+  </p>
+  <p
+    th:if="${assignation.comment != null && assignation.comment != ''}"
+    th:text="${assignation.comment}"
+  >
+    Motivo de rechazo
+  </p>
+  Entre
+  <a th:href="'https://105bentaya.org/preinscripciones'">a la web</a>
+  para asignar una nueva preinscripción.
+  <p>
+    Atentamente,<br>
+    El sistema de mensajería de Scouts 105 Bentaya
+  </p>
+</div>
+</body>
+</html>

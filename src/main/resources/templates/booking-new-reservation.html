@@ -30,7 +30,7 @@
     <hr>
     <div th:if="${newUser}">
       Podrá seguir el estado de la reserva a través de nuestro sitio web
-      (<a href="https://105bentaya.org">105bentaya.org</a>)
+      (<a href="https://105bentaya.org/centros-scout/seguimiento">105bentaya.org</a>)
       accediendo con el siguiente usuario:
       <ul>
         <li>Nombre de usuario: <span th:text="${contactMail}"></span></li>
@@ -40,10 +40,10 @@
     </div>
     <div th:unless="${newUser}">
       Podrá seguir el estado de la reserva a través de nuestro sitio web
-      (<a href="https://105bentaya.org">105bentaya.org</a>)
+      (<a href="https://105bentaya.org/centros-scout/seguimiento">105bentaya.org</a>)
       accediendo con el usuario <span th:text="${contactMail}"></span>.
-      Si no recuerda la contraseña del usuario, puede restablecerla al intentar iniciar sesión haciendo click en
-      <b>'Olvidé la contraseña'</b>.
+      Si no recuerda la contraseña del usuario, puede restablecerla
+      <a href="https://105bentaya.org/olvide-la-clave">haciendo click aquí</a>.
     </div>
   </div>
   <div>

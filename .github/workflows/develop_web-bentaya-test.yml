@@ -3,10 +3,11 @@
 
 name: Web Bentaya Backend Test Deployment
 
+## Branch can be changed depending on what you are testing, but default should always be 'test'
 on:
   push:
     branches:
-      - develop
+      - test
   workflow_dispatch:
 
 jobs:

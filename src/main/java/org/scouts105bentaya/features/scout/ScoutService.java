@@ -141,7 +141,7 @@ public class ScoutService {
         scout.getUserList().stream()
             .filter(user -> scoutUsers.stream()
                 .noneMatch(username -> username.equalsIgnoreCase(user.getUsername())))
-            .forEach(user -> userService.removeScout(user, scout));
+            .forEach(user -> userService.removeScoutFromUser(user, scout));
 
 
         scoutUsers.forEach(username -> {
@@ -149,7 +149,7 @@ public class ScoutService {
                 try {
                     User user = userService.findByUsername(username.toLowerCase());
                     log.info("updateScoutUsers - adding scout to user {}", username);
-                    userService.addScout(user, scout);
+                    userService.addScoutToUser(user, scout);
                 } catch (WebBentayaUserNotFoundException ex) {
                     log.info("updateScoutUsers - user {} does not exist, creating new user", username);
                     userService.addNewUserRoleUser(username.toLowerCase(), scout);
@@ -165,14 +165,14 @@ public class ScoutService {
         ).forEach(contactRepository::delete);
     }
 
-    private void deleteFutureConfirmations(Scout scout) {
+    private void deleteFutureConfirmations(Scout scout) { //todo this method should be in confirmation service
         confirmationService.deleteAll(scout.getConfirmationList().stream()
             .filter(confirmation -> !confirmation.getEvent().eventHasEnded())
             .toList()
         );
     }
 
-    private void createConfirmationForFutureEvents(Scout scout) {
+    private void createConfirmationForFutureEvents(Scout scout) { //todo this method should be in confirmation service
         eventService.findAllByGroupId(scout.getGroupId()).stream()
             .filter(event -> event.isActiveAttendanceList() && !event.eventHasEnded())
             .forEach(e -> {
@@ -210,7 +210,7 @@ public class ScoutService {
     @Transactional
     public void disable(Integer id) {
         Scout scout = this.findById(id);
-        scout.getUserList().forEach(user -> userService.removeScout(user, scout));
+        scout.getUserList().forEach(user -> userService.removeScoutFromUser(user, scout));
         this.deleteFutureConfirmations(scout);
         scout.setEnabled(false);
         scoutRepository.save(scout);
@@ -219,7 +219,7 @@ public class ScoutService {
     @Transactional
     public void delete(Integer id) {
         Scout scout = scoutRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
-        scout.getUserList().forEach(user -> userService.removeScout(user, scout));
+        scout.getUserList().forEach(user -> userService.removeScoutFromUser(user, scout));
         scoutRepository.deleteById(id);
     }
 }

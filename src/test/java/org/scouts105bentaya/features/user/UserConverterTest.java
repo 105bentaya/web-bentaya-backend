@@ -3,10 +3,10 @@ package org.scouts105bentaya.features.user;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.scouts105bentaya.features.scout.converter.ScoutUserConverter;
 import org.scouts105bentaya.features.user.dto.UserDto;
+import org.scouts105bentaya.features.user.role.RoleRepository;
 
 import java.util.List;
 import java.util.Set;

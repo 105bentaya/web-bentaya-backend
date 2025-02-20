@@ -1,4 +1,4 @@
-package org.scouts105bentaya.features.user;
+package org.scouts105bentaya.features.user.role;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

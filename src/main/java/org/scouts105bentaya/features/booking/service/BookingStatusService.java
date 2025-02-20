@@ -132,6 +132,7 @@ public class BookingStatusService {
         context.setVariable("statusObservation", booking.getStatusObservations());
         context.setVariable("contactMail", userMail);
 
+        // todo: que el link te lleva al formulario de reservas. Si no está iniciada la sesión, que te lleve al portal de inicio de sesión y después vuelvas al formulario (usar query param)
         final String infoHtmlContent = this.htmlTemplateEngine.process("booking-finished.html", context);
         String subject = String.format(
             "Reserva de Centros Scout Nº %d Revisada",

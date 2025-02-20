@@ -108,7 +108,10 @@ public class DonationService {
             this.emailService.sendSimpleEmail(
                 donation.getEmail(),
                 "Error en el pago de su donación",
-                "No se ha podido completar el pago de su donación nº %s con éxito. Si cree que esto es un error, contacte con informatica@105bentaya.org".formatted(donation.getPayment().getOrderNumber())
+                """
+                    No se ha podido completar el pago de su donación nº %s con éxito. Si cree que esto es un error, \
+                    contacte con informatica@105bentaya.org
+                    """.formatted(donation.getPayment().getOrderNumber())
             );
         }
     }

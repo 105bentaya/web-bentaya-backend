@@ -8,7 +8,6 @@ import org.scouts105bentaya.features.invoice.repository.InvoicePayerRepository;
 import org.scouts105bentaya.features.invoice.repository.InvoiceRepository;
 import org.scouts105bentaya.features.invoice.specification.InvoiceSpecification;
 import org.scouts105bentaya.features.invoice.specification.InvoiceSpecificationFilter;
-import org.scouts105bentaya.shared.specification.SpecificationFilter;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 

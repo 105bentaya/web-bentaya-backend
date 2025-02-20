@@ -5,7 +5,10 @@ import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.core.security.service.ResetPasswordService;
 import org.scouts105bentaya.features.user.dto.ChangePasswordDto;
+import org.scouts105bentaya.features.user.dto.ForgotPasswordDto;
 import org.scouts105bentaya.features.user.dto.UserDto;
+import org.scouts105bentaya.features.user.dto.UserFormDto;
+import org.scouts105bentaya.features.user.dto.UserProfileDto;
 import org.scouts105bentaya.features.user.specification.UserSpecificationFilter;
 import org.scouts105bentaya.shared.specification.PageDto;
 import org.scouts105bentaya.shared.util.SecurityUtils;
@@ -56,17 +59,24 @@ public class UserController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/form/{id}")
+    public UserFormDto findFormDtoById(@PathVariable Integer id) {
+        log.info("METHOD UserController.findFormDtoById --- PARAMS id: {}{}", id, SecurityUtils.getLoggedUserUsernameForLog());
+        return userService.findByIdForForm(id);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public UserDto save(@RequestBody UserDto userDto) {
+    public UserDto save(@RequestBody @Valid UserFormDto formDto) {
         log.info("METHOD UserController.save{}", SecurityUtils.getLoggedUserUsernameForLog());
-        return userService.save(userDto);
+        return userConverter.convertFromEntity(userService.save(formDto));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
-    public UserDto update(@RequestBody UserDto userDto, @PathVariable Integer id) {
+    public UserDto update(@RequestBody @Valid UserFormDto formDto, @PathVariable Integer id) {
         log.info("METHOD UserController.update --- PARAMS id: {}{}", id, SecurityUtils.getLoggedUserUsernameForLog());
-        return userService.update(userConverter.convertFromDto(userDto), id);
+        return userConverter.convertFromEntity(userService.update(formDto, id));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -77,9 +87,9 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    public UserDto getUserInfo(Principal principal) {
+    public UserProfileDto getUserInfo(Principal principal) {
         log.info("METHOD UserController.getUserInfo for {}", principal.getName());
-        return userConverter.convertFromEntity(userService.findByUsername(principal.getName()));
+        return userService.findProfileByUsername(principal.getName());
     }
 
     @PostMapping("/change-password")

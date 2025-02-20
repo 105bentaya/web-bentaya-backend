@@ -42,7 +42,7 @@ public class WebSecurityConfig {
             .authorizeHttpRequests(authorization -> authorization
                 .requestMatchers(SecurityConstant.AUTH_WHITELIST).permitAll()
                 .requestMatchers(SecurityConstant.API_URL).authenticated()
-                .anyRequest().permitAll()
+                .anyRequest().denyAll()
             )
             .addFilter(new JwtAuthenticationFilter(authenticationManager, jwt))
             .addFilter(new JwtAuthorizationFilter(authenticationManager, jwt))

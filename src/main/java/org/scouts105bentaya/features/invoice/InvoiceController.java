@@ -6,7 +6,6 @@ import org.scouts105bentaya.features.invoice.entity.Invoice;
 import org.scouts105bentaya.features.invoice.specification.InvoiceSpecificationFilter;
 import org.scouts105bentaya.shared.GenericConverter;
 import org.scouts105bentaya.shared.specification.PageDto;
-import org.scouts105bentaya.shared.specification.SpecificationFilter;
 import org.scouts105bentaya.shared.util.SecurityUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;

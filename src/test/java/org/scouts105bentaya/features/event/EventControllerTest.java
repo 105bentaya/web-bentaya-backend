@@ -6,7 +6,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mockito;
 import org.scouts105bentaya.core.security.service.AuthLogic;
 import org.scouts105bentaya.features.event.service.EventService;
-import org.scouts105bentaya.features.user.Roles;
+import org.scouts105bentaya.features.user.role.Roles;
 import org.scouts105bentaya.shared.Group;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;

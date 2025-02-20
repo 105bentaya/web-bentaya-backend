@@ -7,7 +7,7 @@ import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
 import org.scouts105bentaya.core.exception.WebBentayaConflictException;
 import org.scouts105bentaya.core.exception.WebBentayaUnauthorizedException;
 import org.scouts105bentaya.core.exception.WebBentayaUserNotFoundException;
-import org.scouts105bentaya.features.user.ForgotPasswordDto;
+import org.scouts105bentaya.features.user.dto.ForgotPasswordDto;
 import org.scouts105bentaya.features.user.UserService;
 import org.scouts105bentaya.shared.service.EmailService;
 import org.springframework.stereotype.Service;

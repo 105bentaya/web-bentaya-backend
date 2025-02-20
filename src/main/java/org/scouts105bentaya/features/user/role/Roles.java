@@ -1,4 +1,4 @@
-package org.scouts105bentaya.features.user;
+package org.scouts105bentaya.features.user.role;
 
 public enum Roles {
     ROLE_ADMIN,

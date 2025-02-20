@@ -1,4 +1,4 @@
-package org.scouts105bentaya.features.user;
+package org.scouts105bentaya.features.user.constraint;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;

@@ -1,5 +1,6 @@
 package org.scouts105bentaya.features.user;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -16,14 +17,18 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.scout.Scout;
+import org.scouts105bentaya.features.user.role.Role;
+import org.scouts105bentaya.features.user.role.Roles;
 import org.scouts105bentaya.shared.Group;
 import org.scouts105bentaya.shared.constraint.IsUnit;
 
 import java.util.List;
 import java.util.Set;
 
+@Accessors(chain = true)
 @Getter
 @Setter
 @Entity
@@ -47,6 +52,7 @@ public class User {
     //todo rename to Group
     @IsUnit
     @Enumerated(EnumType.ORDINAL)
+    @Nullable
     private Group groupId;
     @ManyToMany
     @JoinTable(

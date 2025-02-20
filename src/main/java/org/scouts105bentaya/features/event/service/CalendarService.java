@@ -16,6 +16,7 @@ import net.fortuna.ical4j.model.property.Name;
 import net.fortuna.ical4j.model.property.ProdId;
 import net.fortuna.ical4j.model.property.Summary;
 import net.fortuna.ical4j.model.property.Uid;
+import net.fortuna.ical4j.model.property.Url;
 import net.fortuna.ical4j.model.property.immutable.ImmutableCalScale;
 import net.fortuna.ical4j.model.property.immutable.ImmutableVersion;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
@@ -25,9 +26,9 @@ import org.scouts105bentaya.core.exception.WebBentayaUnauthorizedException;
 import org.scouts105bentaya.core.security.InvalidJwtException;
 import org.scouts105bentaya.features.event.Event;
 import org.scouts105bentaya.features.scout.Scout;
-import org.scouts105bentaya.features.user.Roles;
 import org.scouts105bentaya.features.user.User;
 import org.scouts105bentaya.features.user.UserService;
+import org.scouts105bentaya.features.user.role.Roles;
 import org.scouts105bentaya.shared.GenericConstants;
 import org.scouts105bentaya.shared.Group;
 import org.scouts105bentaya.shared.service.AuthService;
@@ -38,16 +39,19 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 @Slf4j
 @Service
 public class CalendarService {
-
+    private static final String CALENDAR_GENERATION_ERROR = "No se ha podido generar el calendario";
     private static final String TOKEN_USER_GROUPS_KEY = "userGroups";
 
     private final UserService userService;
@@ -70,9 +74,9 @@ public class CalendarService {
         try {
             return this.getIcsCalendarAsByteArray(jwtToken);
         } catch (InvalidJwtException e) {
-            throw new WebBentayaBadRequestException("No se ha podido generar el calendario");
+            throw new WebBentayaBadRequestException(CALENDAR_GENERATION_ERROR);
         } catch (IOException e) {
-            throw new WebBentayaErrorException("No se ha podido generar el calendario");
+            throw new WebBentayaErrorException(CALENDAR_GENERATION_ERROR);
         }
     }
 
@@ -98,7 +102,7 @@ public class CalendarService {
 
         Set<Group> tokenGroups = getTokenGroups(user, parsedToken.getPayload());
         List<Event> events = tokenGroups.stream().map(eventService::findAllByGroupId).flatMap(Collection::stream).toList();
-        events.forEach(event -> calendar.add(this.generateICSEvent(event)));
+        events.forEach(event -> calendar.add(this.generateICSEvent(event, user)));
 
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         CalendarOutputter outputWriter = new CalendarOutputter();
@@ -107,12 +111,17 @@ public class CalendarService {
         return output.toByteArray();
     }
 
-    private VEvent generateICSEvent(Event event) {
+    private VEvent generateICSEvent(Event event, User user) {
         VEvent calEvent = new VEvent();
         calEvent.add(new Uid("event105bentaya-%s".formatted(event.getId())));
         calEvent.add(new Summary(event.getTitle()));
         calEvent.add(new Location(event.getLocation()));
-        calEvent.add(new Description(generateEventDescription(event)));
+        calEvent.add(new Description(generateEventDescription(event, user)));
+        try {
+            calEvent.add(new Url(new URI("https://105bentaya.org/calendario?actividad=%s".formatted(event.getId()))));
+        } catch (URISyntaxException e) {
+            throw new WebBentayaErrorException(CALENDAR_GENERATION_ERROR);
+        }
 
         if (event.isUnknownTime()) {
             calEvent.add(new DtStart<>(event.getStartDate().withZoneSameInstant(GenericConstants.UTC_ZONE).toLocalDate()));
@@ -124,14 +133,20 @@ public class CalendarService {
         return calEvent;
     }
 
-    private String generateEventDescription(Event event) {
+    private String generateEventDescription(Event event, User user) {
         String description = """
             Actividad de %s.
             %s""".formatted(event.getGroupId().toTitleCase(), event.getDescription());
         if (!description.endsWith(".")) description += ".";
         if (event.isUnknownTime()) description += "\nEl horario está aún por concretar.";
-        if (event.isActiveAttendanceList())
-            description += "\nPara acceder a la asistencia entre a https://105bentaya.org";
+        if (event.isActiveAttendanceList() && user.hasRole(Roles.ROLE_SCOUTER)) {
+            description +=
+                "%nPara acceder a la lista de asistencia entre a https://105bentaya.org/unidad/asistencias?actividad=%s"
+                    .formatted(event.getId());
+        }
+        if (event.isActiveAttendanceList() && user.hasRole(Roles.ROLE_USER)) {
+            description += "\nPara editar la asistencia entre a https://105bentaya.org/asistencias";
+        }
         return description;
     }
 
@@ -158,10 +173,14 @@ public class CalendarService {
 
         if (claims.containsKey(TOKEN_USER_GROUPS_KEY) && Boolean.TRUE.equals(claims.get(TOKEN_USER_GROUPS_KEY, Boolean.class))) {
             groups.add(Group.GRUPO);
-            if (user.hasRole(Roles.ROLE_USER))
+            if (user.hasRole(Roles.ROLE_USER)) {
                 groups.addAll(user.getScoutList().stream().map(Scout::getGroupId).toList());
-            if (user.hasRole(Roles.ROLE_SCOUTER)) groups.addAll(List.of(user.getGroupId(), Group.SCOUTERS));
-            else if (user.hasRole(Roles.ROLE_GROUP_SCOUTER)) groups.add(Group.SCOUTERS);
+            }
+            if (user.hasRole(Roles.ROLE_SCOUTER)) {
+                groups.addAll(List.of(Objects.requireNonNull(user.getGroupId()), Group.SCOUTERS));
+            } else if (user.hasRole(Roles.ROLE_GROUP_SCOUTER)) {
+                groups.add(Group.SCOUTERS);
+            }
         }
 
         return groups;

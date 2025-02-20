@@ -15,4 +15,8 @@ public class TemplateUtils {
         }
         return context;
     }
+
+    public static Context contextOf(String key, Object value) {
+        return getContext(key, value);
+    }
 }

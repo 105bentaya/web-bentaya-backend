@@ -1,6 +1,6 @@
 package org.scouts105bentaya.features.user.dto;
 
-import org.scouts105bentaya.features.user.ValidPassword;
+import org.scouts105bentaya.features.user.constraint.ValidPassword;
 
 public record ChangePasswordDto(
     String currentPassword,

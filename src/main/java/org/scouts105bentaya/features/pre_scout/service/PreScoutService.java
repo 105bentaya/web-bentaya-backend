@@ -17,12 +17,15 @@ import org.scouts105bentaya.shared.GenericConstants;
 import org.scouts105bentaya.shared.Group;
 import org.scouts105bentaya.shared.service.AuthService;
 import org.scouts105bentaya.shared.service.EmailService;
+import org.scouts105bentaya.shared.util.TemplateUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -42,6 +45,7 @@ public class PreScoutService {
     private final AuthService authService;
     private final Environment environment;
     private final PreScoutPdfService preScoutPdfService;
+    private final TemplateEngine templateEngine;
     @Value("${bentaya.email.main}")
     private String mainEmail;
 
@@ -52,7 +56,7 @@ public class PreScoutService {
         SettingService settingService,
         AuthService authService,
         Environment environment,
-        PreScoutPdfService preScoutPdfService
+        PreScoutPdfService preScoutPdfService, TemplateEngine templateEngine
     ) {
         this.emailService = emailService;
         this.preScoutRepository = preScoutRepository;
@@ -61,6 +65,7 @@ public class PreScoutService {
         this.authService = authService;
         this.environment = environment;
         this.preScoutPdfService = preScoutPdfService;
+        this.templateEngine = templateEngine;
     }
 
     public List<PreScout> findAll() {
@@ -178,34 +183,19 @@ public class PreScoutService {
     private void sendAssignationEmail(PreScoutAssignation assignation) {
         String groupEmail = environment.getProperty(assignation.getGroupId().getEmailProperty());
         PreScout preScout = assignation.getPreScout();
-        this.emailService.sendSimpleEmail(
+        this.emailService.sendSimpleEmailWithHtml(
             groupEmail,
             "Nueva Preinscripción Asignada - %s %s".formatted(preScout.getName(), preScout.getSurname()),
-            generateAssignationBody(preScout)
+            this.templateEngine.process("pre_scout/assigned.html", TemplateUtils.contextOf("preScout", preScout))
         );
-    }
-
-    private String generateAssignationBody(PreScout preScout) {
-        return """
-            Se ha asignado la preinscripción de %s, %s a su unidad.
-            Entre a la web para ver más detalles.
-            """.formatted(preScout.getSurname(), preScout.getName());
     }
 
     private void sendRejectionEmail(PreScoutAssignation assignation) {
-        this.emailService.sendSimpleEmail(
+        this.emailService.sendSimpleEmailWithHtml(
             mainEmail,
             "Preinscripción Rechazada - %d".formatted(assignation.getPreScoutId()),
-            generateRejectionMessage(assignation)
+            this.templateEngine.process("pre_scout/rejected.html", TemplateUtils.contextOf("assignation", assignation))
         );
-    }
-
-    private String generateRejectionMessage(PreScoutAssignation assignation) {
-        return """
-            Se ha rechazado la preinscripción de %s, %s (ID %d) - %s por el siguiente motivo:
-            %s
-            """.formatted(assignation.getPreScout().getSurname(), assignation.getPreScout().getName(),
-            assignation.getPreScoutId(), assignation.getGroupId().toString(), assignation.getComment());
     }
 
     public ResponseEntity<byte[]> getPDF(Integer id) {

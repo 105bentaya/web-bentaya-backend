@@ -1,9 +1,6 @@
 package org.scouts105bentaya.features.user;
 
 import lombok.extern.slf4j.Slf4j;
-import org.passay.CharacterData;
-import org.passay.CharacterRule;
-import org.passay.PasswordGenerator;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
 import org.scouts105bentaya.core.exception.WebBentayaConflictException;
 import org.scouts105bentaya.core.exception.WebBentayaRoleNotFoundException;
@@ -12,11 +9,18 @@ import org.scouts105bentaya.core.security.UserHasReachedMaxLoginAttemptsExceptio
 import org.scouts105bentaya.core.security.service.LoginAttemptService;
 import org.scouts105bentaya.core.security.service.RequestService;
 import org.scouts105bentaya.features.scout.Scout;
+import org.scouts105bentaya.features.scout.ScoutRepository;
 import org.scouts105bentaya.features.user.dto.ChangePasswordDto;
-import org.scouts105bentaya.features.user.dto.UserDto;
+import org.scouts105bentaya.features.user.dto.UserFormDto;
+import org.scouts105bentaya.features.user.dto.UserProfileDto;
+import org.scouts105bentaya.features.user.dto.UserScoutDto;
+import org.scouts105bentaya.features.user.role.Role;
+import org.scouts105bentaya.features.user.role.RoleRepository;
+import org.scouts105bentaya.features.user.role.Roles;
 import org.scouts105bentaya.features.user.specification.UserSpecification;
 import org.scouts105bentaya.features.user.specification.UserSpecificationFilter;
 import org.scouts105bentaya.shared.GenericConstants;
+import org.scouts105bentaya.shared.Group;
 import org.scouts105bentaya.shared.service.EmailService;
 import org.scouts105bentaya.shared.util.SecurityUtils;
 import org.springframework.context.annotation.Lazy;
@@ -36,35 +40,36 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
-    private final UserConverter userConverter;
     private final PasswordEncoder passwordEncoder;
     private final LoginAttemptService loginAttemptService;
     private final EmailService emailService;
     private final RoleRepository roleRepository;
     private final RequestService requestService;
+    private final ScoutRepository scoutRepository;
 
     public UserService(
         UserRepository userRepository,
-        UserConverter userConverter,
         @Lazy PasswordEncoder passwordEncoder,
         LoginAttemptService loginAttemptService,
         EmailService emailService,
         RoleRepository roleRepository,
-        RequestService requestService
+        RequestService requestService,
+        ScoutRepository scoutRepository
     ) {
         this.userRepository = userRepository;
-        this.userConverter = userConverter;
         this.passwordEncoder = passwordEncoder;
         this.loginAttemptService = loginAttemptService;
         this.emailService = emailService;
         this.roleRepository = roleRepository;
         this.requestService = requestService;
+        this.scoutRepository = scoutRepository;
     }
 
     public Page<User> findAll(UserSpecificationFilter filter) {
@@ -79,18 +84,21 @@ public class UserService implements UserDetailsService {
         return user.orElseThrow(WebBentayaUserNotFoundException::new);
     }
 
-    public UserDto save(UserDto userDto) {
-        log.info("Trying to save user with username {}", userDto.username());
-        User user = userConverter.convertFromDto(userDto);
-
-        if (userRepository.findByUsername(user.getUsername()).isPresent()) {
-            handleUserAlreadyExists(userDto.username());
-        }
+    public void updateUserBasicData(User user, UserFormDto formDto) {
+        user
+            .setUsername(formDto.username().toLowerCase())
+            .setGroupId(Group.valueOf(formDto.groupId()))
+            .setRoles(formDto.roles().stream().map(role -> roleRepository.findByName(role).orElse(null)).collect(Collectors.toList()))
+            .setScoutList(Optional.ofNullable(formDto.scoutIds())
+                .map(scoutRepository::findAllById)
+                .map(HashSet::new)
+                .orElse(null)
+            );
 
         if (!user.hasRole(Roles.ROLE_SCOUTER)) {
             user.setGroupId(null);
         } else if (user.getGroupId() == null) {
-            throw new WebBentayaBadRequestException("El usuario debe tener una unidad");
+            throw new WebBentayaBadRequestException("El usuario debe tener una unidad asignada");
         }
 
         if (!user.hasRole(Roles.ROLE_USER)) {
@@ -98,27 +106,56 @@ public class UserService implements UserDetailsService {
         } else if (user.getScoutList() == null) {
             throw new WebBentayaBadRequestException("El usuario debe tener educandos");
         }
-
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-
-        return userConverter.convertFromEntity(this.userRepository.save(user));
     }
 
-    public void addNewUserRoleUser(String username, Scout scout) {
-        Optional<User> usernameUser = userRepository.findByUsername(username);
-        if (usernameUser.isPresent()) {
-            handleUserAlreadyExists(username);
+    public User save(UserFormDto formDto) {
+        log.info("Trying to save user new with username {}", formDto.username());
+
+        if (formDto.id() != null) throw new WebBentayaBadRequestException("El usuario no puede tener una ID asignada");
+        if (formDto.password().equals(GenericConstants.FAKE_PASSWORD)) throw new WebBentayaBadRequestException("La contraseña no es válida");
+        userRepository.findByUsername(formDto.username()).ifPresent(this::handleUserAlreadyExists);
+
+        User user = new User()
+            .setEnabled(true)
+            .setPassword(passwordEncoder.encode(formDto.password()));
+
+        updateUserBasicData(user, formDto);
+
+        return this.userRepository.save(user);
+    }
+
+    public User update(UserFormDto userToUpdate, Integer id) {
+        log.info("Trying to update user with id {}", id);
+
+        User userDB = findById(id);
+
+        if (!userDB.getUsername().equals(userToUpdate.username())) {
+            log.info("Trying to change user's {} username from {} to {}", id, userDB.getUsername(), userToUpdate.username());
+            userRepository.findByUsername(userToUpdate.username()).ifPresent(this::handleUserAlreadyExists);
         }
+
+        if (!userToUpdate.password().equals(GenericConstants.FAKE_PASSWORD)) userDB.setPassword(passwordEncoder.encode(userToUpdate.password()));
+
+        updateUserBasicData(userDB, userToUpdate);
+        userDB.setEnabled(userToUpdate.enabled());
+
+        return this.userRepository.save(userDB);
+    }
+
+
+    public void addNewUserRoleUser(String username, Scout scout) {
+        userRepository.findByUsername(username).ifPresent(this::handleUserAlreadyExists);
 
         User newUser = new User();
         newUser.setUsername(username);
-        String password = generatePassword();
+        String password = PasswordHelper.generatePassword();
         newUser.setPassword(passwordEncoder.encode(password));
         newUser.setRoles(Collections.singletonList(roleRepository.findByName(Roles.ROLE_USER.name()).orElse(null)));
         newUser.setScoutList(Collections.singleton(scout));
 
         userRepository.save(newUser);
 
+        //todo WB-245
         emailService.sendSimpleEmail(
             username, "Alta de usuario en la web de Asociación Scouts Exploradores Bentaya",
             String.format(
@@ -148,7 +185,7 @@ public class UserService implements UserDetailsService {
 
         User newUser = new User();
         newUser.setUsername(username);
-        String password = generatePassword();
+        String password = PasswordHelper.generatePassword();
         newUser.setPassword(passwordEncoder.encode(password));
         newUser.setRoles(Collections.singletonList(roleRepository.findByName("ROLE_SCOUT_CENTER_REQUESTER").orElse(null)));
         userRepository.save(newUser);
@@ -156,94 +193,7 @@ public class UserService implements UserDetailsService {
         return password;
     }
 
-    private String generatePassword() {
-        PasswordGenerator gen = new PasswordGenerator();
-
-        CharacterRule lowerCase = new CharacterRule(new CharacterData() {
-            public String getErrorCode() {
-                return "ERROR_AT_PASSWORD_LOWER";
-            }
-
-            public String getCharacters() {
-                return "abcdefghijkmnopqrstuvwxyz";
-            }
-        }, 2);
-        CharacterRule upperCase = new CharacterRule(new CharacterData() {
-            public String getErrorCode() {
-                return "ERROR_AT_PASSWORD_UPPER";
-            }
-
-            public String getCharacters() {
-                return "ABCDEFGHJKLMNPQRSTUVWXYZ";
-            }
-        }, 2);
-        CharacterRule digit = new CharacterRule(new CharacterData() {
-            public String getErrorCode() {
-                return "ERROR_AT_PASSWORD_DIGIT";
-            }
-
-            public String getCharacters() {
-                return "123456789";
-            }
-        }, 2);
-        CharacterRule special = new CharacterRule(new CharacterData() {
-            public String getErrorCode() {
-                return "ERROR_AT_PASSWORD_SPECIAL";
-            }
-
-            public String getCharacters() {
-                return "!_-;$%&/()";
-            }
-        }, 2);
-        return gen.generatePassword(10, lowerCase, upperCase, digit, special);
-    }
-
-    public UserDto update(User userToUpdate, Integer id) {
-        log.info("Trying to update user with id {}", id);
-
-        User userDB = findById(id);
-        Optional<User> usernameUser = userRepository.findByUsername(userToUpdate.getUsername());
-
-        if (!userDB.getUsername().equals(userToUpdate.getUsername())) {
-            log.info("Trying to change user's {} username from {} to {}", id, userDB.getUsername(), userToUpdate.getUsername());
-        }
-        if (usernameUser.isPresent() && !usernameUser.get().getId().equals(userDB.getId())) {
-            handleUserAlreadyExists(userToUpdate.getUsername());
-        }
-        userDB.setPassword(
-            userToUpdate.getPassword() == null || userToUpdate.getPassword().isEmpty() ?
-                userDB.getPassword() :
-                passwordEncoder.encode(userToUpdate.getPassword())
-        );
-        userDB.setUsername(userToUpdate.getUsername());
-
-
-        if (userDB.hasRole(Roles.ROLE_USER) && !userToUpdate.hasRole(Roles.ROLE_USER)) {
-            userDB.setScoutList(null);
-        }
-
-        if (userToUpdate.hasRole(Roles.ROLE_USER)) {
-            if (userToUpdate.getScoutList() == null)
-                throw new WebBentayaBadRequestException("El usuario debe tener educandos");
-            userDB.setScoutList(userToUpdate.getScoutList());
-        }
-
-        if (userToUpdate.hasRole(Roles.ROLE_SCOUTER)) {
-            if (userToUpdate.getGroupId() == null)
-                throw new WebBentayaBadRequestException("El usuario debe tener una unidad");
-            userDB.setGroupId(userToUpdate.getGroupId());
-        } else {
-            userDB.setGroupId(null);
-        }
-
-        userDB.setRoles(userToUpdate.getRoles());
-        userDB.setEnabled(userToUpdate.isEnabled());
-        userDB.setEnabled(true);
-
-        return userConverter.convertFromEntity(this.userRepository.save(userDB));
-    }
-
-    public void addScout(User user, Scout scout) {
+    public void addScoutToUser(User user, Scout scout) {
         if (!user.getScoutList().contains(scout)) {
             if (!user.isEnabled()) {
                 user.getRoles().removeIf(role -> !role.getName().equals(Roles.ROLE_USER.name()));
@@ -256,17 +206,16 @@ public class UserService implements UserDetailsService {
             userRepository.save(user);
             emailService.sendSimpleEmail(
                 user.getUsername(), "Nueva Persona Educanda Añadida a tu usuario",
-                String.format(
-                    """
-                        Se ha añadido a la persona educanda %s %s a tu usuario %s de la web de la Asociación Scouts Exploradores Bentaya.
-                        Si cree que esto es un error, por favor avísenos enviando un correo a informatica@105bentaya.org""",
-                    scout.getName(), scout.getSurname(), user.getUsername())
+                """
+                    Se ha añadido a la persona educanda %s %s a tu usuario %s de la web de la Asociación Scouts Exploradores Bentaya.
+                    Si cree que esto es un error, por favor avísenos enviando un correo a informatica@105bentaya.org
+                    """.formatted(scout.getName(), scout.getSurname(), user.getUsername())
             );
 
         }
     }
 
-    public void removeScout(User user, Scout scout) {
+    public void removeScoutFromUser(User user, Scout scout) {
         user.getScoutList().remove(scout);
         if (user.getScoutList().isEmpty() && user.hasRole(Roles.ROLE_USER) && user.getRoles().size() == 1) {
             user.setEnabled(false);
@@ -278,6 +227,24 @@ public class UserService implements UserDetailsService {
 
     public User findByUsername(String username) {
         return userRepository.findByUsername(username).orElseThrow(WebBentayaUserNotFoundException::new);
+    }
+
+    public UserProfileDto findProfileByUsername(String username) {
+        User user = findByUsername(username);
+        return new UserProfileDto(
+            user.getId(),
+            user.getUsername(),
+            user.getRoles().stream().map(Role::getName).toList(),
+            Group.valueFrom(user.getGroupId()),
+            user.getScoutList().stream().map(scout ->
+                new UserScoutDto(
+                    scout.getId(),
+                    scout.getGroupId().getValue(),
+                    scout.getName(),
+                    scout.getSurname()
+                )
+            ).toList()
+        );
     }
 
     public void delete(int id) {
@@ -346,8 +313,21 @@ public class UserService implements UserDetailsService {
         return new ArrayList<>(auths);
     }
 
-    private void handleUserAlreadyExists(String username) {
-        log.warn("User with username {} already exists", username);
+    private void handleUserAlreadyExists(User user) {
+        log.warn("User with username {} already exists", user.getUsername());
         throw new WebBentayaConflictException("Ya existe un usuario con este correo electrónico");
+    }
+
+    public UserFormDto findByIdForForm(Integer id) {
+        User user = findById(id);
+        return new UserFormDto(
+            user.getId(),
+            user.getUsername(),
+            GenericConstants.FAKE_PASSWORD,
+            user.getRoles().stream().map(Role::getName).toList(),
+            user.isEnabled(),
+            Group.valueFrom(user.getGroupId()),
+            user.getScoutList().stream().map(Scout::getId).toList()
+        );
     }
 }
