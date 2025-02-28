@@ -47,7 +47,7 @@ public class ResetPasswordService {
                 username,
                 "Restablecer contraseña - 105 Bentaya",
                 """
-                    Link para restablecer la contraseña: 105bentaya.org/reset-password/%s
+                    Link para restablecer la contraseña: 105bentaya.org/restablecer-clave/%s
                     Este link caducará en 5 minutos. En caso de que ya haya caducado, puede volver a solicitar el \
                     restablecimiento de la contraseña desde el portal de inicio de sesión.
                     """.formatted(token)
