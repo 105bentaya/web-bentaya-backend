@@ -4,6 +4,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.core.security.service.ResetPasswordService;
+import org.scouts105bentaya.features.user.converter.UserConverter;
+import org.scouts105bentaya.features.user.converter.UserFormConverter;
 import org.scouts105bentaya.features.user.dto.ChangePasswordDto;
 import org.scouts105bentaya.features.user.dto.ForgotPasswordDto;
 import org.scouts105bentaya.features.user.dto.UserDto;
@@ -33,15 +35,17 @@ public class UserController {
     private final UserService userService;
     private final ResetPasswordService resetPasswordService;
     private final UserConverter userConverter;
+    private final UserFormConverter userFormConverter;
 
     public UserController(
         UserService userService,
         ResetPasswordService resetPasswordService,
-        UserConverter userConverter
-    ) {
+        UserConverter userConverter,
+        UserFormConverter userFormConverter) {
         this.userService = userService;
         this.resetPasswordService = resetPasswordService;
         this.userConverter = userConverter;
+        this.userFormConverter = userFormConverter;
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -62,21 +66,21 @@ public class UserController {
     @GetMapping("/form/{id}")
     public UserFormDto findFormDtoById(@PathVariable Integer id) {
         log.info("METHOD UserController.findFormDtoById --- PARAMS id: {}{}", id, SecurityUtils.getLoggedUserUsernameForLog());
-        return userService.findByIdForForm(id);
+        return userFormConverter.convertFromEntity(userService.findById(id));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public UserDto save(@RequestBody @Valid UserFormDto formDto) {
+    public UserFormDto save(@RequestBody @Valid UserFormDto formDto) {
         log.info("METHOD UserController.save{}", SecurityUtils.getLoggedUserUsernameForLog());
-        return userConverter.convertFromEntity(userService.save(formDto));
+        return userFormConverter.convertFromEntity(userService.save(formDto));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
-    public UserDto update(@RequestBody @Valid UserFormDto formDto, @PathVariable Integer id) {
+    public UserFormDto update(@RequestBody @Valid UserFormDto formDto, @PathVariable Integer id) {
         log.info("METHOD UserController.update --- PARAMS id: {}{}", id, SecurityUtils.getLoggedUserUsernameForLog());
-        return userConverter.convertFromEntity(userService.update(formDto, id));
+        return userFormConverter.convertFromEntity(userService.update(formDto, id));
     }
 
     @PreAuthorize("hasRole('ADMIN')")

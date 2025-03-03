@@ -10,6 +10,7 @@ import org.scouts105bentaya.core.security.service.LoginAttemptService;
 import org.scouts105bentaya.core.security.service.RequestService;
 import org.scouts105bentaya.features.scout.Scout;
 import org.scouts105bentaya.features.scout.ScoutRepository;
+import org.scouts105bentaya.features.user.converter.UserFormConverter;
 import org.scouts105bentaya.features.user.dto.ChangePasswordDto;
 import org.scouts105bentaya.features.user.dto.UserFormDto;
 import org.scouts105bentaya.features.user.dto.UserProfileDto;
@@ -61,8 +62,7 @@ public class UserService implements UserDetailsService {
         EmailService emailService,
         RoleRepository roleRepository,
         RequestService requestService,
-        ScoutRepository scoutRepository
-    ) {
+        ScoutRepository scoutRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.loginAttemptService = loginAttemptService;
@@ -316,18 +316,5 @@ public class UserService implements UserDetailsService {
     private void handleUserAlreadyExists(User user) {
         log.warn("User with username {} already exists", user.getUsername());
         throw new WebBentayaConflictException("Ya existe un usuario con este correo electrónico");
-    }
-
-    public UserFormDto findByIdForForm(Integer id) {
-        User user = findById(id);
-        return new UserFormDto(
-            user.getId(),
-            user.getUsername(),
-            GenericConstants.FAKE_PASSWORD,
-            user.getRoles().stream().map(Role::getName).toList(),
-            user.isEnabled(),
-            Group.valueFrom(user.getGroupId()),
-            user.getScoutList().stream().map(Scout::getId).toList()
-        );
     }
 }

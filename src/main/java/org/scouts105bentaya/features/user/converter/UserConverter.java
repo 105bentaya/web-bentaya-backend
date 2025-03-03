@@ -1,6 +1,7 @@
-package org.scouts105bentaya.features.user;
+package org.scouts105bentaya.features.user.converter;
 
 import org.scouts105bentaya.features.scout.converter.ScoutUserConverter;
+import org.scouts105bentaya.features.user.User;
 import org.scouts105bentaya.features.user.dto.UserDto;
 import org.scouts105bentaya.features.user.role.Role;
 import org.scouts105bentaya.features.user.role.RoleRepository;

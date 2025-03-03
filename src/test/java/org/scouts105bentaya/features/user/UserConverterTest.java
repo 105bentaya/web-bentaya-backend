@@ -5,6 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.scouts105bentaya.features.scout.converter.ScoutUserConverter;
+import org.scouts105bentaya.features.user.converter.UserConverter;
 import org.scouts105bentaya.features.user.dto.UserDto;
 import org.scouts105bentaya.features.user.role.RoleRepository;
 
