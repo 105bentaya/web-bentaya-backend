@@ -26,8 +26,8 @@ public class BookingStatusService {
     private final TemplateEngine htmlTemplateEngine;
     private final EmailService emailService;
     private final UserService userService;
-    @Value("${bentaya.email.booking}")
-    private String bookingMail;
+    @Value("${bentaya.email.booking}") private String bookingMail;
+    @Value("${bentaya.web.url}") private String url;
 
     public BookingStatusService(
         BookingRepository bookingRepository,
@@ -131,6 +131,7 @@ public class BookingStatusService {
         context.setVariable("center", booking.getScoutCenter().getName());
         context.setVariable("statusObservation", booking.getStatusObservations());
         context.setVariable("contactMail", userMail);
+        context.setVariable("url", url);
 
         // todo: que el link te lleva al formulario de reservas. Si no está iniciada la sesión, que te lleve al portal de inicio de sesión y después vuelvas al formulario (usar query param)
         final String infoHtmlContent = this.htmlTemplateEngine.process("booking-finished.html", context);

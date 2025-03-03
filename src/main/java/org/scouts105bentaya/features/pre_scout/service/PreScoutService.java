@@ -46,8 +46,8 @@ public class PreScoutService {
     private final Environment environment;
     private final PreScoutPdfService preScoutPdfService;
     private final TemplateEngine templateEngine;
-    @Value("${bentaya.email.main}")
-    private String mainEmail;
+    @Value("${bentaya.email.main}") private String mainEmail;
+    @Value("${bentaya.web.url}") private String url;
 
     public PreScoutService(
         EmailService emailService,
@@ -186,7 +186,7 @@ public class PreScoutService {
         this.emailService.sendSimpleEmailWithHtml(
             groupEmail,
             "Nueva Preinscripción Asignada - %s %s".formatted(preScout.getName(), preScout.getSurname()),
-            this.templateEngine.process("pre_scout/assigned.html", TemplateUtils.contextOf("preScout", preScout))
+            this.templateEngine.process("pre_scout/assigned.html", TemplateUtils.getContext("preScout", preScout, "url", url))
         );
     }
 
@@ -194,7 +194,7 @@ public class PreScoutService {
         this.emailService.sendSimpleEmailWithHtml(
             mainEmail,
             "Preinscripción Rechazada - %d".formatted(assignation.getPreScoutId()),
-            this.templateEngine.process("pre_scout/rejected.html", TemplateUtils.contextOf("assignation", assignation))
+            this.templateEngine.process("pre_scout/rejected.html", TemplateUtils.getContext("assignation", assignation, "url", url))
         );
     }
 

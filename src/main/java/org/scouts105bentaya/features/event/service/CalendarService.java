@@ -57,8 +57,8 @@ public class CalendarService {
     private final UserService userService;
     private final EventService eventService;
     private final AuthService authService;
-    @Value("${jwt.calendar.key}")
-    private String secret;
+    @Value("${jwt.calendar.key}") private String secret;
+    @Value("${bentaya.web.url}") private String url;
 
     public CalendarService(
         UserService userService,
@@ -118,7 +118,7 @@ public class CalendarService {
         calEvent.add(new Location(event.getLocation()));
         calEvent.add(new Description(generateEventDescription(event, user)));
         try {
-            calEvent.add(new Url(new URI("https://105bentaya.org/calendario?actividad=%s".formatted(event.getId()))));
+            calEvent.add(new Url(new URI("%s/calendario?actividad=%s".formatted(url, event.getId()))));
         } catch (URISyntaxException e) {
             throw new WebBentayaErrorException(CALENDAR_GENERATION_ERROR);
         }
@@ -141,11 +141,11 @@ public class CalendarService {
         if (event.isUnknownTime()) description += "\nEl horario está aún por concretar.";
         if (event.isActiveAttendanceList() && user.hasRole(Roles.ROLE_SCOUTER)) {
             description +=
-                "%nPara acceder a la lista de asistencia entre a https://105bentaya.org/unidad/asistencias?actividad=%s"
-                    .formatted(event.getId());
+                "%nPara acceder a la lista de asistencia entre a %s/unidad/asistencias?actividad=%s"
+                    .formatted(url, event.getId());
         }
         if (event.isActiveAttendanceList() && user.hasRole(Roles.ROLE_USER)) {
-            description += "\nPara editar la asistencia entre a https://105bentaya.org/asistencias";
+            description += "%nPara editar la asistencia entre a %s/asistencias".formatted(url);
         }
         return description;
     }

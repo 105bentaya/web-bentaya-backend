@@ -24,6 +24,7 @@ import org.scouts105bentaya.shared.GenericConstants;
 import org.scouts105bentaya.shared.Group;
 import org.scouts105bentaya.shared.service.EmailService;
 import org.scouts105bentaya.shared.util.SecurityUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.GrantedAuthority;
@@ -54,6 +55,9 @@ public class UserService implements UserDetailsService {
     private final RoleRepository roleRepository;
     private final RequestService requestService;
     private final ScoutRepository scoutRepository;
+
+    @Value("${bentaya.web.url}") String url;
+    @Value("${bentaya.email.it}") String itMail;
 
     public UserService(
         UserRepository userRepository,
@@ -160,13 +164,13 @@ public class UserService implements UserDetailsService {
             username, "Alta de usuario en la web de Asociación Scouts Exploradores Bentaya",
             String.format(
                 """
-                    Se ha añadido un nuevo usuario asociado a este correo para la web https://105bentaya.org
+                    Se ha añadido un nuevo usuario asociado a este correo para la web %s
                     Nombre de usuario: %s
                     Persona educanda asociada: %s %s
                     Contraseña: %s
                     Es altamente recomendable cambiar la contraseña.
-                    Si cree que esto es un error, por favor avísenos enviando un correo a informatica@105bentaya.org""",
-                username, scout.getName(), scout.getSurname(), password)
+                    Si cree que esto es un error, por favor avísenos enviando un correo a %s""",
+                url, username, scout.getName(), scout.getSurname(), password, itMail)
         );
     }
 
@@ -208,8 +212,8 @@ public class UserService implements UserDetailsService {
                 user.getUsername(), "Nueva Persona Educanda Añadida a tu usuario",
                 """
                     Se ha añadido a la persona educanda %s %s a tu usuario %s de la web de la Asociación Scouts Exploradores Bentaya.
-                    Si cree que esto es un error, por favor avísenos enviando un correo a informatica@105bentaya.org
-                    """.formatted(scout.getName(), scout.getSurname(), user.getUsername())
+                    Si cree que esto es un error, por favor avísenos enviando un correo a %s
+                    """.formatted(scout.getName(), scout.getSurname(), user.getUsername(), itMail)
             );
 
         }

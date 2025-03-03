@@ -10,6 +10,7 @@ import org.scouts105bentaya.core.exception.WebBentayaUserNotFoundException;
 import org.scouts105bentaya.features.user.dto.ForgotPasswordDto;
 import org.scouts105bentaya.features.user.UserService;
 import org.scouts105bentaya.shared.service.EmailService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
@@ -19,6 +20,8 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Service
 public class ResetPasswordService {
+
+    @Value("${bentaya.web.url}") private String url;
 
     private final Cache<String, String> tokenCache;
     private final Cache<String, Boolean> usernameHasChangedPswCache;
@@ -47,10 +50,10 @@ public class ResetPasswordService {
                 username,
                 "Restablecer contraseña - 105 Bentaya",
                 """
-                    Link para restablecer la contraseña: 105bentaya.org/restablecer-clave/%s
+                    Link para restablecer la contraseña: %s/restablecer-clave/%s
                     Este link caducará en 5 minutos. En caso de que ya haya caducado, puede volver a solicitar el \
                     restablecimiento de la contraseña desde el portal de inicio de sesión.
-                    """.formatted(token)
+                    """.formatted(url, token)
             );
         } catch (WebBentayaUserNotFoundException ignored) {
             //ignored

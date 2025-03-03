@@ -1,6 +1,7 @@
 package org.scouts105bentaya.features.donation;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.scouts105bentaya.core.exception.WebBentayaConflictException;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.donation.converter.DonationFormConverter;
@@ -32,8 +33,8 @@ public class DonationService {
     private final TemplateEngine templateEngine;
     private final EmailService emailService;
     private final PaymentService paymentService;
-    @Value("${bentaya.email.treasury}")
-    private String treasuryEmail;
+    @Value("${bentaya.email.treasury}") private String treasuryEmail;
+    @Value("${bentaya.email.it}") private String itEmail;
 
     public DonationService(
         TemplateEngine templateEngine,
@@ -110,8 +111,8 @@ public class DonationService {
                 "Error en el pago de su donación",
                 """
                     No se ha podido completar el pago de su donación nº %s con éxito. Si cree que esto es un error, \
-                    contacte con informatica@105bentaya.org
-                    """.formatted(donation.getPayment().getOrderNumber())
+                    contacte con %s
+                    """.formatted(donation.getPayment().getOrderNumber(), itEmail)
             );
         }
     }
@@ -137,7 +138,7 @@ public class DonationService {
             }
         }
         if (showIban(donation)) {
-            context.setVariable("iban", donation.getIban());
+            context.setVariable("iban", formatIban(donation.getIban()));
         }
 
         this.emailService.sendSimpleEmailWithHtml(
@@ -150,6 +151,10 @@ public class DonationService {
             "Scouts 105 Bentaya - Datos de Donación %s".formatted(frequencyToString(donation.getFrequency())),
             this.templateEngine.process("donation/donation-received.html", context)
         );
+    }
+
+    private static String formatIban(String iban) {
+        return StringUtils.repeat("*", iban.length() - 4) + iban.substring(iban.length() - 4);
     }
 
     private boolean showIban(Donation donation) {
