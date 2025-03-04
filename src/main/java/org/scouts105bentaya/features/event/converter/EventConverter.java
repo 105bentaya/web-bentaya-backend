@@ -27,7 +27,9 @@ public class EventConverter extends GenericConverter<Event, EventDto> {
             entity.getStartDate(),
             entity.getEndDate(),
             entity.isUnknownTime(),
-            entity.isActiveAttendanceList()
+            entity.isActiveAttendanceList(),
+            entity.eventAttendanceIsClosed(),
+            entity.getCloseDateTime()
         );
     }
 }

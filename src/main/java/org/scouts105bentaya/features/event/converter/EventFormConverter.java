@@ -32,7 +32,8 @@ public class EventFormConverter extends GenericConverter<Event, EventFormDto> {
             entity.isUnknownTime(),
             entity.isActiveAttendanceList(),
             entity.isActiveAttendancePayment(),
-            entity.isClosedAttendanceList()
+            entity.isClosedAttendanceList(),
+            entity.getCloseDateTime()
         );
     }
 }

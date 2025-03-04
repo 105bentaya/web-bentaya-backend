@@ -9,6 +9,7 @@ public record AttendanceScoutInfoDto(
     String eventTitle,
     Boolean attending,
     Boolean payed,
-    boolean closed
+    boolean closed,
+    boolean endsSoon
 ) {
 }

@@ -1,5 +1,6 @@
 package org.scouts105bentaya.features.event.dto;
 
+import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
@@ -21,6 +22,7 @@ public record EventFormDto(
     boolean unknownTime,
     @NotNull(message = "Activating Attendance List") boolean activateAttendanceList,
     boolean activateAttendancePayment,
-    boolean closeAttendanceList
+    boolean closeAttendanceList,
+    @Nullable ZonedDateTime closeDateTime
 ) {
 }

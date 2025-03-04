@@ -1,5 +1,6 @@
 package org.scouts105bentaya.features.event;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -38,10 +39,21 @@ public class Event {
     private boolean activeAttendanceList;
     private boolean activeAttendancePayment;
     private boolean closedAttendanceList;
+    @Nullable
+    private ZonedDateTime closeDateTime;
     @OneToMany(mappedBy = "event", cascade = CascadeType.REMOVE)
     private List<Confirmation> confirmationList;
 
     public boolean eventHasEnded() {
         return getEndDate().isBefore(ZonedDateTime.now());
+    }
+
+    public boolean eventAttendanceIsClosed() {
+        if (activeAttendanceList) {
+            if (closedAttendanceList) return true;
+            if (closeDateTime == null) return eventHasEnded();
+            return getCloseDateTime().isBefore(ZonedDateTime.now());
+        }
+        return false;
     }
 }

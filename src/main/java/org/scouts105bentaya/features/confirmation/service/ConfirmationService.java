@@ -19,7 +19,10 @@ import org.scouts105bentaya.shared.service.AuthService;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
+import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -80,7 +83,7 @@ public class ConfirmationService {
         attendanceListBasicDto.setEventEndDate(event.getEndDate());
         attendanceListBasicDto.setEventId(event.getId());
         attendanceListBasicDto.setEventHasPayment(event.isActiveAttendancePayment());
-        attendanceListBasicDto.setEventIsClosed(event.isClosedAttendanceList() || event.eventHasEnded());
+        attendanceListBasicDto.setEventIsClosed(event.eventAttendanceIsClosed());
         if (event.isActiveAttendancePayment()) attendanceListBasicDto.setAffirmativeAndPayedConfirmations(0);
 
         event.getConfirmationList().forEach(confirmation -> {
@@ -123,7 +126,10 @@ public class ConfirmationService {
             confirmation.getEvent().getTitle(),
             confirmation.getAttending(),
             confirmation.getPayed(),
-            confirmation.getEvent().isClosedAttendanceList() || confirmation.getEvent().eventHasEnded()
+            confirmation.getEvent().eventAttendanceIsClosed(),
+            Optional.ofNullable(confirmation.getEvent().getCloseDateTime())
+                .map(dateTime -> dateTime.minusDays(3L).isBefore(ZonedDateTime.now()))
+                .orElse(false)
         );
     }
 
@@ -134,7 +140,7 @@ public class ConfirmationService {
     public Confirmation updateByUser(ConfirmationDto confirmation) {
         Confirmation confirmationDB = this.findById(confirmation.scoutId(), confirmation.eventId());
         Event event = confirmationDB.getEvent();
-        if (!event.eventHasEnded() && !event.isClosedAttendanceList()) {
+        if (!event.eventAttendanceIsClosed()) {
             confirmationDB.setText(confirmation.text());
             confirmationDB.setAttending(confirmation.attending());
             return confirmationRepository.save(confirmationDB);
@@ -160,7 +166,7 @@ public class ConfirmationService {
 
     private void validateScouterScoutAccess(Confirmation confirmation) {
         User loggedUser = this.authService.getLoggedUser();
-        if (!loggedUser.getGroupId().equals(confirmation.getEvent().getGroupId()) ||
+        if (!Objects.requireNonNull(loggedUser.getGroupId()).equals(confirmation.getEvent().getGroupId()) ||
             !loggedUser.getGroupId().equals(confirmation.getScout().getGroupId())) {
             throw new WebBentayaForbiddenException("Acceso no autorizado a este scout");
         }
@@ -177,7 +183,7 @@ public class ConfirmationService {
     public boolean loggedUserHasNotifications() {
         return this.authService.getLoggedUser().getScoutList().stream()
             .anyMatch(scout -> scout.getConfirmationList().stream()
-                .filter(confirmation -> !confirmation.getEvent().isClosedAttendanceList() && !confirmation.getEvent().eventHasEnded())
+                .filter(confirmation -> !confirmation.getEvent().eventAttendanceIsClosed())
                 .anyMatch(confirmation -> confirmation.getAttending() == null)
             );
     }

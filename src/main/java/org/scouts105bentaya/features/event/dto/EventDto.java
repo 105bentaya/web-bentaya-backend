@@ -13,6 +13,8 @@ public record EventDto(
     ZonedDateTime startDate,
     ZonedDateTime endDate,
     boolean unknownTime,
-    Boolean hasAttendance
+    Boolean hasAttendance,
+    boolean attendanceIsClosed,
+    ZonedDateTime closeDateTime
 ) {
 }

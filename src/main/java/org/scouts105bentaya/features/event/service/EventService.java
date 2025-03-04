@@ -68,6 +68,8 @@ public class EventService {
 
         newEvent.setActiveAttendanceList(eventForm.activateAttendanceList());
         newEvent.setActiveAttendancePayment(eventForm.activateAttendanceList() && eventForm.activateAttendancePayment());
+        newEvent.setClosedAttendanceList(eventForm.closeAttendanceList());
+        newEvent.setCloseDateTime(eventForm.closeAttendanceList() ? null : eventForm.closeDateTime());
 
         this.setEventCoordinates(newEvent, eventForm);
         this.setEventDates(newEvent, eventForm);
@@ -138,11 +140,13 @@ public class EventService {
             eventDB.setActiveAttendanceList(false);
             eventDB.setActiveAttendancePayment(false);
             eventDB.setClosedAttendanceList(false);
+            eventDB.setCloseDateTime(null);
             confirmationService.deleteAllByEventId(eventDB.getId());
         } else if (!eventDB.isActiveAttendanceList()) {
             eventDB.setActiveAttendanceList(true);
             eventDB.setActiveAttendancePayment(eventForm.activateAttendancePayment());
-            eventDB.setClosedAttendanceList(false);
+            eventDB.setClosedAttendanceList(eventDB.isClosedAttendanceList());
+            eventDB.setCloseDateTime(eventDB.getCloseDateTime());
             this.scoutService.findAllByLoggedScouterGroupId().forEach(scout -> {
                 Confirmation confirmation = new Confirmation();
                 confirmation.setEvent(eventDB);
@@ -152,6 +156,7 @@ public class EventService {
             });
         } else {
             eventDB.setClosedAttendanceList(eventForm.closeAttendanceList());
+            eventDB.setCloseDateTime(eventForm.closeDateTime());
             if (!eventDB.isActiveAttendancePayment() && eventForm.activateAttendancePayment()) {
                 eventDB.setActiveAttendancePayment(true);
                 eventDB.getConfirmationList().forEach(confirmation -> {
