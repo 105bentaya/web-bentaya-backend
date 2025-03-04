@@ -290,6 +290,36 @@ class EventServiceTest {
     }
 
     @Test
+    void onUpdateEventAttendance_AttendanceCloseSet() {
+        //given
+        var eventFormDto = EventFormDto.builder().id(1).groupId(1).activateAttendanceList(true)
+            .startDate(start).endDate(end).closeAttendanceList(true).build();
+        var existingEvent = new Event().setId(1).setGroupId(Group.GARAJONAY)
+            .setStartDate(start).setEndDate(end)
+            .setActiveAttendanceList(true);
+        ZonedDateTime mockedNow = ZonedDateTime.parse("2025-03-12T11:00:00Z");
+
+        //before
+        try (MockedStatic<ZonedDateTime> mockedLocalDateTime = Mockito.mockStatic(ZonedDateTime.class)) {
+            mockedLocalDateTime.when(ZonedDateTime::now).thenReturn(mockedNow);
+            Assertions.assertThat(existingEvent.eventAttendanceIsClosed()).isFalse();
+        }
+
+        //when
+        when(eventRepository.findById(anyInt())).thenReturn(Optional.of(existingEvent));
+        mockSave();
+        Event updatedEvent = eventService.update(eventFormDto);
+
+        //then
+        Assertions.assertThat(updatedEvent).isNotNull();
+
+        try (MockedStatic<ZonedDateTime> mockedLocalDateTime = Mockito.mockStatic(ZonedDateTime.class)) {
+            mockedLocalDateTime.when(ZonedDateTime::now).thenReturn(mockedNow);
+            Assertions.assertThat(updatedEvent.eventAttendanceIsClosed()).isTrue();
+        }
+    }
+
+    @Test
     void onUpdateEventAttendance_AttendanceIsDeactivated() {
         //given
         var eventFormDto = EventFormDto.builder().id(1).groupId(1).activateAttendanceList(false)
