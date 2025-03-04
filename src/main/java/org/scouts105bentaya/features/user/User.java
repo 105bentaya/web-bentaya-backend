@@ -21,7 +21,7 @@ import lombok.experimental.Accessors;
 import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.scout.Scout;
 import org.scouts105bentaya.features.user.role.Role;
-import org.scouts105bentaya.features.user.role.Roles;
+import org.scouts105bentaya.features.user.role.RoleEnum;
 import org.scouts105bentaya.shared.Group;
 import org.scouts105bentaya.shared.constraint.IsUnit;
 
@@ -65,12 +65,12 @@ public class User {
     private List<Booking> bookingList;
 
     @Transient
-    public boolean hasRole(Roles roleEnum) {
-        return roles.stream().anyMatch(role -> role.getName().equals(roleEnum.name()));
+    public boolean hasRole(RoleEnum roleEnum) {
+        return roles.stream().anyMatch(role -> role.getName() == roleEnum);
     }
 
     @Transient
     public boolean isMember() {
-        return hasRole(Roles.ROLE_USER) || hasRole(Roles.ROLE_SCOUTER) || hasRole(Roles.ROLE_GROUP_SCOUTER);
+        return hasRole(RoleEnum.ROLE_USER) || hasRole(RoleEnum.ROLE_SCOUTER) || hasRole(RoleEnum.ROLE_GROUP_SCOUTER);
     }
 }

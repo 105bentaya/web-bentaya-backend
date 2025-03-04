@@ -28,7 +28,7 @@ import org.scouts105bentaya.features.event.Event;
 import org.scouts105bentaya.features.scout.Scout;
 import org.scouts105bentaya.features.user.User;
 import org.scouts105bentaya.features.user.UserService;
-import org.scouts105bentaya.features.user.role.Roles;
+import org.scouts105bentaya.features.user.role.RoleEnum;
 import org.scouts105bentaya.shared.GenericConstants;
 import org.scouts105bentaya.shared.Group;
 import org.scouts105bentaya.shared.service.AuthService;
@@ -139,12 +139,12 @@ public class CalendarService {
             %s""".formatted(event.getGroupId().toTitleCase(), event.getDescription());
         if (!description.endsWith(".")) description += ".";
         if (event.isUnknownTime()) description += "\nEl horario está aún por concretar.";
-        if (event.isActiveAttendanceList() && user.hasRole(Roles.ROLE_SCOUTER)) {
+        if (event.isActiveAttendanceList() && user.hasRole(RoleEnum.ROLE_SCOUTER)) {
             description +=
                 "%nPara acceder a la lista de asistencia entre a %s/unidad/asistencias?actividad=%s"
                     .formatted(url, event.getId());
         }
-        if (event.isActiveAttendanceList() && user.hasRole(Roles.ROLE_USER)) {
+        if (event.isActiveAttendanceList() && user.hasRole(RoleEnum.ROLE_USER)) {
             description += "%nPara editar la asistencia entre a %s/asistencias".formatted(url);
         }
         return description;
@@ -173,12 +173,12 @@ public class CalendarService {
 
         if (claims.containsKey(TOKEN_USER_GROUPS_KEY) && Boolean.TRUE.equals(claims.get(TOKEN_USER_GROUPS_KEY, Boolean.class))) {
             groups.add(Group.GRUPO);
-            if (user.hasRole(Roles.ROLE_USER)) {
+            if (user.hasRole(RoleEnum.ROLE_USER)) {
                 groups.addAll(user.getScoutList().stream().map(Scout::getGroupId).toList());
             }
-            if (user.hasRole(Roles.ROLE_SCOUTER)) {
+            if (user.hasRole(RoleEnum.ROLE_SCOUTER)) {
                 groups.addAll(List.of(Objects.requireNonNull(user.getGroupId()), Group.SCOUTERS));
-            } else if (user.hasRole(Roles.ROLE_GROUP_SCOUTER)) {
+            } else if (user.hasRole(RoleEnum.ROLE_GROUP_SCOUTER)) {
                 groups.add(Group.SCOUTERS);
             }
         }

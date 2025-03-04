@@ -6,7 +6,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mockito;
 import org.scouts105bentaya.core.security.service.AuthLogic;
 import org.scouts105bentaya.features.event.service.EventService;
-import org.scouts105bentaya.features.user.role.Roles;
+import org.scouts105bentaya.features.user.role.RoleEnum;
 import org.scouts105bentaya.shared.Group;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -40,20 +40,20 @@ class EventControllerTest {
     private AuthLogic authLogic;
 
     @ParameterizedTest
-    @EnumSource(value = Roles.class, names = {"ROLE_SCOUTER", "ROLE_GROUP_SCOUTER", "ROLE_USER"})
-    void authorizedUsersCanGetEvents(Roles roles) throws Exception {
+    @EnumSource(value = RoleEnum.class, names = {"ROLE_SCOUTER", "ROLE_GROUP_SCOUTER", "ROLE_USER"})
+    void authorizedUsersCanGetEvents(RoleEnum roles) throws Exception {
         buildResultActions("/api/event", roles)
             .andExpect(status().isOk());
     }
 
     @ParameterizedTest
-    @EnumSource(value = Roles.class, mode = EnumSource.Mode.EXCLUDE, names = {"ROLE_SCOUTER", "ROLE_GROUP_SCOUTER", "ROLE_USER"})
-    void unauthorizedUsersCannotGetEvents(Roles roles) throws Exception {
+    @EnumSource(value = RoleEnum.class, mode = EnumSource.Mode.EXCLUDE, names = {"ROLE_SCOUTER", "ROLE_GROUP_SCOUTER", "ROLE_USER"})
+    void unauthorizedUsersCannotGetEvents(RoleEnum roles) throws Exception {
         buildResultActions("/api/event", roles)
             .andExpect(status().isForbidden());
     }
 
-    private ResultActions buildResultActions(String url, Roles role) throws Exception {
+    private ResultActions buildResultActions(String url, RoleEnum role) throws Exception {
         return role == null ?
             mockMvc.perform(MockMvcRequestBuilders.get(url)) :
             mockMvc.perform(MockMvcRequestBuilders.get(url).with(
@@ -66,7 +66,7 @@ class EventControllerTest {
         Mockito.when(eventService.findAll()).thenReturn(buildEvents());
         Mockito.when(authLogic.groupIdIsUserAuthorized(anyInt())).thenAnswer(a -> !a.getArgument(0).equals(8));
 
-        this.buildResultActions("/api/event", Roles.ROLE_USER)
+        this.buildResultActions("/api/event", RoleEnum.ROLE_USER)
             .andExpect(status().isOk())
             .andExpect(jsonPath("$", hasSize(3))); //not necessary
 
@@ -77,8 +77,8 @@ class EventControllerTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = Roles.class, names = {"ROLE_SCOUTER", "ROLE_GROUP_SCOUTER"})
-    void findAllAsScouterShouldNotCallAuthLogic(Roles role) throws Exception {
+    @EnumSource(value = RoleEnum.class, names = {"ROLE_SCOUTER", "ROLE_GROUP_SCOUTER"})
+    void findAllAsScouterShouldNotCallAuthLogic(RoleEnum role) throws Exception {
         Mockito.when(eventService.findAll()).thenReturn(buildEvents());
 
         this.buildResultActions("/api/event", role)
@@ -90,8 +90,8 @@ class EventControllerTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = Roles.class, mode = EnumSource.Mode.EXCLUDE, names = {"ROLE_SCOUTER", "ROLE_GROUP_SCOUTER", "ROLE_USER"})
-    void findAllAsUnauthorizedUserShouldReturnForbidden(Roles role) throws Exception {
+    @EnumSource(value = RoleEnum.class, mode = EnumSource.Mode.EXCLUDE, names = {"ROLE_SCOUTER", "ROLE_GROUP_SCOUTER", "ROLE_USER"})
+    void findAllAsUnauthorizedUserShouldReturnForbidden(RoleEnum role) throws Exception {
         this.buildResultActions("/api/event", role).andExpect(status().isForbidden());
         Mockito.verifyNoInteractions(authLogic, eventService);
     }

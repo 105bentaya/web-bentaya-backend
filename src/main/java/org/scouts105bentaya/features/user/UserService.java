@@ -10,14 +10,13 @@ import org.scouts105bentaya.core.security.service.LoginAttemptService;
 import org.scouts105bentaya.core.security.service.RequestService;
 import org.scouts105bentaya.features.scout.Scout;
 import org.scouts105bentaya.features.scout.ScoutRepository;
-import org.scouts105bentaya.features.user.converter.UserFormConverter;
 import org.scouts105bentaya.features.user.dto.ChangePasswordDto;
 import org.scouts105bentaya.features.user.dto.UserFormDto;
 import org.scouts105bentaya.features.user.dto.UserProfileDto;
 import org.scouts105bentaya.features.user.dto.UserScoutDto;
 import org.scouts105bentaya.features.user.role.Role;
 import org.scouts105bentaya.features.user.role.RoleRepository;
-import org.scouts105bentaya.features.user.role.Roles;
+import org.scouts105bentaya.features.user.role.RoleEnum;
 import org.scouts105bentaya.features.user.specification.UserSpecification;
 import org.scouts105bentaya.features.user.specification.UserSpecificationFilter;
 import org.scouts105bentaya.shared.GenericConstants;
@@ -99,13 +98,13 @@ public class UserService implements UserDetailsService {
                 .orElse(null)
             );
 
-        if (!user.hasRole(Roles.ROLE_SCOUTER)) {
+        if (!user.hasRole(RoleEnum.ROLE_SCOUTER)) {
             user.setGroupId(null);
         } else if (user.getGroupId() == null) {
             throw new WebBentayaBadRequestException("El usuario debe tener una unidad asignada");
         }
 
-        if (!user.hasRole(Roles.ROLE_USER)) {
+        if (!user.hasRole(RoleEnum.ROLE_USER)) {
             user.setScoutList(null);
         } else if (user.getScoutList() == null) {
             throw new WebBentayaBadRequestException("El usuario debe tener educandos");
@@ -154,7 +153,7 @@ public class UserService implements UserDetailsService {
         newUser.setUsername(username);
         String password = PasswordHelper.generatePassword();
         newUser.setPassword(passwordEncoder.encode(password));
-        newUser.setRoles(Collections.singletonList(roleRepository.findByName(Roles.ROLE_USER.name()).orElse(null)));
+        newUser.setRoles(Collections.singletonList(roleRepository.findByName(RoleEnum.ROLE_USER).orElse(null)));
         newUser.setScoutList(Collections.singleton(scout));
 
         userRepository.save(newUser);
@@ -179,8 +178,8 @@ public class UserService implements UserDetailsService {
 
         if (usernameUser.isPresent()) {
             User existingUser = usernameUser.get();
-            if (!existingUser.hasRole(Roles.ROLE_SCOUT_CENTER_REQUESTER)) {
-                existingUser.getRoles().add(roleRepository.findByName("ROLE_SCOUT_CENTER_REQUESTER")
+            if (!existingUser.hasRole(RoleEnum.ROLE_SCOUT_CENTER_REQUESTER)) {
+                existingUser.getRoles().add(roleRepository.findByName(RoleEnum.ROLE_SCOUT_CENTER_REQUESTER)
                     .orElseThrow(WebBentayaRoleNotFoundException::new)
                 );
             }
@@ -191,7 +190,7 @@ public class UserService implements UserDetailsService {
         newUser.setUsername(username);
         String password = PasswordHelper.generatePassword();
         newUser.setPassword(passwordEncoder.encode(password));
-        newUser.setRoles(Collections.singletonList(roleRepository.findByName("ROLE_SCOUT_CENTER_REQUESTER").orElse(null)));
+        newUser.setRoles(Collections.singletonList(roleRepository.findByName(RoleEnum.ROLE_SCOUT_CENTER_REQUESTER).orElse(null)));
         userRepository.save(newUser);
 
         return password;
@@ -200,11 +199,11 @@ public class UserService implements UserDetailsService {
     public void addScoutToUser(User user, Scout scout) {
         if (!user.getScoutList().contains(scout)) {
             if (!user.isEnabled()) {
-                user.getRoles().removeIf(role -> !role.getName().equals(Roles.ROLE_USER.name()));
+                user.getRoles().removeIf(role -> role.getName() != RoleEnum.ROLE_USER);
                 user.setEnabled(true);
             }
-            if (!user.hasRole(Roles.ROLE_USER)) {
-                user.getRoles().add(roleRepository.findByName(Roles.ROLE_USER.name()).orElseThrow(WebBentayaRoleNotFoundException::new));
+            if (!user.hasRole(RoleEnum.ROLE_USER)) {
+                user.getRoles().add(roleRepository.findByName(RoleEnum.ROLE_USER).orElseThrow(WebBentayaRoleNotFoundException::new));
             }
             user.getScoutList().add(scout);
             userRepository.save(user);
@@ -221,10 +220,10 @@ public class UserService implements UserDetailsService {
 
     public void removeScoutFromUser(User user, Scout scout) {
         user.getScoutList().remove(scout);
-        if (user.getScoutList().isEmpty() && user.hasRole(Roles.ROLE_USER) && user.getRoles().size() == 1) {
+        if (user.getScoutList().isEmpty() && user.hasRole(RoleEnum.ROLE_USER) && user.getRoles().size() == 1) {
             user.setEnabled(false);
-        } else if (user.getScoutList().isEmpty() && user.hasRole(Roles.ROLE_USER)) {
-            user.getRoles().removeIf(role -> role.getName().equals(Roles.ROLE_USER.name()));
+        } else if (user.getScoutList().isEmpty() && user.hasRole(RoleEnum.ROLE_USER)) {
+            user.getRoles().removeIf(role -> role.getName() == RoleEnum.ROLE_USER);
         }
         userRepository.save(user);
     }
@@ -312,7 +311,7 @@ public class UserService implements UserDetailsService {
     private List<GrantedAuthority> buildAuthorities(Iterable<Role> userRoles) {
         Set<GrantedAuthority> auths = new HashSet<>();
         for (Role role : userRoles) {
-            auths.add(new SimpleGrantedAuthority(role.getName()));
+            auths.add(new SimpleGrantedAuthority(role.getName().name()));
         }
         return new ArrayList<>(auths);
     }
