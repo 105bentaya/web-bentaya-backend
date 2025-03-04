@@ -13,6 +13,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 import org.scouts105bentaya.features.confirmation.Confirmation;
 import org.scouts105bentaya.features.scout_contact.Contact;
 import org.scouts105bentaya.features.user.User;
@@ -26,6 +27,7 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
+@Accessors(chain = true)
 public class Scout {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

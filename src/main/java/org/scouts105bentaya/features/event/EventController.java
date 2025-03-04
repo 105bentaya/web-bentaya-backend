@@ -1,5 +1,6 @@
 package org.scouts105bentaya.features.event;
 
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.features.event.converter.EventCalendarConverter;
 import org.scouts105bentaya.features.event.converter.EventConverter;
@@ -91,14 +92,14 @@ public class EventController {
 
     @PreAuthorize("(hasRole('SCOUTER') and (@authLogic.groupIdIsNotUnit(#event.groupId) or @authLogic.userHasGroupId(#event.groupId))) or (hasAnyRole('GROUP_SCOUTER', 'ADMIN') and @authLogic.groupIdIsNotUnit(#event.groupId))")
     @PostMapping
-    public EventDto save(@RequestBody EventFormDto event) {
+    public EventDto save(@RequestBody @Valid EventFormDto event) {
         log.info("METHOD EventController.save{}", SecurityUtils.getLoggedUserUsernameForLog());
         return eventConverter.convertFromEntity(eventService.save(event));
     }
 
     @PreAuthorize("hasAnyRole('SCOUTER', 'GROUP_SCOUTER', 'ADMIN') and @authLogic.eventIsEditableByUser(#eventDto.id) and (@authLogic.groupIdIsNotUnit(#eventDto.groupId) or @authLogic.userHasGroupId(#eventDto.groupId))")
     @PutMapping
-    public EventDto update(@RequestBody EventFormDto eventDto) {
+    public EventDto update(@RequestBody @Valid EventFormDto eventDto) {
         log.info("METHOD EventController.update --- PARAMS id: {}{}", eventDto.id(), SecurityUtils.getLoggedUserUsernameForLog());
         return eventConverter.convertFromEntity(eventService.update(eventDto));
     }

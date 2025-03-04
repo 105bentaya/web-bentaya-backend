@@ -2,13 +2,15 @@ package org.scouts105bentaya.features.event.dto;
 
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 
+@Builder
 public record EventFormDto(
     Integer id,
-    Integer groupId,
+    @NotNull Integer groupId,
     String title,
     String description,
     String location,
