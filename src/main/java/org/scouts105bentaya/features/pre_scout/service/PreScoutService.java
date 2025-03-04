@@ -12,6 +12,7 @@ import org.scouts105bentaya.features.pre_scout.entity.PreScout;
 import org.scouts105bentaya.features.pre_scout.entity.PreScoutAssignation;
 import org.scouts105bentaya.features.pre_scout.repository.PreScoutAssignationRepository;
 import org.scouts105bentaya.features.pre_scout.repository.PreScoutRepository;
+import org.scouts105bentaya.features.setting.SettingEnum;
 import org.scouts105bentaya.features.setting.SettingService;
 import org.scouts105bentaya.shared.GenericConstants;
 import org.scouts105bentaya.shared.Group;
@@ -25,7 +26,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
-import org.thymeleaf.context.Context;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -106,7 +106,7 @@ public class PreScoutService {
             .setPriorityInfo(preScoutDto.priorityInfo())
             .setComment(preScoutDto.comment());
 
-        int secondYearOfTerm = Integer.parseInt(settingService.findByName("currentFormYear").getValue());
+        int secondYearOfTerm = Integer.parseInt(settingService.findByName(SettingEnum.CURRENT_FORM_YEAR).getValue());
         int firstYearOfTerm = secondYearOfTerm - 1;
         int preScoutBirthYear = LocalDate.parse(preScout.getBirthday(), DateTimeFormatter.ofPattern("dd/MM/yyyy")).getYear();
 

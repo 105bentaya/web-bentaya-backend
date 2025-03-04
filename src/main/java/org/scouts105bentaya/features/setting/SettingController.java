@@ -32,13 +32,13 @@ public class SettingController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{name}")
-    public Setting updateValue(@RequestBody String value, @PathVariable String name) {
+    public Setting updateValue(@RequestBody String value, @PathVariable SettingEnum name) {
         log.info("METHOD SettingController.updateValue --- PARAMS value: {}, name: {}{}", value, name, SecurityUtils.getLoggedUserUsernameForLog());
         return this.settingService.updateValue(value, name);
     }
 
     @GetMapping("/get/{name}")
-    public Setting findByName(@PathVariable String name) {
+    public Setting findByName(@PathVariable SettingEnum name) {
         return this.settingService.findByName(name);
     }
 }

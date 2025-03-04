@@ -10,8 +10,6 @@ import org.scouts105bentaya.shared.GenericConstants;
 import org.scouts105bentaya.shared.util.PdfUtils;
 import org.springframework.stereotype.Service;
 
-import java.time.format.DateTimeFormatter;
-
 @Slf4j
 @Service
 public class PreScoutPdfService {

@@ -7,5 +7,5 @@ import java.util.Optional;
 
 @Repository
 public interface SettingsRepository extends JpaRepository<Setting, Integer> {
-    Optional<Setting> findByName(String name);
+    Optional<Setting> findByName(SettingEnum name);
 }

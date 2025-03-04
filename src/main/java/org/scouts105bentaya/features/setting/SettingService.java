@@ -18,11 +18,11 @@ public class SettingService {
         return settingsRepository.findAll();
     }
 
-    public Setting findByName(String name) {
+    public Setting findByName(SettingEnum name) {
         return this.settingsRepository.findByName(name).orElseThrow(WebBentayaNotFoundException::new);
     }
 
-    public Setting updateValue(String value, String name) {
+    public Setting updateValue(String value, SettingEnum name) {
         Setting settingToUpdate = this.findByName(name);
         settingToUpdate.setValue(value);
 

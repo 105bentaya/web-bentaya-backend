@@ -12,8 +12,6 @@ import org.scouts105bentaya.features.user.role.RoleRepository;
 import java.util.List;
 import java.util.Set;
 
-import static org.mockito.ArgumentMatchers.any;
-
 @ExtendWith(MockitoExtension.class)
 class UserConverterTest {
 

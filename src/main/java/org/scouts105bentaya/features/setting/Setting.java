@@ -1,6 +1,9 @@
 package org.scouts105bentaya.features.setting;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -16,7 +19,9 @@ public class Setting {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     @NotNull
-    private String name;
+    @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "varchar")
+    private SettingEnum name;
     @NotNull
     private String value;
 }
