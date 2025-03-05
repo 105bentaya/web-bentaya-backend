@@ -3,6 +3,7 @@ package org.scouts105bentaya.features.donation.converter;
 import org.scouts105bentaya.features.donation.Donation;
 import org.scouts105bentaya.features.donation.dto.DonationDto;
 import org.scouts105bentaya.features.payment.Payment;
+import org.scouts105bentaya.shared.GenericConstants;
 import org.scouts105bentaya.shared.GenericConverter;
 import org.springframework.stereotype.Component;
 
@@ -12,7 +13,7 @@ import java.util.Optional;
 public class DonationConverter extends GenericConverter<Donation, DonationDto> {
     @Override
     public Donation convertFromDto(DonationDto dto) {
-        throw new UnsupportedOperationException("Method not supported");
+        throw new UnsupportedOperationException(GenericConstants.NOT_IMPLEMENTED);
     }
 
     @Override

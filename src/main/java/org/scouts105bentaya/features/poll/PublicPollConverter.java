@@ -5,6 +5,7 @@ import org.scouts105bentaya.features.poll.dto.PublicPollDto;
 import org.scouts105bentaya.features.poll.dto.PublicPollOptionDto;
 import org.scouts105bentaya.features.poll.entity.Poll;
 import org.scouts105bentaya.features.poll.entity.PollAttachment;
+import org.scouts105bentaya.shared.GenericConstants;
 import org.scouts105bentaya.shared.GenericConverter;
 import org.springframework.stereotype.Component;
 
@@ -19,7 +20,7 @@ public class PublicPollConverter extends GenericConverter<Poll, PublicPollDto> {
 
     @Override
     public Poll convertFromDto(PublicPollDto dto) {
-        throw new UnsupportedOperationException("Method not implemented");
+        throw new UnsupportedOperationException(GenericConstants.NOT_IMPLEMENTED);
     }
 
     @Override

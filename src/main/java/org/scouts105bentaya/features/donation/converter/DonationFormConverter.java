@@ -2,6 +2,7 @@ package org.scouts105bentaya.features.donation.converter;
 
 import org.scouts105bentaya.features.donation.Donation;
 import org.scouts105bentaya.features.donation.dto.DonationFormDto;
+import org.scouts105bentaya.shared.GenericConstants;
 import org.scouts105bentaya.shared.GenericConverter;
 import org.springframework.stereotype.Component;
 
@@ -27,6 +28,6 @@ public class DonationFormConverter extends GenericConverter<Donation, DonationFo
 
     @Override
     public DonationFormDto convertFromEntity(Donation entity) {
-        throw new UnsupportedOperationException("Method not supported");
+        throw new UnsupportedOperationException(GenericConstants.NOT_IMPLEMENTED);
     }
 }

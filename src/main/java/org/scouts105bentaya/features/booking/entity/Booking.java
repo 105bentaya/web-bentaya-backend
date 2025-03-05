@@ -14,6 +14,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 import org.scouts105bentaya.features.booking.ScoutCenter;
 import org.scouts105bentaya.features.booking.enums.BookingStatus;
 import org.scouts105bentaya.features.user.User;
@@ -25,6 +26,7 @@ import java.util.List;
 @Getter
 @Setter
 @Entity
+@Accessors(chain = true)
 public class Booking {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

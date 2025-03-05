@@ -2,6 +2,7 @@ package org.scouts105bentaya.features.confirmation.converter;
 
 import org.scouts105bentaya.features.confirmation.Confirmation;
 import org.scouts105bentaya.features.confirmation.dto.ConfirmationDto;
+import org.scouts105bentaya.shared.GenericConstants;
 import org.scouts105bentaya.shared.GenericConverter;
 import org.springframework.stereotype.Component;
 
@@ -10,7 +11,7 @@ public class ConfirmationConverter extends GenericConverter<Confirmation, Confir
 
     @Override
     public Confirmation convertFromDto(ConfirmationDto dto) {
-        throw new UnsupportedOperationException("Method not implemented");
+        throw new UnsupportedOperationException(GenericConstants.NOT_IMPLEMENTED);
     }
 
     @Override

@@ -10,11 +10,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 import org.scouts105bentaya.features.booking.enums.BookingDocumentStatus;
 
 @Getter
 @Setter
 @Entity
+@Accessors(chain = true)
 public class BookingDocument {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -2,6 +2,7 @@ package org.scouts105bentaya.features.booking.converter;
 
 import org.scouts105bentaya.features.booking.dto.BookingFormDto;
 import org.scouts105bentaya.features.booking.entity.Booking;
+import org.scouts105bentaya.shared.GenericConstants;
 import org.scouts105bentaya.shared.GenericConverter;
 import org.springframework.stereotype.Component;
 
@@ -30,6 +31,6 @@ public class BookingFormConverter extends GenericConverter<Booking, BookingFormD
 
     @Override
     public BookingFormDto convertFromEntity(Booking entity) {
-        throw new UnsupportedOperationException("Method not implemented");
+        throw new UnsupportedOperationException(GenericConstants.NOT_IMPLEMENTED);
     }
 }
