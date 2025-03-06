@@ -8,6 +8,8 @@ import org.scouts105bentaya.core.exception.WebBentayaUserNotFoundException;
 import org.scouts105bentaya.core.security.UserHasReachedMaxLoginAttemptsException;
 import org.scouts105bentaya.core.security.service.LoginAttemptService;
 import org.scouts105bentaya.core.security.service.RequestService;
+import org.scouts105bentaya.features.group.GroupBasicDataDto;
+import org.scouts105bentaya.features.group.GroupService;
 import org.scouts105bentaya.features.scout.Scout;
 import org.scouts105bentaya.features.scout.ScoutRepository;
 import org.scouts105bentaya.features.user.dto.ChangePasswordDto;
@@ -20,7 +22,6 @@ import org.scouts105bentaya.features.user.role.RoleRepository;
 import org.scouts105bentaya.features.user.specification.UserSpecification;
 import org.scouts105bentaya.features.user.specification.UserSpecificationFilter;
 import org.scouts105bentaya.shared.GenericConstants;
-import org.scouts105bentaya.shared.Group;
 import org.scouts105bentaya.shared.service.EmailService;
 import org.scouts105bentaya.shared.util.SecurityUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -54,6 +55,7 @@ public class UserService implements UserDetailsService {
     private final RoleRepository roleRepository;
     private final RequestService requestService;
     private final ScoutRepository scoutRepository;
+    private final GroupService groupService;
 
     @Value("${bentaya.web.url}") String url;
     @Value("${bentaya.email.it}") String itMail;
@@ -65,7 +67,7 @@ public class UserService implements UserDetailsService {
         EmailService emailService,
         RoleRepository roleRepository,
         RequestService requestService,
-        ScoutRepository scoutRepository) {
+        ScoutRepository scoutRepository, GroupService groupService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.loginAttemptService = loginAttemptService;
@@ -73,6 +75,7 @@ public class UserService implements UserDetailsService {
         this.roleRepository = roleRepository;
         this.requestService = requestService;
         this.scoutRepository = scoutRepository;
+        this.groupService = groupService;
     }
 
     public Page<User> findAll(UserSpecificationFilter filter) {
@@ -90,7 +93,7 @@ public class UserService implements UserDetailsService {
     public void updateUserBasicData(User user, UserFormDto formDto) {
         user
             .setUsername(formDto.username().toLowerCase())
-            .setGroupId(Group.valueOf(formDto.groupId()))
+            .setGroup(groupService.findByNullableId(formDto.groupId()))
             .setRoles(formDto.roles().stream().map(role -> roleRepository.findByName(role).orElse(null)).collect(Collectors.toList()))
             .setScoutList(Optional.ofNullable(formDto.scoutIds())
                 .map(scoutRepository::findAllById)
@@ -99,8 +102,8 @@ public class UserService implements UserDetailsService {
             );
 
         if (!user.hasRole(RoleEnum.ROLE_SCOUTER)) {
-            user.setGroupId(null);
-        } else if (user.getGroupId() == null) {
+            user.setGroup(null);
+        } else if (user.getGroup() == null) {
             throw new WebBentayaBadRequestException("El usuario debe tener una unidad asignada");
         }
 
@@ -238,11 +241,11 @@ public class UserService implements UserDetailsService {
             user.getId(),
             user.getUsername(),
             user.getRoles().stream().map(Role::getName).toList(),
-            Group.valueFrom(user.getGroupId()),
+            GroupBasicDataDto.fromGroup(user.getGroup()),
             user.getScoutList().stream().map(scout ->
                 new UserScoutDto(
                     scout.getId(),
-                    scout.getGroupId().getValue(),
+                    GroupBasicDataDto.fromGroup(scout.getGroup()),
                     scout.getName(),
                     scout.getSurname()
                 )
@@ -252,7 +255,7 @@ public class UserService implements UserDetailsService {
 
     public void delete(int id) {
         User user = findById(id);
-        user.setGroupId(null);
+        user.setGroup(null);
         user.setScoutList(Collections.emptySet());
         user.setEnabled(false);
         this.userRepository.save(user);

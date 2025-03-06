@@ -6,13 +6,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.scouts105bentaya.features.confirmation.service.ConfirmationService;
+import org.scouts105bentaya.features.group.GroupBasicDataDto;
+import org.scouts105bentaya.features.group.GroupService;
 import org.scouts105bentaya.features.scout.converter.ScoutConverter;
 import org.scouts105bentaya.features.scout.dto.ScoutDto;
 import org.scouts105bentaya.features.scout_contact.Contact;
 import org.scouts105bentaya.features.scout_contact.ContactConverter;
 import org.scouts105bentaya.features.scout_contact.ContactDto;
 import org.scouts105bentaya.features.scout_contact.ContactRepository;
-import org.scouts105bentaya.shared.Group;
+import org.scouts105bentaya.utils.GroupUtils;
 
 import java.time.Instant;
 import java.util.Date;
@@ -33,12 +35,15 @@ class ScoutServiceTest {
     @Mock
     private ConfirmationService confirmationService;
 
+    @Mock
+    private GroupService groupService;
+
     private ScoutConverter scoutConverter;
 
     @BeforeEach
     void setUp() {
 //        MockitoAnnotations.openMocks(this);
-        scoutConverter = new ScoutConverter(new ContactConverter());  // No mocking, using the actual converter
+        scoutConverter = new ScoutConverter(new ContactConverter(), groupService);  // No mocking, using the actual converter
         scoutService = new ScoutService(scoutRepository, contactRepository, scoutConverter, null, null, null, confirmationService, null);
     }
 
@@ -51,7 +56,7 @@ class ScoutServiceTest {
 
         Scout scout = new Scout();
         scout.setId(1);
-        scout.setGroupId(Group.GARAJONAY);
+        scout.setGroup(GroupUtils.basicGroup());
         scout.setName("Scout 1");
         scout.setSurname("Scout 1");
         scout.setDni("dni");
@@ -72,7 +77,7 @@ class ScoutServiceTest {
     private ScoutDto buildScoutDto() {
         return new ScoutDto(
             1,
-            1,
+            GroupBasicDataDto.fromGroup(GroupUtils.basicGroup()),
             "",
             "",
             "",

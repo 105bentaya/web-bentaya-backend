@@ -1,6 +1,6 @@
 package org.scouts105bentaya.features.scout;
 
-import org.scouts105bentaya.shared.Group;
+import org.scouts105bentaya.features.group.Group;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -13,7 +13,7 @@ public interface ScoutRepository extends JpaRepository<Scout, Integer> {
 
     Optional<Scout> findByIdAndEnabledIsTrue(Integer id);
 
-    List<Scout> findAllByGroupIdAndEnabledIsTrue(Group groupId);
+    List<Scout> findAllByGroupAndEnabledIsTrue(Group group);
 
     List<Scout> findAllByImageAuthorizationAndEnabledIsTrue(boolean imageAuthorization);
 }

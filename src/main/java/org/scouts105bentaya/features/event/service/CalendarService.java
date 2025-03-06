@@ -4,6 +4,8 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.fortuna.ical4j.data.CalendarOutputter;
 import net.fortuna.ical4j.model.Calendar;
@@ -19,18 +21,19 @@ import net.fortuna.ical4j.model.property.Uid;
 import net.fortuna.ical4j.model.property.Url;
 import net.fortuna.ical4j.model.property.immutable.ImmutableCalScale;
 import net.fortuna.ical4j.model.property.immutable.ImmutableVersion;
+import org.apache.commons.lang3.StringUtils;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
 import org.scouts105bentaya.core.exception.WebBentayaErrorException;
 import org.scouts105bentaya.core.exception.WebBentayaForbiddenException;
 import org.scouts105bentaya.core.exception.WebBentayaUnauthorizedException;
 import org.scouts105bentaya.core.security.InvalidJwtException;
 import org.scouts105bentaya.features.event.Event;
+import org.scouts105bentaya.features.group.Group;
 import org.scouts105bentaya.features.scout.Scout;
 import org.scouts105bentaya.features.user.User;
 import org.scouts105bentaya.features.user.UserService;
 import org.scouts105bentaya.features.user.role.RoleEnum;
 import org.scouts105bentaya.shared.GenericConstants;
-import org.scouts105bentaya.shared.Group;
 import org.scouts105bentaya.shared.service.AuthService;
 import org.scouts105bentaya.shared.util.JwtUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,12 +44,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -100,9 +103,10 @@ public class CalendarService {
         calendar.add(new ProdId("-//Scouts 105 Bentaya//Calendario Web Bentaya//ES-es"));
         calendar.add(new Name("Calendario Scouts 105 Bentaya"));
 
-        Set<Group> tokenGroups = getTokenGroups(user, parsedToken.getPayload());
-        List<Event> events = tokenGroups.stream().map(eventService::findAllByGroupId).flatMap(Collection::stream).toList();
-        events.forEach(event -> calendar.add(this.generateICSEvent(event, user)));
+        TokenGroups tokenGroups = getTokenGroups(user, parsedToken.getPayload());
+        List<Event> events = getEvents(tokenGroups);
+
+        events.forEach(event -> calendar.add(this.generateICSEvent(event)));
 
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         CalendarOutputter outputWriter = new CalendarOutputter();
@@ -111,12 +115,12 @@ public class CalendarService {
         return output.toByteArray();
     }
 
-    private VEvent generateICSEvent(Event event, User user) {
+    private VEvent generateICSEvent(Event event) {
         VEvent calEvent = new VEvent();
         calEvent.add(new Uid("event105bentaya-%s".formatted(event.getId())));
         calEvent.add(new Summary(event.getTitle()));
         calEvent.add(new Location(event.getLocation()));
-        calEvent.add(new Description(generateEventDescription(event, user)));
+        calEvent.add(new Description(generateEventDescription(event)));
         try {
             calEvent.add(new Url(new URI("%s/calendario?actividad=%s".formatted(url, event.getId()))));
         } catch (URISyntaxException e) {
@@ -133,19 +137,20 @@ public class CalendarService {
         return calEvent;
     }
 
-    private String generateEventDescription(Event event, User user) {
-        String description = """
-            Actividad de %s.
-            %s""".formatted(event.getGroupId().toTitleCase(), event.getDescription());
-        if (!description.endsWith(".")) description += ".";
-        if (event.isUnknownTime()) description += "\nEl horario está aún por concretar.";
-        if (event.isActiveAttendanceList() && user.hasRole(RoleEnum.ROLE_SCOUTER)) {
-            description +=
-                "%nPara acceder a la lista de asistencia entre a %s/unidad/asistencias?actividad=%s"
-                    .formatted(url, event.getId());
+    private String generateEventDescription(Event event) {
+        String eventGroupTitle = event.isForEveryone() ? "grupo" : Objects.requireNonNull(event.getGroup()).getName();
+        if (event.isForScouters()) eventGroupTitle = "%s (sólo scouters)".formatted(eventGroupTitle);
+
+        String description = "Actividad de %s.".formatted(eventGroupTitle);
+
+        if (!StringUtils.isBlank(event.getDescription())) {
+            description += "\n" + event.getDescription();
+            if (!description.endsWith(".")) description += ".";
         }
-        if (event.isActiveAttendanceList() && user.hasRole(RoleEnum.ROLE_USER)) {
-            description += "%nPara editar la asistencia entre a %s/asistencias".formatted(url);
+
+        if (event.isUnknownTime()) description += "\nEl horario está aún por concretar.";
+        if (event.isActiveAttendanceList()) {
+            description += "\nPara acceder a la asistencia entre al link del evento";
         }
         return description;
     }
@@ -165,24 +170,43 @@ public class CalendarService {
             .compact();
     }
 
-    private Set<Group> getTokenGroups(User user, Claims claims) {
+    private TokenGroups getTokenGroups(User user, Claims claims) {
         if (!user.isMember()) {
             throw new WebBentayaUnauthorizedException("Usuario no autorizado a acceder al calendario");
         }
+
+        TokenGroups tokenGroups = new TokenGroups();
         Set<Group> groups = new HashSet<>();
 
         if (claims.containsKey(TOKEN_USER_GROUPS_KEY) && Boolean.TRUE.equals(claims.get(TOKEN_USER_GROUPS_KEY, Boolean.class))) {
-            groups.add(Group.GRUPO);
+            tokenGroups.setGroupEvents(true);
             if (user.hasRole(RoleEnum.ROLE_USER)) {
-                groups.addAll(user.getScoutList().stream().map(Scout::getGroupId).toList());
+                groups.addAll(user.getScoutList().stream().map(Scout::getGroup).toList());
             }
             if (user.hasRole(RoleEnum.ROLE_SCOUTER)) {
-                groups.addAll(List.of(Objects.requireNonNull(user.getGroupId()), Group.SCOUTERS));
+                tokenGroups.setScouterEvents(true);
+                groups.add(Objects.requireNonNull(user.getGroup()));
             } else if (user.hasRole(RoleEnum.ROLE_GROUP_SCOUTER)) {
-                groups.add(Group.SCOUTERS);
+                tokenGroups.setScouterEvents(true);
             }
         }
+        tokenGroups.setGroups(groups);
+        return tokenGroups;
+    }
 
-        return groups;
+    private List<Event> getEvents(TokenGroups tokenGroups) {
+        return eventService.findAll().stream()
+            .filter(event -> tokenGroups.groupEvents || !event.isForEveryone())
+            .filter(event -> tokenGroups.scouterEvents || !event.isForScouters())
+            .filter(event -> event.isForEveryone() || tokenGroups.groups.contains(event.getGroup()))
+            .collect(Collectors.toList());
+    }
+
+    @Getter
+    @Setter
+    private static class TokenGroups {
+        private boolean groupEvents;
+        private boolean scouterEvents;
+        private Set<Group> groups;
     }
 }

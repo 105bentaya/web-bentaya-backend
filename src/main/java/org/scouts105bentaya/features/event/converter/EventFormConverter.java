@@ -2,24 +2,28 @@ package org.scouts105bentaya.features.event.converter;
 
 import org.scouts105bentaya.features.event.Event;
 import org.scouts105bentaya.features.event.dto.EventFormDto;
+import org.scouts105bentaya.features.group.Group;
 import org.scouts105bentaya.shared.GenericConstants;
 import org.scouts105bentaya.shared.GenericConverter;
-import org.scouts105bentaya.shared.Group;
 import org.springframework.stereotype.Component;
+
+import java.util.Optional;
 
 @Component
 public class EventFormConverter extends GenericConverter<Event, EventFormDto> {
 
     @Override
     public Event convertFromDto(EventFormDto dto) {
-        throw new UnsupportedOperationException("Method not implemented");
+        throw new UnsupportedOperationException(GenericConstants.NOT_IMPLEMENTED);
     }
 
     @Override
     public EventFormDto convertFromEntity(Event entity) {
         return new EventFormDto(
             entity.getId(),
-            Group.valueFrom(entity.getGroupId()),
+            Optional.ofNullable(entity.getGroup()).map(Group::getId).orElse(null),
+            entity.isForScouters(),
+            entity.isForEveryone(),
             entity.getTitle(),
             entity.getDescription(),
             entity.getLocation(),

@@ -1,42 +1,18 @@
 package org.scouts105bentaya.features.pre_scout;
 
+import org.scouts105bentaya.features.pre_scout.dto.PreScoutAssignationDto;
 import org.scouts105bentaya.features.pre_scout.dto.PreScoutDto;
 import org.scouts105bentaya.features.pre_scout.entity.PreScout;
-import org.scouts105bentaya.features.pre_scout.entity.PreScoutAssignation;
+import org.scouts105bentaya.shared.GenericConstants;
 import org.scouts105bentaya.shared.GenericConverter;
 import org.springframework.stereotype.Component;
-
-import java.util.Optional;
 
 @Component
 public class PreScoutConverter extends GenericConverter<PreScout, PreScoutDto> {
 
     @Override
     public PreScout convertFromDto(PreScoutDto preScoutDto) {
-        PreScout preScout = new PreScout();
-        preScout.setId(preScoutDto.id());
-        preScout.setName(preScoutDto.name().toUpperCase());
-        preScout.setSurname(preScoutDto.surname().toUpperCase().trim());
-        preScout.setSection(preScoutDto.section());
-        preScout.setBirthday(preScoutDto.birthday());
-        preScout.setAge(preScoutDto.age());
-        preScout.setGender(preScoutDto.gender().toUpperCase());
-        preScout.setDni(preScoutDto.dni().toUpperCase());
-        preScout.setHasBeenInGroup(preScoutDto.hasBeenInGroup());
-        preScout.setYearAndSection(preScoutDto.yearAndSection());
-        preScout.setMedicalData(preScoutDto.medicalData());
-        preScout.setParentsName(preScoutDto.parentsName().toUpperCase());
-        preScout.setRelationship(preScoutDto.relationship().toUpperCase());
-        preScout.setPhone(preScoutDto.phone());
-        preScout.setEmail(preScoutDto.email().toLowerCase());
-        preScout.setComment(preScoutDto.comment());
-        preScout.setPriority(preScoutDto.priority());
-        preScout.setCreationDate(preScoutDto.creationDate());
-        preScout.setParentsSurname(preScoutDto.parentsSurname().toUpperCase());
-        preScout.setPriorityInfo(preScoutDto.priorityInfo());
-        preScout.setSize(preScoutDto.size().toUpperCase());
-        preScout.setInscriptionYear(preScoutDto.inscriptionYear());
-        return preScout;
+        throw new UnsupportedOperationException(GenericConstants.NOT_IMPLEMENTED);
     }
 
     @Override
@@ -62,10 +38,7 @@ public class PreScoutConverter extends GenericConverter<PreScout, PreScoutDto> {
             preScout.getPriority(),
             preScout.getPriorityInfo(),
             preScout.getCreationDate(),
-            Optional.ofNullable(preScout.getPreScoutAssignation()).map(PreScoutAssignation::getStatus).orElse(null),
-            Optional.ofNullable(preScout.getPreScoutAssignation()).map(preScoutAssignation -> preScoutAssignation.getGroupId().getValue()).orElse(null),
-            Optional.ofNullable(preScout.getPreScoutAssignation()).map(PreScoutAssignation::getComment).orElse(null),
-            Optional.ofNullable(preScout.getPreScoutAssignation()).map(PreScoutAssignation::getAssignationDate).orElse(null),
+            PreScoutAssignationDto.ofPreScoutAssignation(preScout.getPreScoutAssignation()),
             preScout.getInscriptionYear(),
             preScout.getSize()
         );

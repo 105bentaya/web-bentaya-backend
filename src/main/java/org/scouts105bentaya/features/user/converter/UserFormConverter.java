@@ -1,12 +1,12 @@
 package org.scouts105bentaya.features.user.converter;
 
+import org.scouts105bentaya.features.group.Group;
 import org.scouts105bentaya.features.scout.Scout;
 import org.scouts105bentaya.features.user.User;
 import org.scouts105bentaya.features.user.dto.UserFormDto;
 import org.scouts105bentaya.features.user.role.Role;
 import org.scouts105bentaya.shared.GenericConstants;
 import org.scouts105bentaya.shared.GenericConverter;
-import org.scouts105bentaya.shared.Group;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -17,7 +17,7 @@ public class UserFormConverter extends GenericConverter<User, UserFormDto> {
 
     @Override
     public User convertFromDto(UserFormDto dto) {
-        throw new UnsupportedOperationException("Method not implemented");
+        throw new UnsupportedOperationException(GenericConstants.NOT_IMPLEMENTED);
     }
 
     @Override
@@ -28,7 +28,7 @@ public class UserFormConverter extends GenericConverter<User, UserFormDto> {
             GenericConstants.FAKE_PASSWORD,
             user.getRoles().stream().map(Role::getName).toList(),
             user.isEnabled(),
-            Group.valueFrom(user.getGroupId()),
+            Optional.ofNullable(user.getGroup()).map(Group::getId).orElse(null),
             Optional.ofNullable(user.getScoutList()).orElse(Collections.emptySet()).stream().map(Scout::getId).toList()
         );
     }

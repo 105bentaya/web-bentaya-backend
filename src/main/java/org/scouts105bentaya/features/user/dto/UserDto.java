@@ -11,7 +11,7 @@ public record UserDto(
     String password,
     List<RoleEnum> roles,
     boolean enabled,
-    Integer groupId,
+    String groupName,
     List<ScoutUserDto> scoutList
 ) {
 }

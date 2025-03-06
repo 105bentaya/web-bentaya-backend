@@ -3,24 +3,35 @@ package org.scouts105bentaya.features.scout.converter;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.scouts105bentaya.features.group.GroupBasicDataDto;
+import org.scouts105bentaya.features.group.GroupService;
 import org.scouts105bentaya.features.scout.Scout;
 import org.scouts105bentaya.features.scout.dto.ScoutDto;
 import org.scouts105bentaya.features.scout_contact.Contact;
 import org.scouts105bentaya.features.scout_contact.ContactConverter;
 import org.scouts105bentaya.features.scout_contact.ContactDto;
-import org.scouts105bentaya.shared.Group;
+import org.scouts105bentaya.utils.GroupUtils;
 
 import java.time.Instant;
 import java.util.Date;
 import java.util.stream.Stream;
 
+@ExtendWith(MockitoExtension.class)
 class ScoutConverterTest {
-
     private ScoutConverter scoutConverter;
+
+    @Mock
+    private GroupService groupService;
+
+    @Mock
+    private ContactConverter contactConverter;
 
     @BeforeEach
     void setUp() {
-        scoutConverter = new ScoutConverter(new ContactConverter());
+        scoutConverter = new ScoutConverter(contactConverter, groupService);
     }
 
     @Test
@@ -38,7 +49,7 @@ class ScoutConverterTest {
         contact.setId(23);
         Scout scout = new Scout();
         scout.setId(1);
-        scout.setGroupId(Group.GARAJONAY);
+        scout.setGroup(GroupUtils.basicGroup());
         scout.setName("Scout 1");
         scout.setSurname("Scout 1");
         scout.setDni("dni");
@@ -59,7 +70,7 @@ class ScoutConverterTest {
     private ScoutDto buildScoutDto() {
         return new ScoutDto(
             1,
-            1,
+            GroupBasicDataDto.fromGroup(GroupUtils.basicGroup()),
             "",
             "",
             "",

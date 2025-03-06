@@ -16,9 +16,10 @@ import org.scouts105bentaya.features.confirmation.service.ConfirmationService;
 import org.scouts105bentaya.features.event.Event;
 import org.scouts105bentaya.features.event.EventRepository;
 import org.scouts105bentaya.features.event.dto.EventFormDto;
+import org.scouts105bentaya.features.group.GroupService;
 import org.scouts105bentaya.features.scout.Scout;
 import org.scouts105bentaya.features.scout.ScoutService;
-import org.scouts105bentaya.shared.Group;
+import org.scouts105bentaya.utils.GroupUtils;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -34,7 +35,6 @@ class EventServiceTest {
     static ZonedDateTime start = ZonedDateTime.parse("2025-03-12T10:00:00Z");
     static ZonedDateTime end = ZonedDateTime.parse("2025-03-12T12:00:00Z");
 
-
     @InjectMocks
     EventService eventService;
 
@@ -46,6 +46,9 @@ class EventServiceTest {
 
     @Mock
     EventRepository eventRepository;
+
+    @Mock
+    GroupService groupService;
 
     @Test
     void onSaveEventAttendance_NoDates() {
@@ -109,6 +112,7 @@ class EventServiceTest {
         var eventFormDto = EventFormDto.builder().groupId(1).activateAttendanceList(true).startDate(start).endDate(end).build();
 
         //when
+        when(groupService.findById(1)).thenReturn(GroupUtils.basicGroup());
         when(scoutService.findAllByLoggedScouterGroupId()).thenReturn(List.of(new Scout().setId(1)));
         ZonedDateTime date1 = ZonedDateTime.parse("2025-03-13T11:00:00Z");
         ZonedDateTime date2 = ZonedDateTime.parse("2025-03-12T11:00:00Z");
@@ -135,6 +139,7 @@ class EventServiceTest {
             .build();
 
         //when
+        when(groupService.findById(1)).thenReturn(GroupUtils.basicGroup());
         when(scoutService.findAllByLoggedScouterGroupId()).thenReturn(List.of(new Scout().setId(1)));
         ZonedDateTime date1 = ZonedDateTime.parse("2025-03-10T12:00:00Z");
         ZonedDateTime date2 = ZonedDateTime.parse("2025-03-09T11:00:00Z");
@@ -158,10 +163,12 @@ class EventServiceTest {
         //given
         var eventFormDto = EventFormDto.builder().groupId(1)
             .activateAttendanceList(true).startDate(start).endDate(end)
-            .closeDateTime(ZonedDateTime.parse("2025-03-10T11:00:00Z")).closeAttendanceList(true)
+            .closeDateTime(ZonedDateTime.parse("2025-03-10T11:00:00Z"))
+            .closeAttendanceList(true)
             .build();
 
         //when
+        when(groupService.findById(1)).thenReturn(GroupUtils.basicGroup());
         when(scoutService.findAllByLoggedScouterGroupId()).thenReturn(List.of(new Scout().setId(1)));
         ZonedDateTime date1 = ZonedDateTime.parse("2025-03-10T12:00:00Z");
         ZonedDateTime date2 = ZonedDateTime.parse("2025-03-09T11:00:00Z");
@@ -196,8 +203,8 @@ class EventServiceTest {
     @Test
     void onUpdateEventAttendance_NoDates() {
         //given
-        var eventFormDto = EventFormDto.builder().id(1).build();
-        var event = new Event().setId(1);
+        var eventFormDto = EventFormDto.builder().id(1).groupId(1).build();
+        var event = new Event().setId(1).setGroup(GroupUtils.basicGroup());
 
         //when
         when(eventRepository.findById(anyInt())).thenReturn(Optional.of(event));
@@ -216,9 +223,10 @@ class EventServiceTest {
 
         var eventFormDto = EventFormDto.builder().id(1).groupId(1).activateAttendanceList(true)
             .startDate(start).endDate(lateEnd).build();
-        var event = new Event().setId(1).setGroupId(Group.GARAJONAY).setActiveAttendanceList(false);
+        var event = new Event().setId(1).setGroup(GroupUtils.basicGroup()).setActiveAttendanceList(false);
 
         //when
+        when(groupService.findById(1)).thenReturn(GroupUtils.basicGroup());
         when(eventRepository.findById(anyInt())).thenReturn(Optional.of(event));
         when(scoutService.findAllByLoggedScouterGroupId()).thenReturn(List.of(new Scout().setId(1)));
         ZonedDateTime mockedNow = ZonedDateTime.parse("2025-03-13T12:00:00Z");
@@ -240,9 +248,10 @@ class EventServiceTest {
         //given
         var eventFormDto = EventFormDto.builder().id(1).groupId(1).activateAttendanceList(true)
             .startDate(start).endDate(end).build();
-        var existingEvent = new Event().setId(1).setGroupId(Group.GARAJONAY).setActiveAttendanceList(false);
+        var existingEvent = new Event().setId(1).setGroup(GroupUtils.basicGroup()).setActiveAttendanceList(false);
 
         //when
+        when(groupService.findById(1)).thenReturn(GroupUtils.basicGroup());
         when(eventRepository.findById(anyInt())).thenReturn(Optional.of(existingEvent));
         when(scoutService.findAllByLoggedScouterGroupId()).thenReturn(List.of(new Scout().setId(1)));
         ZonedDateTime mockedNow = ZonedDateTime.parse("2025-03-13T12:00:00Z");
@@ -264,7 +273,7 @@ class EventServiceTest {
         //given
         var eventFormDto = EventFormDto.builder().id(1).groupId(1).activateAttendanceList(true)
             .startDate(start).endDate(end).closeDateTime(ZonedDateTime.parse("2025-03-08T11:00:00Z")).build();
-        var existingEvent = new Event().setId(1).setGroupId(Group.GARAJONAY)
+        var existingEvent = new Event().setId(1).setGroup(GroupUtils.basicGroup())
             .setStartDate(start).setEndDate(end)
             .setActiveAttendanceList(true);
         ZonedDateTime mockedNow = ZonedDateTime.parse("2025-03-12T11:00:00Z");
@@ -276,6 +285,7 @@ class EventServiceTest {
         }
 
         //when
+        when(groupService.findById(1)).thenReturn(GroupUtils.basicGroup());
         when(eventRepository.findById(anyInt())).thenReturn(Optional.of(existingEvent));
         mockSave();
         Event updatedEvent = eventService.update(eventFormDto);
@@ -294,7 +304,7 @@ class EventServiceTest {
         //given
         var eventFormDto = EventFormDto.builder().id(1).groupId(1).activateAttendanceList(true)
             .startDate(start).endDate(end).closeAttendanceList(true).build();
-        var existingEvent = new Event().setId(1).setGroupId(Group.GARAJONAY)
+        var existingEvent = new Event().setId(1).setGroup(GroupUtils.basicGroup())
             .setStartDate(start).setEndDate(end)
             .setActiveAttendanceList(true);
         ZonedDateTime mockedNow = ZonedDateTime.parse("2025-03-12T11:00:00Z");
@@ -306,6 +316,7 @@ class EventServiceTest {
         }
 
         //when
+        when(groupService.findById(1)).thenReturn(GroupUtils.basicGroup());
         when(eventRepository.findById(anyInt())).thenReturn(Optional.of(existingEvent));
         mockSave();
         Event updatedEvent = eventService.update(eventFormDto);
@@ -324,7 +335,7 @@ class EventServiceTest {
         //given
         var eventFormDto = EventFormDto.builder().id(1).groupId(1).activateAttendanceList(false)
             .startDate(start).endDate(end).build();
-        var existingEvent = new Event().setId(1).setGroupId(Group.GARAJONAY).setActiveAttendanceList(true);
+        var existingEvent = new Event().setId(1).setGroup(GroupUtils.basicGroup()).setActiveAttendanceList(true);
 
         //when
         when(eventRepository.findById(anyInt())).thenReturn(Optional.of(existingEvent));
@@ -342,6 +353,82 @@ class EventServiceTest {
         }
     }
 
+    @Test
+    void onUpdateEventForScouters_AttendanceIsDeactivated() {
+        //given
+        var eventFormDto = EventFormDto.builder().id(1).groupId(1)
+            .activateAttendanceList(true)
+            .forScouters(true)
+            .startDate(start).endDate(end).build();
+
+        var existingEvent = new Event().setId(1).setGroup(GroupUtils.basicGroup()).setActiveAttendanceList(true);
+
+        //when
+        when(eventRepository.findById(anyInt())).thenReturn(Optional.of(existingEvent));
+        ZonedDateTime mockedNow = ZonedDateTime.parse("3999-03-13T12:00:00Z");
+        mockSave();
+        Event updatedEvent = eventService.update(eventFormDto);
+
+        //then
+        Mockito.verify(confirmationService, Mockito.times(1)).deleteAllByEventId(1);
+        Assertions.assertThat(updatedEvent).isNotNull();
+
+        try (MockedStatic<ZonedDateTime> mockedLocalDateTime = Mockito.mockStatic(ZonedDateTime.class)) {
+            mockedLocalDateTime.when(ZonedDateTime::now).thenReturn(mockedNow);
+            Assertions.assertThat(updatedEvent.eventAttendanceIsClosed()).isFalse();
+        }
+    }
+
+    @Test
+    void onUpdateEventNotForScouters_AttendanceIsActivated() {
+        //given
+        var eventFormDto = EventFormDto.builder().id(1).groupId(1)
+            .activateAttendanceList(true)
+            .forScouters(false)
+            .startDate(start)
+            .endDate(end)
+            .build();
+
+        var existingEvent = new Event().setId(1).setGroup(GroupUtils.basicGroup()).setActiveAttendanceList(true);
+
+        //when
+        when(groupService.findById(1)).thenReturn(GroupUtils.basicGroup());
+        when(eventRepository.findById(anyInt())).thenReturn(Optional.of(existingEvent));
+        mockSave();
+        Event updatedEvent = eventService.update(eventFormDto);
+
+        //then
+        Mockito.verifyNoInteractions(confirmationService);
+        Assertions.assertThat(updatedEvent).isNotNull();
+
+        Assertions.assertThat(updatedEvent.isActiveAttendanceList()).isTrue();
+    }
+
+    @Test
+    void onUpdateEventForEveryone_AttendanceIsNotActivated() {
+        //given
+        var eventFormDto = EventFormDto.builder().id(1)
+            .activateAttendanceList(true)
+            .forEveryone(true)
+            .startDate(start)
+            .endDate(end)
+            .build();
+
+        var existingEvent = new Event().setId(1).setGroup(GroupUtils.basicGroup()).setActiveAttendanceList(true);
+
+        //when
+        when(eventRepository.findById(anyInt())).thenReturn(Optional.of(existingEvent));
+        mockSave();
+        Event updatedEvent = eventService.update(eventFormDto);
+
+        //then
+        Mockito.verify(confirmationService).deleteAllByEventId(1);
+        Assertions.assertThat(updatedEvent).isNotNull();
+
+        Assertions.assertThat(updatedEvent.isActiveAttendanceList()).isFalse();
+    }
+
+
     void mockSave() {
         when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
     }
@@ -350,6 +437,8 @@ class EventServiceTest {
         return new EventFormDto(
             1,
             null,
+            false,
+            false,
             null,
             null,
             null,

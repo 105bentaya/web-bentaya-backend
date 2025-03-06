@@ -3,18 +3,16 @@ package org.scouts105bentaya.features.event;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.scouts105bentaya.features.confirmation.Confirmation;
-import org.scouts105bentaya.shared.Group;
+import org.scouts105bentaya.features.group.Group;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -27,9 +25,11 @@ public class Event {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-    @NotNull
-    @Enumerated(EnumType.ORDINAL)
-    private Group groupId;
+    @Nullable
+    @ManyToOne
+    private Group group;
+    private boolean forEveryone;
+    private boolean forScouters;
     private String title;
     private String description;
     private String location;
@@ -54,7 +54,7 @@ public class Event {
         if (activeAttendanceList) {
             if (closedAttendanceList) return true;
             if (closeDateTime == null) return eventHasEnded();
-            return getCloseDateTime().isBefore(ZonedDateTime.now());
+            return closeDateTime.isBefore(ZonedDateTime.now());
         }
         return false;
     }

@@ -2,8 +2,6 @@ package org.scouts105bentaya.features.user;
 
 import jakarta.annotation.Nullable;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -11,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotEmpty;
@@ -19,11 +18,10 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.scouts105bentaya.features.booking.entity.Booking;
+import org.scouts105bentaya.features.group.Group;
 import org.scouts105bentaya.features.scout.Scout;
 import org.scouts105bentaya.features.user.role.Role;
 import org.scouts105bentaya.features.user.role.RoleEnum;
-import org.scouts105bentaya.shared.Group;
-import org.scouts105bentaya.shared.constraint.IsUnit;
 
 import java.util.List;
 import java.util.Set;
@@ -49,11 +47,9 @@ public class User {
     )
     private List<Role> roles;
     private boolean enabled = true;
-    //todo rename to Group
-    @IsUnit
-    @Enumerated(EnumType.ORDINAL)
     @Nullable
-    private Group groupId;
+    @ManyToOne
+    private Group group;
     @ManyToMany
     @JoinTable(
         name = "scout_user",

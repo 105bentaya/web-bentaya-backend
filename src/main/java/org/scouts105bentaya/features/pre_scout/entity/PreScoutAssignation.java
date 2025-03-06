@@ -1,23 +1,24 @@
 package org.scouts105bentaya.features.pre_scout.entity;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
-import org.scouts105bentaya.shared.Group;
-import org.scouts105bentaya.shared.constraint.IsUnit;
+import lombok.experimental.Accessors;
+import org.scouts105bentaya.features.group.Group;
 
 import java.time.ZonedDateTime;
 
 @Getter
 @Setter
 @Entity
+@Accessors(chain = true)
 public class PreScoutAssignation {
     @Id
     private Integer preScoutId;
@@ -30,8 +31,7 @@ public class PreScoutAssignation {
     @NotNull
     private ZonedDateTime assignationDate;
     private String comment;
-    @IsUnit
-    @NotNull
-    @Enumerated(EnumType.ORDINAL)
-    private Group groupId;
+    @ManyToOne
+    @Nullable
+    private Group group;
 }

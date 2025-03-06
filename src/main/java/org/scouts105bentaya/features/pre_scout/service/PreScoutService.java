@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.scouts105bentaya.core.exception.WebBentayaErrorException;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
+import org.scouts105bentaya.features.group.Group;
+import org.scouts105bentaya.features.group.GroupService;
 import org.scouts105bentaya.features.pre_scout.PreScoutUtils;
 import org.scouts105bentaya.features.pre_scout.dto.PreScoutAssignationDto;
 import org.scouts105bentaya.features.pre_scout.dto.PreScoutFormDto;
@@ -15,12 +17,10 @@ import org.scouts105bentaya.features.pre_scout.repository.PreScoutRepository;
 import org.scouts105bentaya.features.setting.SettingEnum;
 import org.scouts105bentaya.features.setting.SettingService;
 import org.scouts105bentaya.shared.GenericConstants;
-import org.scouts105bentaya.shared.Group;
 import org.scouts105bentaya.shared.service.AuthService;
 import org.scouts105bentaya.shared.service.EmailService;
 import org.scouts105bentaya.shared.util.TemplateUtils;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +33,7 @@ import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
@@ -43,9 +44,9 @@ public class PreScoutService {
     private final PreScoutAssignationRepository preScoutAssignationRepository;
     private final SettingService settingService;
     private final AuthService authService;
-    private final Environment environment;
     private final PreScoutPdfService preScoutPdfService;
     private final TemplateEngine templateEngine;
+    private final GroupService groupService;
     @Value("${bentaya.email.main}") private String mainEmail;
     @Value("${bentaya.web.url}") private String url;
 
@@ -55,17 +56,17 @@ public class PreScoutService {
         PreScoutAssignationRepository preScoutAssignationRepository,
         SettingService settingService,
         AuthService authService,
-        Environment environment,
-        PreScoutPdfService preScoutPdfService, TemplateEngine templateEngine
-    ) {
+        PreScoutPdfService preScoutPdfService,
+        TemplateEngine templateEngine,
+        GroupService groupService) {
         this.emailService = emailService;
         this.preScoutRepository = preScoutRepository;
         this.preScoutAssignationRepository = preScoutAssignationRepository;
         this.settingService = settingService;
         this.authService = authService;
-        this.environment = environment;
         this.preScoutPdfService = preScoutPdfService;
         this.templateEngine = templateEngine;
+        this.groupService = groupService;
     }
 
     public List<PreScout> findAll() {
@@ -77,8 +78,8 @@ public class PreScoutService {
     }
 
     public List<PreScout> findAllAssignedByLoggedScouter() {
-        Group group = Optional.ofNullable(this.authService.getLoggedUser().getGroupId()).orElseThrow(WebBentayaNotFoundException::new);
-        return this.preScoutRepository.findAllByPreScoutAssignation_GroupId(group);
+        Group group = Optional.ofNullable(this.authService.getLoggedUser().getGroup()).orElseThrow(WebBentayaNotFoundException::new);
+        return this.preScoutRepository.findAllByPreScoutAssignation_Group(group);
     }
 
     public void saveAndSendEmail(PreScoutFormDto preScoutDto) {
@@ -155,7 +156,7 @@ public class PreScoutService {
         preScoutAssignation.setPreScout(this.findById(dto.preScoutId()));
         preScoutAssignation.setComment(dto.comment());
         preScoutAssignation.setStatus(dto.status());
-        preScoutAssignation.setGroupId(Group.valueOf(dto.groupId()));
+        preScoutAssignation.setGroup(groupService.findById(dto.group().id()));
         preScoutAssignation.setAssignationDate(ZonedDateTime.now());
 
         PreScoutAssignation savedAssignation = this.preScoutAssignationRepository.save(preScoutAssignation);
@@ -169,19 +170,20 @@ public class PreScoutService {
             preScout.setPreScoutAssignation(null);
             this.preScoutAssignationRepository.delete(preScoutAssignation);
         } else {
-            Group originalGroup = preScoutAssignation.getGroupId();
+            Group originalGroup = preScoutAssignation.getGroup();
             Integer originalStatus = preScoutAssignation.getStatus();
             preScoutAssignation.setComment(dto.comment());
             preScoutAssignation.setStatus(dto.status());
-            preScoutAssignation.setGroupId(Group.valueOf(dto.groupId()));
+            preScoutAssignation.setGroup(groupService.findById(dto.group().id()));
             PreScoutAssignation savedAssignation = this.preScoutAssignationRepository.save(preScoutAssignation);
             if (originalStatus != 3 && savedAssignation.getStatus() == 3) this.sendRejectionEmail(savedAssignation);
-            if (savedAssignation.getGroupId() != originalGroup) this.sendAssignationEmail(savedAssignation);
+            if (!Objects.equals(savedAssignation.getGroup(), originalGroup))
+                this.sendAssignationEmail(savedAssignation);
         }
     }
 
     private void sendAssignationEmail(PreScoutAssignation assignation) {
-        String groupEmail = environment.getProperty(assignation.getGroupId().getEmailProperty());
+        String groupEmail = Objects.requireNonNull(assignation.getGroup()).getEmail();
         PreScout preScout = assignation.getPreScout();
         this.emailService.sendSimpleEmailWithHtml(
             groupEmail,

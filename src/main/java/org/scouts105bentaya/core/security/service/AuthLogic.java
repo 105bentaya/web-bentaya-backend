@@ -1,12 +1,15 @@
 package org.scouts105bentaya.core.security.service;
 
+import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.booking.entity.BookingDocument;
+import org.scouts105bentaya.features.event.Event;
+import org.scouts105bentaya.features.event.dto.EventFormDto;
 import org.scouts105bentaya.features.event.service.EventService;
+import org.scouts105bentaya.features.group.Group;
 import org.scouts105bentaya.features.pre_scout.entity.PreScoutAssignation;
 import org.scouts105bentaya.features.pre_scout.service.PreScoutService;
 import org.scouts105bentaya.features.scout.ScoutService;
-import org.scouts105bentaya.shared.Group;
 import org.scouts105bentaya.shared.service.AuthService;
 import org.springframework.stereotype.Service;
 
@@ -37,47 +40,53 @@ public class AuthLogic {
     }
 
     public boolean userHasSameGroupIdAsScout(int scoutId) {
-        Group loggedUserGroup = authService.getLoggedUser().getGroupId();
+        Group loggedUserGroup = authService.getLoggedUser().getGroup();
         if (loggedUserGroup == null) return false;
-        Group scoutGroup = scoutService.findById(scoutId).getGroupId();
-        return loggedUserGroup.equals(scoutGroup);
+        Group scoutGroup = scoutService.findById(scoutId).getGroup();
+        return loggedUserGroup.getId().equals(scoutGroup.getId());
     }
 
-    public boolean eventIsEditableByUser(int eventId) {
-        Group eventGroup = eventService.findById(eventId).getGroupId();
-        if (eventGroup.isNotUnit()) return true;
-        Group loggedUserGroup = authService.getLoggedUser().getGroupId();
-        return Objects.equals(eventGroup, loggedUserGroup);
+    public boolean eventIsEditableByScouter(EventFormDto eventFormDto) {
+        Event event;
+        try {
+            event = eventService.findById(eventFormDto.id());
+        } catch (WebBentayaNotFoundException e) {
+            return false;
+        }
+        Group loggedUserGroup = authService.getLoggedUser().getGroup();
+        if (!event.isForEveryone() && (loggedUserGroup == null || !Objects.equals(loggedUserGroup.getId(), Objects.requireNonNull(event.getGroup()).getId()))) return false;
+        return eventFormDto.forEveryone() || (loggedUserGroup != null && Objects.equals(loggedUserGroup.getId(), eventFormDto.groupId()));
+    }
+
+    public boolean scouterHasAccessToEvent(int eventId) {
+        Event event = eventService.findById(eventId);
+        if (event.isForEveryone()) return true;
+        Group eventGroup = event.getGroup();
+        Group loggedUserGroup = authService.getLoggedUser().getGroup();
+        return loggedUserGroup != null && Objects.equals(Objects.requireNonNull(eventGroup).getId(), loggedUserGroup.getId());
     }
 
     public boolean userHasGroupId(int groupId) {
-        return Objects.equals(authService.getLoggedUser().getGroupId(), Group.valueOf(groupId));
+        Group loggedUserGroup = authService.getLoggedUser().getGroup();
+        if (loggedUserGroup == null) return false;
+        return loggedUserGroup.getId() == groupId;
     }
 
     public boolean preScoutHasGroupId(int preScoutId, int groupId) {
         PreScoutAssignation preScoutAssignation = preScoutService.findById(preScoutId).getPreScoutAssignation();
         if (preScoutAssignation == null) return false;
-        return Objects.equals(Group.valueOf(groupId), preScoutAssignation.getGroupId());
+        return groupId == Objects.requireNonNull(preScoutAssignation.getGroup()).getId();
     }
 
-    public boolean userHasPreScoutId(int preScoutId) {
+    public boolean userHasPreScoutGroupId(int preScoutId) {
         PreScoutAssignation preScoutAssignation = preScoutService.findById(preScoutId).getPreScoutAssignation();
-        if (preScoutAssignation == null) return false;
-        return Objects.equals(authService.getLoggedUser().getGroupId(), preScoutAssignation.getGroupId());
+        Group loggedUserGroup = authService.getLoggedUser().getGroup();
+        if (preScoutAssignation == null || loggedUserGroup == null) return false;
+        return Objects.equals(loggedUserGroup.getId(), Objects.requireNonNull(preScoutAssignation.getGroup()).getId());
     }
 
     public boolean userHasScoutId(int scoutId) {
         return this.authService.getLoggedUser().getScoutList().stream().anyMatch(scout -> scout.getId().equals(scoutId));
-    }
-
-    public boolean groupIdIsNotUnit(int groupId) {
-        Group group = Group.valueOf(groupId);
-        return group != null && group.isNotUnit();
-    }
-
-    public boolean groupIdIsUserAuthorized(int groupId) {
-        Group group = Group.valueOf(groupId);
-        return group != null && group.isUserAuthorized();
     }
 
     public boolean userOwnsBooking(int bookingId) {

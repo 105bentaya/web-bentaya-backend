@@ -9,15 +9,17 @@ import org.scouts105bentaya.features.confirmation.service.ConfirmationService;
 import org.scouts105bentaya.features.event.Event;
 import org.scouts105bentaya.features.event.EventRepository;
 import org.scouts105bentaya.features.event.dto.EventFormDto;
+import org.scouts105bentaya.features.group.Group;
+import org.scouts105bentaya.features.group.GroupService;
 import org.scouts105bentaya.features.scout.ScoutService;
 import org.scouts105bentaya.shared.GenericConstants;
-import org.scouts105bentaya.shared.Group;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -27,27 +29,29 @@ public class EventService {
 
     private final ScoutService scoutService;
     private final ConfirmationService confirmationService;
+    private final GroupService groupService;
 
     public EventService(
         EventRepository eventRepository,
         ScoutService scoutService,
-        ConfirmationService confirmationService
-    ) {
+        ConfirmationService confirmationService,
+        GroupService groupService) {
         this.eventRepository = eventRepository;
         this.scoutService = scoutService;
         this.confirmationService = confirmationService;
+        this.groupService = groupService;
     }
 
     public List<Event> findAll() {
         return eventRepository.findAll();
     }
 
-    public List<Event> findAllByGroupId(Group id) {
-        return eventRepository.findAllByGroupId(id);
+    public List<Event> findAllByGroup(Group group) {
+        return eventRepository.findAllByGroup(group);
     }
 
-    public List<Event> findAllByGroupIdAndActivatedAttendance(Group id) {
-        return eventRepository.findAllByGroupIdAndActiveAttendanceListIsTrue(id);
+    public List<Event> findAllByGroupIdAndActivatedAttendance(Group group) {
+        return eventRepository.findAllByGroupAndActiveAttendanceListIsTrue(group);
     }
 
     public Event findById(Integer id) {
@@ -57,19 +61,17 @@ public class EventService {
     @Transactional
     public Event save(EventFormDto eventForm) {
         Event newEvent = new Event();
-        newEvent.setTitle(eventForm.title());
-        newEvent.setGroupId(Group.valueOf(eventForm.groupId()));
-        newEvent.setDescription(eventForm.description());
-        newEvent.setLocation(eventForm.location());
 
-        if (newEvent.getGroupId().isNotUnit() && eventForm.activateAttendanceList()) {
+        this.setEventBasicInfo(eventForm, newEvent);
+
+        if ((newEvent.getGroup() == null || newEvent.isForScouters()) && eventForm.activateAttendanceList()) {
             throw new WebBentayaBadRequestException("No se puede activar la asistencia para esta unidad");
         }
 
         newEvent.setActiveAttendanceList(eventForm.activateAttendanceList());
         newEvent.setActiveAttendancePayment(eventForm.activateAttendanceList() && eventForm.activateAttendancePayment());
-        newEvent.setClosedAttendanceList(eventForm.closeAttendanceList());
-        newEvent.setCloseDateTime(eventForm.closeAttendanceList() ? null : eventForm.closeDateTime());
+        newEvent.setClosedAttendanceList(eventForm.activateAttendanceList() && eventForm.closeAttendanceList());
+        newEvent.setCloseDateTime(!eventForm.activateAttendanceList() || eventForm.closeAttendanceList() ? null : eventForm.closeDateTime());
 
         this.setEventCoordinates(newEvent, eventForm);
         this.setEventDates(newEvent, eventForm);
@@ -90,16 +92,22 @@ public class EventService {
     public Event update(EventFormDto eventForm) {
         Event eventDB = findById(eventForm.id());
 
-        eventDB.setTitle(eventForm.title());
-        eventDB.setGroupId(Group.valueOf(eventForm.groupId()));
-        eventDB.setDescription(eventForm.description());
-        eventDB.setLocation(eventForm.location());
-
+        this.setEventBasicInfo(eventForm, eventDB);
         this.setEventCoordinates(eventDB, eventForm);
         this.setEventDates(eventDB, eventForm);
         this.updateEventAttendance(eventForm, eventDB);
 
         return eventRepository.save(eventDB);
+    }
+
+    private void setEventBasicInfo(EventFormDto eventForm, Event event) {
+        event.setTitle(eventForm.title());
+        event.setForEveryone(eventForm.forEveryone());
+        if (!event.isForEveryone()) event.setGroup(groupService.findById(Objects.requireNonNull(eventForm.groupId())));
+        else event.setGroup(null);
+        event.setForScouters(eventForm.forScouters());
+        event.setDescription(eventForm.description());
+        event.setLocation(eventForm.location());
     }
 
     private void setEventDates(Event event, EventFormDto eventForm) {
@@ -136,7 +144,7 @@ public class EventService {
     }
 
     private void updateEventAttendance(EventFormDto eventForm, Event eventDB) {
-        if (!eventForm.activateAttendanceList() || eventDB.getGroupId().isNotUnit()) {
+        if (!eventForm.activateAttendanceList() || eventDB.getGroup() == null || eventDB.isForScouters()) {
             eventDB.setActiveAttendanceList(false);
             eventDB.setActiveAttendancePayment(false);
             eventDB.setClosedAttendanceList(false);
@@ -145,8 +153,8 @@ public class EventService {
         } else if (!eventDB.isActiveAttendanceList()) {
             eventDB.setActiveAttendanceList(true);
             eventDB.setActiveAttendancePayment(eventForm.activateAttendancePayment());
-            eventDB.setClosedAttendanceList(eventDB.isClosedAttendanceList());
-            eventDB.setCloseDateTime(eventDB.getCloseDateTime());
+            eventDB.setClosedAttendanceList(eventForm.closeAttendanceList());
+            eventDB.setCloseDateTime(eventForm.closeAttendanceList() ? null : eventForm.closeDateTime());
             this.scoutService.findAllByLoggedScouterGroupId().forEach(scout -> {
                 Confirmation confirmation = new Confirmation();
                 confirmation.setEvent(eventDB);

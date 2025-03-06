@@ -20,6 +20,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 @Slf4j
@@ -68,7 +69,7 @@ public class ScoutService {
     }
 
     public List<Scout> findAllByLoggedScouterGroupId() {
-        return scoutRepository.findAllByGroupIdAndEnabledIsTrue(authService.getLoggedUser().getGroupId());
+        return scoutRepository.findAllByGroupAndEnabledIsTrue(Objects.requireNonNull(authService.getLoggedUser().getGroup()));
     }
 
     public List<String> findScoutUsernames(Integer id) {
@@ -105,12 +106,12 @@ public class ScoutService {
     public Scout update(ScoutDto scoutDto) {
         Scout scoutToUpdate = scoutConverter.convertFromDto(scoutDto);
         Scout scoutDB = this.findById(scoutDto.id());
-        boolean hasChangedGroup = !scoutDB.getGroupId().equals(scoutToUpdate.getGroupId());
+        boolean hasChangedGroup = !scoutDB.getGroup().getId().equals(scoutToUpdate.getGroup().getId());
 
         scoutDB.setDni(scoutToUpdate.getDni());
         scoutDB.setName(scoutToUpdate.getName());
         scoutDB.setMedicalData(scoutToUpdate.getMedicalData());
-        scoutDB.setGroupId(scoutToUpdate.getGroupId());
+        scoutDB.setGroup(scoutToUpdate.getGroup());
         scoutDB.setBirthday(scoutToUpdate.getBirthday());
         scoutDB.setSurname(scoutToUpdate.getSurname());
         scoutDB.setGender(scoutToUpdate.getGender());
@@ -173,8 +174,8 @@ public class ScoutService {
     }
 
     private void createConfirmationForFutureEvents(Scout scout) { //todo this method should be in confirmation service
-        eventService.findAllByGroupId(scout.getGroupId()).stream()
-            .filter(event -> event.isActiveAttendanceList() && !event.eventHasEnded())
+        eventService.findAllByGroup(scout.getGroup()).stream()
+            .filter(event -> !event.isForScouters() && event.isActiveAttendanceList() && !event.eventHasEnded())
             .forEach(e -> {
                 Confirmation confirmation = new Confirmation();
                 confirmation.setScout(scout);

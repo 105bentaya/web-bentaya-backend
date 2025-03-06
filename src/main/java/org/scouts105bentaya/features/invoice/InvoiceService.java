@@ -2,6 +2,7 @@ package org.scouts105bentaya.features.invoice;
 
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.invoice.entity.Invoice;
+import org.scouts105bentaya.features.invoice.entity.InvoicePayer;
 import org.scouts105bentaya.features.invoice.repository.InvoiceExpenseTypeRepository;
 import org.scouts105bentaya.features.invoice.repository.InvoiceGrantRepository;
 import org.scouts105bentaya.features.invoice.repository.InvoicePayerRepository;
@@ -10,6 +11,8 @@ import org.scouts105bentaya.features.invoice.specification.InvoiceSpecification;
 import org.scouts105bentaya.features.invoice.specification.InvoiceSpecificationFilter;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+
+import java.util.stream.Collectors;
 
 @Service
 public class InvoiceService {
@@ -43,8 +46,15 @@ public class InvoiceService {
         return InvoiceDataDto.builder()
             .expenseTypes(invoiceExpenseTypeRepository.findAll())
             .grants(invoiceGrantRepository.findAll())
-            .payers(invoicePayerRepository.findAll())
+            .payers(invoicePayerRepository.findAll().stream().sorted(this::invoiceComparator).collect(Collectors.toList()))
             .build();
+    }
+
+    private int invoiceComparator(InvoicePayer a, InvoicePayer b) {
+        if (a.getGroup() == null && b.getGroup() == null) return 0;
+        if (b.getGroup() == null) return -1;
+        if (a.getGroup() == null) return 1;
+        return a.getGroup().getOrder() - b.getGroup().getOrder();
     }
 
     public Invoice save(Invoice invoice) {

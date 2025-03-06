@@ -3,22 +3,21 @@ package org.scouts105bentaya.features.scout;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.scouts105bentaya.features.confirmation.Confirmation;
+import org.scouts105bentaya.features.group.Group;
 import org.scouts105bentaya.features.scout_contact.Contact;
 import org.scouts105bentaya.features.user.User;
-import org.scouts105bentaya.shared.Group;
-import org.scouts105bentaya.shared.constraint.IsUnit;
 
 import java.util.Date;
 import java.util.List;
@@ -32,9 +31,9 @@ public class Scout {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-    @IsUnit
-    @Enumerated(EnumType.ORDINAL)
-    private Group groupId;
+    @NotNull
+    @ManyToOne
+    private Group group;
     private String name;
     private String surname;
     private String dni;

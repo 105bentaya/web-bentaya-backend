@@ -13,6 +13,7 @@ import org.scouts105bentaya.features.confirmation.dto.AttendanceScoutInfoDto;
 import org.scouts105bentaya.features.confirmation.dto.ConfirmationDto;
 import org.scouts105bentaya.features.event.Event;
 import org.scouts105bentaya.features.event.service.EventService;
+import org.scouts105bentaya.features.group.Group;
 import org.scouts105bentaya.features.scout.Scout;
 import org.scouts105bentaya.features.user.User;
 import org.scouts105bentaya.shared.service.AuthService;
@@ -70,8 +71,7 @@ public class ConfirmationService {
     }
 
     public List<AttendanceListBasicDto> findScouterAttendanceList() {
-        return eventService.findAllByGroupId(authService.getLoggedUser().getGroupId()).stream()
-            .filter(Event::isActiveAttendanceList)
+        return eventService.findAllByGroupIdAndActivatedAttendance(Objects.requireNonNull(authService.getLoggedUser().getGroup())).stream()
             .map(this::getAttendanceListBasicDtoFromEvent)
             .toList();
     }
@@ -166,8 +166,12 @@ public class ConfirmationService {
 
     private void validateScouterScoutAccess(Confirmation confirmation) {
         User loggedUser = this.authService.getLoggedUser();
-        if (!Objects.requireNonNull(loggedUser.getGroupId()).equals(confirmation.getEvent().getGroupId()) ||
-            !loggedUser.getGroupId().equals(confirmation.getScout().getGroupId())) {
+
+        Group scouterGroup = loggedUser.getGroup();
+        Group eventGroup = confirmation.getEvent().getGroup();
+        Group scoutGroup = confirmation.getScout().getGroup();
+
+        if (!Objects.requireNonNull(scouterGroup).equals(eventGroup) || !scouterGroup.equals(scoutGroup)) {
             throw new WebBentayaForbiddenException("Acceso no autorizado a este scout");
         }
     }

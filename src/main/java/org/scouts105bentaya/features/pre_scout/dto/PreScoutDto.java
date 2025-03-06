@@ -25,10 +25,7 @@ public record PreScoutDto(
     @NotNull Integer priority,
     String priorityInfo,
     ZonedDateTime creationDate,
-    Integer status,
-    Integer groupId,
-    String assignationComment,
-    ZonedDateTime assignationDate,
+    PreScoutAssignationDto assignation,
     int inscriptionYear,
     @NotNull String size
 ) {

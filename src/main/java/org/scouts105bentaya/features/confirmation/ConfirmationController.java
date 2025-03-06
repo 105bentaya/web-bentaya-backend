@@ -52,7 +52,7 @@ public class ConfirmationController {
         return confirmationService.findScouterAttendanceList();
     }
 
-    @PreAuthorize("hasRole('SCOUTER') and @authLogic.eventIsEditableByUser(#id)")
+    @PreAuthorize("hasRole('SCOUTER') and @authLogic.scouterHasAccessToEvent(#id)")
     @GetMapping("/info/{id}")
     public List<AttendanceInfoDto> findAllByEventId(@PathVariable Integer id) {
         log.info("METHOD ConfirmationController.findAllByEventId --- PARAMS id: {}{}", id, SecurityUtils.getLoggedUserUsernameForLog());

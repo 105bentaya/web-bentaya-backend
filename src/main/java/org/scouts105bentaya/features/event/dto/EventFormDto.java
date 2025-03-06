@@ -10,7 +10,9 @@ import java.time.ZonedDateTime;
 @Builder
 public record EventFormDto(
     Integer id,
-    @NotNull Integer groupId,
+    @Nullable Integer groupId,
+    boolean forScouters,
+    boolean forEveryone,
     String title,
     String description,
     String location,

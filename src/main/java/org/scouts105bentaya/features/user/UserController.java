@@ -56,13 +56,6 @@ public class UserController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/{id}")
-    public UserDto findById(@PathVariable Integer id) {
-        log.info("METHOD UserController.findById --- PARAMS id: {}{}", id, SecurityUtils.getLoggedUserUsernameForLog());
-        return userConverter.convertFromEntity(userService.findById(id));
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/form/{id}")
     public UserFormDto findFormDtoById(@PathVariable Integer id) {
         log.info("METHOD UserController.findFormDtoById --- PARAMS id: {}{}", id, SecurityUtils.getLoggedUserUsernameForLog());

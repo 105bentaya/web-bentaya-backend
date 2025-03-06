@@ -54,7 +54,7 @@ public class EventController {
     }
 
     @PreAuthorize("hasAnyRole('SCOUTER', 'GROUP_SCOUTER', 'USER')")
-    @PostFilter("hasAnyRole('SCOUTER', 'GROUP_SCOUTER') ? true : @authLogic.groupIdIsUserAuthorized(filterObject.groupId)")
+    @PostFilter("hasAnyRole('SCOUTER', 'GROUP_SCOUTER') ? true : !filterObject.forScouters")
     @GetMapping
     public List<EventCalendarDto> findAll() {
         return eventCalendarConverter.convertEntityCollectionToDtoList(eventService.findAll());
@@ -76,35 +76,36 @@ public class EventController {
             .body(calendarService.getIcsCalendar(token));
     }
 
-    @PostAuthorize("@authLogic.groupIdIsUserAuthorized(returnObject.groupId) or hasAnyRole('SCOUTER', 'GROUP_SCOUTER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SCOUTER', 'GROUP_SCOUTER', 'USER')")
+    @PostAuthorize("!returnObject.forScouters or hasAnyRole('SCOUTER', 'GROUP_SCOUTER')")
     @GetMapping("/get/{id}")
     public EventDto findById(@PathVariable Integer id) {
         log.info("METHOD EventController.findById --- PARAMS id: {}{}", id, SecurityUtils.getLoggedUserUsernameForLog());
         return eventConverter.convertFromEntity(eventService.findById(id));
     }
 
-    @PreAuthorize("hasAnyRole('SCOUTER', 'GROUP_SCOUTER', 'ADMIN') and @authLogic.eventIsEditableByUser(#id)")
+    @PreAuthorize("hasAnyRole('SCOUTER', 'GROUP_SCOUTER') and @authLogic.scouterHasAccessToEvent(#id)")
     @GetMapping("/edit/{id}")
     public EventFormDto findByIdToEdit(@PathVariable Integer id) {
         log.info("METHOD EventController.findByIdToEdit --- PARAMS id: {}{}", id, SecurityUtils.getLoggedUserUsernameForLog());
         return eventFormConverter.convertFromEntity(eventService.findById(id));
     }
 
-    @PreAuthorize("(hasRole('SCOUTER') and (@authLogic.groupIdIsNotUnit(#event.groupId) or @authLogic.userHasGroupId(#event.groupId))) or (hasAnyRole('GROUP_SCOUTER', 'ADMIN') and @authLogic.groupIdIsNotUnit(#event.groupId))")
+    @PreAuthorize("(hasRole('SCOUTER') and (#event.forScouters or @authLogic.userHasGroupId(#event.groupId))) or (hasAnyRole('GROUP_SCOUTER') and #event.forEveryone)")
     @PostMapping
     public EventDto save(@RequestBody @Valid EventFormDto event) {
         log.info("METHOD EventController.save{}", SecurityUtils.getLoggedUserUsernameForLog());
         return eventConverter.convertFromEntity(eventService.save(event));
     }
 
-    @PreAuthorize("hasAnyRole('SCOUTER', 'GROUP_SCOUTER', 'ADMIN') and @authLogic.eventIsEditableByUser(#eventDto.id) and (@authLogic.groupIdIsNotUnit(#eventDto.groupId) or @authLogic.userHasGroupId(#eventDto.groupId))")
+    @PreAuthorize("hasAnyRole('SCOUTER', 'GROUP_SCOUTER') and @authLogic.eventIsEditableByScouter(#eventDto)")
     @PutMapping
     public EventDto update(@RequestBody @Valid EventFormDto eventDto) {
         log.info("METHOD EventController.update --- PARAMS id: {}{}", eventDto.id(), SecurityUtils.getLoggedUserUsernameForLog());
         return eventConverter.convertFromEntity(eventService.update(eventDto));
     }
 
-    @PreAuthorize("hasAnyRole('SCOUTER', 'GROUP_SCOUTER', 'ADMIN') and @authLogic.eventIsEditableByUser(#id)")
+    @PreAuthorize("hasAnyRole('SCOUTER', 'GROUP_SCOUTER') and @authLogic.scouterHasAccessToEvent(#id)")
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Integer id) {
         log.info("METHOD EventController.delete --- PARAMS id: {}{}", id, SecurityUtils.getLoggedUserUsernameForLog());

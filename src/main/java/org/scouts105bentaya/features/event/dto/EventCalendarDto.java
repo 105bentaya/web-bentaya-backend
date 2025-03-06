@@ -8,6 +8,8 @@ public record EventCalendarDto(
     String title,
     ZonedDateTime startDate,
     ZonedDateTime endDate,
-    boolean unknownTime
+    boolean unknownTime,
+    boolean forEveryone,
+    boolean forScouters
 ) {
 }
