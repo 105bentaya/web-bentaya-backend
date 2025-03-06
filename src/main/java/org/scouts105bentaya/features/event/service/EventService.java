@@ -8,8 +8,10 @@ import org.scouts105bentaya.features.confirmation.Confirmation;
 import org.scouts105bentaya.features.confirmation.service.ConfirmationService;
 import org.scouts105bentaya.features.event.Event;
 import org.scouts105bentaya.features.event.EventRepository;
+import org.scouts105bentaya.features.event.dto.EventDateConflictsFormDto;
 import org.scouts105bentaya.features.event.dto.EventFormDto;
 import org.scouts105bentaya.features.group.Group;
+import org.scouts105bentaya.features.group.GroupBasicDataDto;
 import org.scouts105bentaya.features.group.GroupService;
 import org.scouts105bentaya.features.scout.ScoutService;
 import org.scouts105bentaya.shared.GenericConstants;
@@ -20,6 +22,9 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -183,5 +188,27 @@ public class EventService {
 
     public void delete(Integer id) {
         eventRepository.deleteById(id);
+    }
+
+    public List<GroupBasicDataDto> getEventDateConflicts(EventDateConflictsFormDto form) {
+        List<Event> coincidingEvents = eventRepository.findEventsWithStartOrEndCoincidence(form.startDate(), form.endDate());
+
+        Stream<Event> coincidingEventsStream;
+        if (form.groupId() != null) {
+            coincidingEventsStream = coincidingEvents.stream()
+                .filter(Predicate.not(
+                    event -> Optional.ofNullable(event.getGroup())
+                        .map(group -> group.getId().equals(form.groupId()))
+                        .orElse(false)
+                ));
+        } else {
+            coincidingEventsStream = coincidingEvents.stream().filter(event -> !event.isForEveryone());
+        }
+
+        return coincidingEventsStream
+            .map(Event::getGroup)
+            .distinct()
+            .map(GroupBasicDataDto::fromGroupNullAsGeneral)
+            .toList();
     }
 }

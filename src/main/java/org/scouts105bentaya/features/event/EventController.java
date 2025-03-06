@@ -6,10 +6,12 @@ import org.scouts105bentaya.features.event.converter.EventCalendarConverter;
 import org.scouts105bentaya.features.event.converter.EventConverter;
 import org.scouts105bentaya.features.event.converter.EventFormConverter;
 import org.scouts105bentaya.features.event.dto.EventCalendarDto;
+import org.scouts105bentaya.features.event.dto.EventDateConflictsFormDto;
 import org.scouts105bentaya.features.event.dto.EventDto;
 import org.scouts105bentaya.features.event.dto.EventFormDto;
 import org.scouts105bentaya.features.event.service.CalendarService;
 import org.scouts105bentaya.features.event.service.EventService;
+import org.scouts105bentaya.features.group.GroupBasicDataDto;
 import org.scouts105bentaya.shared.util.SecurityUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -65,6 +67,13 @@ public class EventController {
     public String subscribeToCalendar() {
         log.info("METHOD EventController.subscribeToCalendar{}", SecurityUtils.getLoggedUserUsernameForLog());
         return (calendarService.getCalendarSubscription());
+    }
+
+    @PreAuthorize("hasAnyRole('SCOUTER', 'GROUP_SCOUTER')")
+    @GetMapping("/coincidences")
+    public List<GroupBasicDataDto> getEventDateConflicts(@Valid EventDateConflictsFormDto formDto) {
+        log.info("METHOD EventController.getEventDateConflicts{}", SecurityUtils.getLoggedUserUsernameForLog());
+        return eventService.getEventDateConflicts(formDto);
     }
 
     @GetMapping("/public/calendar")
