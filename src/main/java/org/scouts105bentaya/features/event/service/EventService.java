@@ -78,7 +78,6 @@ public class EventService {
         newEvent.setClosedAttendanceList(eventForm.activateAttendanceList() && eventForm.closeAttendanceList());
         newEvent.setCloseDateTime(!eventForm.activateAttendanceList() || eventForm.closeAttendanceList() ? null : eventForm.closeDateTime());
 
-        this.setEventCoordinates(newEvent, eventForm);
         this.setEventDates(newEvent, eventForm);
 
         Event savedEvent = eventRepository.save(newEvent);
@@ -98,7 +97,6 @@ public class EventService {
         Event eventDB = findById(eventForm.id());
 
         this.setEventBasicInfo(eventForm, eventDB);
-        this.setEventCoordinates(eventDB, eventForm);
         this.setEventDates(eventDB, eventForm);
         this.updateEventAttendance(eventForm, eventDB);
 
@@ -113,6 +111,8 @@ public class EventService {
         event.setForScouters(eventForm.forScouters());
         event.setDescription(eventForm.description());
         event.setLocation(eventForm.location());
+        event.setMeetingLocation(eventForm.meetingLocation());
+        event.setPickupLocation(eventForm.pickupLocation());
     }
 
     private void setEventDates(Event event, EventFormDto eventForm) {
@@ -135,16 +135,6 @@ public class EventService {
         if (!event.getStartDate().isBefore(event.getEndDate())) {
             log.warn("setEventDates - start date {} is not before end date {}", event.getStartDate(), event.getEndDate());
             throw new WebBentayaBadRequestException("La fecha de fin no debe ser anterior a la de inicio");
-        }
-    }
-
-    private void setEventCoordinates(Event event, EventFormDto eventForm) {
-        if (eventForm.latitude() == null || eventForm.longitude() == null) {
-            event.setLatitude(null);
-            event.setLongitude(null);
-        } else {
-            event.setLatitude(eventForm.latitude());
-            event.setLongitude(eventForm.longitude());
         }
     }
 

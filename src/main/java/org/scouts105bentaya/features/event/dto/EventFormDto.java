@@ -16,8 +16,8 @@ public record EventFormDto(
     String title,
     String description,
     String location,
-    String longitude,
-    String latitude,
+    String meetingLocation,
+    String pickupLocation,
     ZonedDateTime startDate,
     ZonedDateTime endDate,
     //todo maybe it can be removed and use withzonesamelocal

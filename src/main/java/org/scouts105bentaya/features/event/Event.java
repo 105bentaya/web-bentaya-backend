@@ -33,8 +33,8 @@ public class Event {
     private String title;
     private String description;
     private String location;
-    private String longitude;
-    private String latitude;
+    private String meetingLocation;
+    private String pickupLocation;
     private ZonedDateTime startDate;
     private ZonedDateTime endDate;
     private boolean unknownTime;

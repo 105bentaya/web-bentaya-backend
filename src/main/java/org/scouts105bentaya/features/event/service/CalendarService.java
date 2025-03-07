@@ -142,11 +142,15 @@ public class CalendarService {
         if (event.isForScouters()) eventGroupTitle = "%s (sólo scouters)".formatted(eventGroupTitle);
 
         String description = "Actividad de %s.".formatted(eventGroupTitle);
-
         if (!StringUtils.isBlank(event.getDescription())) {
             description += "\n" + event.getDescription();
             if (!description.endsWith(".")) description += ".";
         }
+
+        if (!StringUtils.isBlank(event.getMeetingLocation()))
+            description += "%nLugar de quedada: %s".formatted(event.getMeetingLocation());
+        if (!StringUtils.isBlank(event.getPickupLocation()))
+            description += "%nLugar de recogida: %s".formatted(event.getPickupLocation());
 
         if (event.isUnknownTime()) description += "\nEl horario está aún por concretar.";
         if (event.isActiveAttendanceList()) {
