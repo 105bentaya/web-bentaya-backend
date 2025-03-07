@@ -1,9 +1,10 @@
 package org.scouts105bentaya.features.complaint;
 
 import jakarta.activation.DataSource;
+import org.apache.commons.lang3.StringUtils;
+import org.scouts105bentaya.features.setting.enums.SettingEnum;
 import org.scouts105bentaya.shared.service.EmailService;
 import org.scouts105bentaya.shared.service.PdfService;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,10 +15,6 @@ public class ComplaintService {
     private final EmailService emailService;
     private final PdfService pdfService;
     private final ComplaintRepository complaintRepository;
-    @Value("${bentaya.email.it}")
-    private String itEmail;
-    @Value("${bentaya.email.main}")
-    private String mainEmail;
 
     public ComplaintService(
         EmailService emailService,
@@ -41,20 +38,13 @@ public class ComplaintService {
         this.save(complaint);
         DataSource dataSource = pdfService.generateComplaintPDF(complaint);
         emailService.sendEmailWithAttachment(
-            mainEmail,
             "Denuncia de " + complaint.getCategory(),
             generateBody(complaint),
-            dataSource
+            dataSource,
+            emailService.getSettingEmails(SettingEnum.COMPLAINT_MAIL)
         );
-        emailService.sendEmailWithAttachment(
-            itEmail,
-            "Denuncia de " + complaint.getCategory(),
-            generateBody(complaint),
-            dataSource
-        );
-        if (complaint.getEmail() != null && !complaint.getEmail().isBlank()) {
+        if (!StringUtils.isBlank(complaint.getEmail())) {
             emailService.sendSimpleEmail(
-                complaint.getEmail(),
                 "Scouts 105 Bentaya - Recibí de su denuncia",
                 """
                     Mediante este correo le notificamos que su denuncia ha sido recibida, nos pondremos en \
@@ -62,7 +52,8 @@ public class ComplaintService {
                     notificarnos su queja.
                     Un cordial saludo,
                     Scouts 105 Bentaya
-                    """
+                    """,
+                complaint.getEmail()
             );
         }
     }

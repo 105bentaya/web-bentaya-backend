@@ -10,6 +10,8 @@ import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+import org.scouts105bentaya.features.setting.enums.SettingEnum;
+import org.scouts105bentaya.features.setting.enums.SettingType;
 
 @Getter
 @Setter
@@ -20,8 +22,14 @@ public class Setting {
     private Integer id;
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "varchar")
+    @Column(columnDefinition = "varchar", unique = true, nullable = false)
     private SettingEnum name;
     @NotNull
+    @Column(nullable = false)
     private String value;
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "varchar", nullable = false)
+    private SettingType type;
+    private boolean canBeNull;
 }

@@ -20,18 +20,6 @@ Para ejecutar WebBentayaBackendApplication será necesario añadir las siguiente
 
 * WEB_EMAIL_USERNAME (dirección de correo que envía los correos)
 * WEB_EMAIL_PASSWORD (contraseña de aplicación de dicho correo)
-* BENTAYA_EMAIL_MAIN (dirección principal a la que se envían algunos correos)
-* BENTAYA_EMAIL_IT (dirección de mantenimiento a la que se envían algunos correos)
-* BENTAYA_EMAIL_BOOKING (dirección de reservas a la que se envían algunos correos)
-* BENTAYA_EMAIL_TREASURY (dirección de tesorería a la que se envían algunos correos)
-* Direcciones de unidades:
-    * BENTAYA_EMAIL_GAR
-    * BENTAYA_EMAIL_WAI
-    * BENTAYA_EMAIL_BAO
-    * BENTAYA_EMAIL_ART
-    * BENTAYA_EMAIL_AUT
-    * BENTAYA_EMAIL_ARI
-    * BENTAYA_EMAIL_IDA
 
 Si deseas tener correo funcional añadir dirección de correo electrónico con su respectiva contraseña de aplicación. Si
 no deseas añadir un correo, pon cualquier valor a la variable de entorno. **NO** añadir correos desconocidos que no
@@ -44,7 +32,7 @@ Puedes copiar las variables de entorno en el formato de IntelliJ a continuación
 funcionará la aplicación, pero puedes cambiar los valores según lo comentado anteriormente:
 
 ```
-BENTAYA_EMAIL_ARI=fake_mail;BENTAYA_EMAIL_ART=fake_mail;BENTAYA_EMAIL_AUT=fake_mail;BENTAYA_EMAIL_BAO=fake_mail;BENTAYA_EMAIL_BOOKING=fake_mail;BENTAYA_EMAIL_GAR=fake_mail;BENTAYA_EMAIL_IDA=fake_mail;BENTAYA_EMAIL_IT=fake_mail;BENTAYA_EMAIL_MAIN=fake_mail;BENTAYA_EMAIL_TREASURY=fake_mail;BENTAYA_EMAIL_WAI=fake_mail;TPV_URL=;WEB_EMAIL_PASSWORD=fake_app_password;WEB_EMAIL_USERNAME=fake_mail
+WEB_EMAIL_PASSWORD=xxxxxxxxxxxxxxxx;WEB_EMAIL_USERNAME=fakemail@fakebentaya.org;TPV_URL=https://la-url-se-ve-algo-asi.ngrok-free.app;
 ```
 
 ### Perfil
@@ -53,9 +41,11 @@ También tendrás que especificar en 'Active profiles' local-mysql.
 
 ## Despliegue
 
-1. Al actualizar la rama 'main' se creará un workflow en GitHub que actualizará automáticamente la app.
-2. El entorno de producción deberá contar con las siguientes variables de entorno, además de las mencionadas en el
-   apartado de desarrollo.
+1. Al actualizar la rama 'main' se creará un workflow en GitHub que actualizará automáticamente la app. Si se actualiza
+   la rama test, se actualizará la app del entorno de test.
+2. El entorno de test y/o producción deberá contar con las siguientes variables de entorno:
+    * WEB_EMAIL_USERNAME (dirección de correo que envía los correos)
+    * WEB_EMAIL_PASSWORD (contraseña de aplicación de dicho correo)
     * WEB_DB_URL (url a la base de datos)
     * WEB_DB_USERNAME (usuario de la base de datos)
     * WEB_DB_PASSWORD (contraseña del usuario)

@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.booking.enums.BookingStatus;
 import org.scouts105bentaya.features.booking.repository.BookingRepository;
+import org.scouts105bentaya.features.setting.enums.SettingEnum;
 import org.scouts105bentaya.features.user.UserService;
 import org.scouts105bentaya.shared.service.EmailService;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,7 +27,6 @@ public class BookingStatusService {
     private final TemplateEngine htmlTemplateEngine;
     private final EmailService emailService;
     private final UserService userService;
-    @Value("${bentaya.email.booking}") private String bookingMail;
     @Value("${bentaya.web.url}") private String url;
 
     public BookingStatusService(
@@ -140,7 +140,7 @@ public class BookingStatusService {
             booking.getId()
         );
 
-        this.emailService.sendSimpleEmailWithHtml(userMail, subject, infoHtmlContent);
+        this.emailService.sendSimpleEmailWithHtml(subject, infoHtmlContent, userMail);
     }
 
     private void sendLeftMail(Booking booking) {
@@ -155,7 +155,7 @@ public class BookingStatusService {
             booking.getScoutCenter().getName(), booking.getId()
         );
 
-        this.emailService.sendSimpleEmailWithHtml(bookingMail, subject, infoHtmlContent);
+        this.emailService.sendSimpleEmailWithHtml(subject, infoHtmlContent, getBookingEmails());
     }
 
     private void sendAcceptedMail(Booking booking, boolean exclusivenessRejected) {
@@ -175,10 +175,10 @@ public class BookingStatusService {
         );
         try {
             DataSource dataSource = this.generatePdfDataSource(booking.getScoutCenter().getPdfName());
-            this.emailService.sendSimpleEmailWithHtmlAndAttachment(userMail, subject, infoHtmlContent, dataSource);
+            this.emailService.sendSimpleEmailWithHtmlAndAttachment(subject, infoHtmlContent, dataSource, userMail);
         } catch (IOException e) {
             log.error("Error trying to fetch pdf: {}", e.getMessage());
-            this.emailService.sendSimpleEmailWithHtml(userMail, subject, infoHtmlContent);
+            this.emailService.sendSimpleEmailWithHtml(subject, infoHtmlContent, userMail);
         }
     }
 
@@ -196,7 +196,7 @@ public class BookingStatusService {
             "Reserva de Centros Scout Nº %d - Documentos rechazados",
             booking.getId()
         );
-        this.emailService.sendSimpleEmailWithHtml(userMail, subject, infoHtmlContent);
+        this.emailService.sendSimpleEmailWithHtml(subject, infoHtmlContent, userMail);
     }
 
     private void sendNotifyDocumentsUploadedMail(Booking booking) {
@@ -211,7 +211,7 @@ public class BookingStatusService {
             booking.getScoutCenter().getName(),
             booking.getId()
         );
-        this.emailService.sendSimpleEmailWithHtml(bookingMail, subject, infoHtmlContent);
+        this.emailService.sendSimpleEmailWithHtml(subject, infoHtmlContent, getBookingEmails());
     }
 
     private void sendCancellationMail(Booking booking) {
@@ -222,7 +222,7 @@ public class BookingStatusService {
 
         final String infoHtmlContent = this.htmlTemplateEngine.process("booking-cancellation.html", context);
         String subject = String.format("Centro Scout %s - Reserva Nº %d cancelada", booking.getScoutCenter().getName(), booking.getId());
-        this.emailService.sendSimpleEmailWithHtml(bookingMail, subject, infoHtmlContent);
+        this.emailService.sendSimpleEmailWithHtml(subject, infoHtmlContent, getBookingEmails());
     }
 
     private void sendReservedMail(Booking booking) {
@@ -238,10 +238,10 @@ public class BookingStatusService {
         final String infoHtmlContent = this.htmlTemplateEngine.process("booking-reservation-accepted.html", context);
         try {
             DataSource dataSource = this.generatePdfDataSource(booking.getScoutCenter().getPdfName());
-            this.emailService.sendSimpleEmailWithHtmlAndAttachment(userMail, "Reserva de Centro Scout Aceptada", infoHtmlContent, dataSource);
+            this.emailService.sendSimpleEmailWithHtmlAndAttachment("Reserva de Centro Scout Aceptada", infoHtmlContent, dataSource, userMail);
         } catch (IOException e) {
             log.error("Error trying to fetch pdf: {}", e.getMessage());
-            this.emailService.sendSimpleEmailWithHtml(userMail, "Reserva de Centro Scout Aceptada", infoHtmlContent);
+            this.emailService.sendSimpleEmailWithHtml("Reserva de Centro Scout Aceptada", infoHtmlContent, userMail);
         }
     }
 
@@ -255,7 +255,7 @@ public class BookingStatusService {
         context.setVariable("contactMail", userMail);
 
         final String infoHtmlContent = this.htmlTemplateEngine.process("booking-rejection.html", context);
-        this.emailService.sendSimpleEmailWithHtml(userMail, "Reserva de Centro Scout Rechazada", infoHtmlContent);
+        this.emailService.sendSimpleEmailWithHtml("Reserva de Centro Scout Rechazada", infoHtmlContent, userMail);
     }
 
     private void sendNewBookingMails(Booking booking, String newUserPassword) {
@@ -286,8 +286,8 @@ public class BookingStatusService {
         final String userHtmlContent = this.htmlTemplateEngine.process("booking-new-reservation.html", context);
 
         String subject = String.format("Centro Scout %s - Nueva Reserva", booking.getScoutCenter().getName());
-        this.emailService.sendSimpleEmailWithHtml(bookingMail, subject, infoHtmlContent);
-        this.emailService.sendSimpleEmailWithHtml(booking.getContactMail(), "Centro Scout - Nueva Reserva", userHtmlContent);
+        this.emailService.sendSimpleEmailWithHtml(subject, infoHtmlContent, getBookingEmails());
+        this.emailService.sendSimpleEmailWithHtml("Centro Scout - Nueva Reserva", userHtmlContent, booking.getContactMail());
     }
 
     private DataSource generatePdfDataSource(String pdfName) throws IOException {
@@ -295,5 +295,9 @@ public class BookingStatusService {
         ByteArrayDataSource dataSource = new ByteArrayDataSource(bytes, "application/pdf");
         dataSource.setName(pdfName);
         return dataSource;
+    }
+
+    private String[] getBookingEmails() {
+        return this.emailService.getSettingEmails(SettingEnum.BOOKING_MAIL);
     }
 }

@@ -1,8 +1,8 @@
 package org.scouts105bentaya.features.contact_message;
 
+import org.scouts105bentaya.features.setting.enums.SettingEnum;
 import org.scouts105bentaya.shared.service.EmailService;
 import org.scouts105bentaya.shared.util.TemplateUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 
@@ -15,8 +15,6 @@ public class ContactMessageService {
     private final EmailService emailService;
     private final ContactMessageRepository contactMessageRepository;
     private final TemplateEngine templateEngine;
-    @Value("${bentaya.email.it}")
-    private String itEmail;
 
     public ContactMessageService(
         EmailService emailService,
@@ -39,9 +37,9 @@ public class ContactMessageService {
     public void sendContactMessageEmail(ContactMessage contactMessage) {
         this.save(contactMessage);
         emailService.sendSimpleEmailWithHtml(
-            itEmail,
             "MENSAJE WEB: %s".formatted(contactMessage.getSubject()),
-            this.templateEngine.process(TEMPLATE, TemplateUtils.getContext("form", contactMessage))
+            this.templateEngine.process(TEMPLATE, TemplateUtils.getContext("form", contactMessage)),
+            emailService.getSettingEmails(SettingEnum.CONTACT_MAIL)
         );
     }
 }

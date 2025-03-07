@@ -4,10 +4,10 @@ import jakarta.activation.DataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.core.exception.WebBentayaErrorException;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
+import org.scouts105bentaya.features.setting.enums.SettingEnum;
 import org.scouts105bentaya.shared.GenericConstants;
 import org.scouts105bentaya.shared.service.EmailService;
 import org.scouts105bentaya.shared.service.PdfService;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -25,8 +25,6 @@ public class PreScouterService {
     private final PdfService pdfService;
     private final PreScouterRepository preScouterRepository;
     private final PreScouterConverter preScouterConverter;
-    @Value("${bentaya.email.main}")
-    private String email;
 
     public PreScouterService(
         EmailService emailService,
@@ -58,13 +56,12 @@ public class PreScouterService {
     private void sendPreScouterEmail(PreScouter preScouter) {
         DataSource dataSource = pdfService.generatePreScouterPDF(preScouter);
         emailService.sendEmailWithAttachment(
-            email,
             "Preinscripción de voluntariado: %s, %s".formatted(preScouter.getSurname(), preScouter.getName()),
             "Preinscripción de la persona interesada - %s, %s".formatted(preScouter.getSurname(), preScouter.getName()),
-            dataSource
+            dataSource,
+            this.emailService.getSettingEmails(SettingEnum.FORM_MAIL)
         );
         emailService.sendEmailWithAttachment(
-            preScouter.getEmail(),
             "Scouts 105 Bentaya - Copia de la preinscripción",
             """
                 Se ha recibido con éxito la preinscripción de: %s, %s
@@ -72,7 +69,10 @@ public class PreScouterService {
                 
                 Atentamente,
                 Grupo Scout 105 Bentaya
-                """.formatted(preScouter.getSurname(), preScouter.getName()), dataSource);
+                """.formatted(preScouter.getSurname(), preScouter.getName()),
+            dataSource,
+            preScouter.getEmail()
+        );
     }
 
     public ResponseEntity<byte[]> getPDF(Integer id) {

@@ -47,13 +47,13 @@ public class ResetPasswordService {
             String token = generateToken();
             tokenCache.put(token, username);
             emailService.sendSimpleEmail(
-                username,
                 "Restablecer contraseña - 105 Bentaya",
                 """
                     Link para restablecer la contraseña: %s/restablecer-clave/%s
                     Este link caducará en 5 minutos. En caso de que ya haya caducado, puede volver a solicitar el \
                     restablecimiento de la contraseña desde el portal de inicio de sesión.
-                    """.formatted(url, token)
+                    """.formatted(url, token),
+                username
             );
         } catch (WebBentayaUserNotFoundException ignored) {
             //ignored

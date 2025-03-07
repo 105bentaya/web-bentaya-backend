@@ -5,9 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.features.contact_message.ContactMessage;
 import org.scouts105bentaya.features.poll.dto.PublicPollDto;
 import org.scouts105bentaya.features.poll.entity.Poll;
+import org.scouts105bentaya.features.setting.enums.SettingEnum;
 import org.scouts105bentaya.shared.service.EmailService;
 import org.scouts105bentaya.shared.util.SecurityUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,8 +29,6 @@ public class PollController {
     private final PollService pollService;
     private final EmailService emailService;
     private final PublicPollConverter publicPollConverter;
-    @Value("${bentaya.email.it}")
-    private String email;
 
     public PollController(
         PollService pollService,
@@ -81,9 +79,13 @@ public class PollController {
     @PostMapping("public/mail")
     public void sendMail(@RequestBody ContactMessage contactMessage) {
         log.info("METHOD PollController.sendMail");
-        emailService.sendSimpleEmail(email, "Canción Disco Bentaya", String.format("""
-            %s con correo %s nos envía la canción %s:
-            %s
-            """, contactMessage.getName(), contactMessage.getEmail(), contactMessage.getSubject(), contactMessage.getMessage()));
+        emailService.sendSimpleEmail(
+            "Canción Disco Bentaya",
+            """
+                %s con correo %s nos envía la canción %s:
+                %s
+                """.formatted(contactMessage.getName(), contactMessage.getEmail(), contactMessage.getSubject(), contactMessage.getMessage()),
+            emailService.getSettingEmails(SettingEnum.ADMINISTRATION_MAIL)
+        );
     }
 }

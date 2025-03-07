@@ -12,6 +12,7 @@ import org.scouts105bentaya.features.group.GroupBasicDataDto;
 import org.scouts105bentaya.features.group.GroupService;
 import org.scouts105bentaya.features.scout.Scout;
 import org.scouts105bentaya.features.scout.ScoutRepository;
+import org.scouts105bentaya.features.setting.enums.SettingEnum;
 import org.scouts105bentaya.features.user.dto.ChangePasswordDto;
 import org.scouts105bentaya.features.user.dto.UserFormDto;
 import org.scouts105bentaya.features.user.dto.UserProfileDto;
@@ -58,7 +59,6 @@ public class UserService implements UserDetailsService {
     private final GroupService groupService;
 
     @Value("${bentaya.web.url}") String url;
-    @Value("${bentaya.email.it}") String itMail;
 
     public UserService(
         UserRepository userRepository,
@@ -163,7 +163,7 @@ public class UserService implements UserDetailsService {
 
         //todo WB-245
         emailService.sendSimpleEmail(
-            username, "Alta de usuario en la web de Asociación Scouts Exploradores Bentaya",
+            "Alta de usuario en la web de Asociación Scouts Exploradores Bentaya",
             String.format(
                 """
                     Se ha añadido un nuevo usuario asociado a este correo para la web %s
@@ -172,7 +172,8 @@ public class UserService implements UserDetailsService {
                     Contraseña: %s
                     Es altamente recomendable cambiar la contraseña.
                     Si cree que esto es un error, por favor avísenos enviando un correo a %s""",
-                url, username, scout.getName(), scout.getSurname(), password, itMail)
+                url, username, scout.getName(), scout.getSurname(), password, this.emailService.getSettingEmails(SettingEnum.ADMINISTRATION_MAIL)[0]),
+            username
         );
     }
 
@@ -211,11 +212,12 @@ public class UserService implements UserDetailsService {
             user.getScoutList().add(scout);
             userRepository.save(user);
             emailService.sendSimpleEmail(
-                user.getUsername(), "Nueva Persona Educanda Añadida a tu usuario",
+                "Nueva Persona Educanda Añadida a tu usuario",
                 """
                     Se ha añadido a la persona educanda %s %s a tu usuario %s de la web de la Asociación Scouts Exploradores Bentaya.
                     Si cree que esto es un error, por favor avísenos enviando un correo a %s
-                    """.formatted(scout.getName(), scout.getSurname(), user.getUsername(), itMail)
+                    """.formatted(scout.getName(), scout.getSurname(), user.getUsername(), this.emailService.getSettingEmails(SettingEnum.ADMINISTRATION_MAIL)[0]),
+                user.getUsername()
             );
 
         }

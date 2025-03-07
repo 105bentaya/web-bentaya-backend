@@ -15,8 +15,8 @@ import org.scouts105bentaya.features.payment.dto.PaymentFormDataRequestDto;
 import org.scouts105bentaya.features.payment.dto.PaymentInfoDto;
 import org.scouts105bentaya.features.payment.dto.PaymentRedsysFormDataDto;
 import org.scouts105bentaya.features.payment.dto.PaymentUrlsDto;
+import org.scouts105bentaya.features.setting.enums.SettingEnum;
 import org.scouts105bentaya.shared.service.EmailService;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -33,8 +33,6 @@ public class DonationService {
     private final TemplateEngine templateEngine;
     private final EmailService emailService;
     private final PaymentService paymentService;
-    @Value("${bentaya.email.treasury}") private String treasuryEmail;
-    @Value("${bentaya.email.it}") private String itEmail;
 
     public DonationService(
         TemplateEngine templateEngine,
@@ -91,28 +89,28 @@ public class DonationService {
     public void confirmDonationPayment(Donation donation) {
         Integer status = donation.getPayment().getStatus();
         this.emailService.sendSimpleEmail(
-            treasuryEmail,
             "Donación por TPV completada",
             "Se ha completado la donación nº %d con el siguiente estado: %d".formatted(
                 donation.getId(),
                 status
-            )
+            ),
+            emailService.getSettingEmails(SettingEnum.TREASURY_MAIL)
         );
 
         if (status >= 0 && status <= 99) {
             this.emailService.sendSimpleEmail(
-                donation.getEmail(),
                 "Donación pagada con éxito",
-                "Se ha completado el pago de su donación con nº %s".formatted(donation.getPayment().getOrderNumber())
+                "Se ha completado el pago de su donación con nº %s".formatted(donation.getPayment().getOrderNumber()),
+                donation.getEmail()
             );
         } else {
             this.emailService.sendSimpleEmail(
-                donation.getEmail(),
                 "Error en el pago de su donación",
                 """
                     No se ha podido completar el pago de su donación nº %s con éxito. Si cree que esto es un error, \
                     contacte con %s
-                    """.formatted(donation.getPayment().getOrderNumber(), itEmail)
+                    """.formatted(donation.getPayment().getOrderNumber(), emailService.getSettingEmails(SettingEnum.TREASURY_MAIL)[0]),
+                donation.getEmail()
             );
         }
     }
@@ -142,14 +140,14 @@ public class DonationService {
         }
 
         this.emailService.sendSimpleEmailWithHtml(
-            treasuryEmail,
             "Nuevo Formulario de Donación %s - nº %d".formatted(frequencyToString(donation.getFrequency()), donation.getId()),
-            this.templateEngine.process("donation/new-donation.html", context)
+            this.templateEngine.process("donation/new-donation.html", context),
+            this.emailService.getSettingEmails(SettingEnum.TREASURY_MAIL)
         );
         this.emailService.sendSimpleEmailWithHtml(
-            donation.getEmail(),
             "Scouts 105 Bentaya - Datos de Donación %s".formatted(frequencyToString(donation.getFrequency())),
-            this.templateEngine.process("donation/donation-received.html", context)
+            this.templateEngine.process("donation/donation-received.html", context),
+            donation.getEmail()
         );
     }
 

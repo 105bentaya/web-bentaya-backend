@@ -1,6 +1,7 @@
 package org.scouts105bentaya.features.setting;
 
 import lombok.extern.slf4j.Slf4j;
+import org.scouts105bentaya.features.setting.enums.SettingEnum;
 import org.scouts105bentaya.shared.util.SecurityUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,7 +33,7 @@ public class SettingController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{name}")
-    public Setting updateValue(@RequestBody String value, @PathVariable SettingEnum name) {
+    public Setting updateValue(@RequestBody SettingInDto value, @PathVariable SettingEnum name) {
         log.info("METHOD SettingController.updateValue --- PARAMS value: {}, name: {}{}", value, name, SecurityUtils.getLoggedUserUsernameForLog());
         return this.settingService.updateValue(value, name);
     }

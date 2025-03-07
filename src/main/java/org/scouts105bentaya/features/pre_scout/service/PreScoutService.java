@@ -14,8 +14,8 @@ import org.scouts105bentaya.features.pre_scout.entity.PreScout;
 import org.scouts105bentaya.features.pre_scout.entity.PreScoutAssignation;
 import org.scouts105bentaya.features.pre_scout.repository.PreScoutAssignationRepository;
 import org.scouts105bentaya.features.pre_scout.repository.PreScoutRepository;
-import org.scouts105bentaya.features.setting.SettingEnum;
 import org.scouts105bentaya.features.setting.SettingService;
+import org.scouts105bentaya.features.setting.enums.SettingEnum;
 import org.scouts105bentaya.shared.GenericConstants;
 import org.scouts105bentaya.shared.service.AuthService;
 import org.scouts105bentaya.shared.service.EmailService;
@@ -47,7 +47,6 @@ public class PreScoutService {
     private final PreScoutPdfService preScoutPdfService;
     private final TemplateEngine templateEngine;
     private final GroupService groupService;
-    @Value("${bentaya.email.main}") private String mainEmail;
     @Value("${bentaya.web.url}") private String url;
 
     public PreScoutService(
@@ -135,7 +134,6 @@ public class PreScoutService {
     private void sendPreScoutEmail(PreScout preScout) {
         DataSource dataSource = preScoutPdfService.generatePreScoutPDF(preScout);
         emailService.sendEmailWithAttachment(
-            preScout.getEmail(),
             "Scouts 105 Bentaya - Copia de la preinscripción",
             """
                 Copia de la preinscripción de la persona educanda: %s %s
@@ -147,7 +145,8 @@ public class PreScoutService {
                 
                 Atentamente,
                 Grupo Scout 105 Bentaya""".formatted(preScout.getName(), preScout.getSurname()),
-            dataSource
+            dataSource,
+            preScout.getEmail()
         );
     }
 
@@ -186,17 +185,17 @@ public class PreScoutService {
         String groupEmail = Objects.requireNonNull(assignation.getGroup()).getEmail();
         PreScout preScout = assignation.getPreScout();
         this.emailService.sendSimpleEmailWithHtml(
-            groupEmail,
             "Nueva Preinscripción Asignada - %s %s".formatted(preScout.getName(), preScout.getSurname()),
-            this.templateEngine.process("pre_scout/assigned.html", TemplateUtils.getContext("preScout", preScout, "url", url))
+            this.templateEngine.process("pre_scout/assigned.html", TemplateUtils.getContext("preScout", preScout, "url", url)),
+            groupEmail
         );
     }
 
     private void sendRejectionEmail(PreScoutAssignation assignation) {
         this.emailService.sendSimpleEmailWithHtml(
-            mainEmail,
             "Preinscripción Rechazada - %d".formatted(assignation.getPreScoutId()),
-            this.templateEngine.process("pre_scout/rejected.html", TemplateUtils.getContext("assignation", assignation, "url", url))
+            this.templateEngine.process("pre_scout/rejected.html", TemplateUtils.getContext("assignation", assignation, "url", url)),
+            this.emailService.getSettingEmails(SettingEnum.FORM_MAIL)
         );
     }
 

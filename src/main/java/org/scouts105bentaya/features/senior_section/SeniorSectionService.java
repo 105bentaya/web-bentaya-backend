@@ -40,7 +40,7 @@ public class SeniorSectionService {
         try {
             Context context = getContextForEmail(formDto);
             String html = this.template.process("new-senior-form", context);
-            this.emailService.sendSimpleEmailWithHtml(seniorForm.getEmail(), "Sección Sénior - Nuevo Formulario", html);
+            this.emailService.sendSimpleEmailWithHtml("Sección Sénior - Nuevo Formulario", html, seniorForm.getEmail());
         } catch (Exception e) {
             log.error("Error sending email form: {}", e.getMessage());
         }
