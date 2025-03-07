@@ -6,7 +6,7 @@
     Se ha rechazado la preinscripción de <span th:text="${assignation.preScout.surname}">apellido</span>,
     <span th:text="${assignation.preScout.name}">nombre</span>
     (ID <span th:text="${assignation.preScout.id}">id</span>) -
-    <span th:text="${assignation.groupId}">grupo</span>
+    <span th:text="${assignation.group.name}">grupo</span>
     <span th:if="${assignation.comment != null && assignation.comment != ''}">por el siguiente motivo:</span>
   </p>
   <p
