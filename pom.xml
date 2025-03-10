@@ -82,6 +82,13 @@
             <version>10.12.0</version>
         </dependency>
 
+        <!--AZURE STORAGE BLOB-->
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-storage-blob</artifactId>
+            <version>12.29.1</version>
+        </dependency>
+
 
         <!--JWT token dependencies-->
         <dependency>

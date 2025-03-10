@@ -2,9 +2,11 @@
 
 El desarrollo se ha hecho usando IntelliJ Ultimate, se recomienda su uso.
 
-## Instalación de la base de datos
+## Instalación de la base de datos y azurite
 
 1. Únicamente hay que ejecutar el archivo `web-bentaya-backend/docker-compose.yml` (es necesario tener Docker instalado)
+   - Se crearán dos instancias, una para la base de datos (mysql) y otra para guardar los archivos como pdfs o
+     imágenes (azurite). Las configuraciones por defecto ya están en las application-local.properties
 
 ## Instalación de librerías
 
@@ -54,3 +56,4 @@ También tendrás que especificar en 'Active profiles' local-mysql.
     * JWT_SECRET (string del JWT)
     * JWT_CALENDAR_SECRET (string del JWT del calendario)
     * BENTAYA_WEB_URL (url de la web)
+   * AZURE_BLOB_CONNECTION_STRING (connection string de la cuenta de Azure Connections para guardar archivos)
