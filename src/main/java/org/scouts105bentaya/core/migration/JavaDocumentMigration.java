@@ -28,7 +28,7 @@ public class JavaDocumentMigration implements InitializingBean {
     public void afterPropertiesSet() {
         log.info("Initializing JavaDocumentMigration");
         bookingDocumentRepository.findAll().stream()
-            .filter(document -> document.getFileName() == null && document.getFileData() != null)
+            .filter(document -> document.getFileUuid() == null && document.getFileData() != null)
             .forEach(document -> {
                 log.info("Migrating document {}", document.getId());
                 String fileUuid = UUID.randomUUID().toString();
@@ -42,7 +42,7 @@ public class JavaDocumentMigration implements InitializingBean {
 
                 document.setFileUuid(fileUuid);
                 bookingDocumentRepository.save(document);
-                log.info("Document {} migrated as {}", document.getId(), document.getFileName());
+                log.info("Document {} migrated as {}", document.getId(), document.getFileUuid());
             });
         log.info("JavaDocumentMigration completed");
     }
