@@ -17,6 +17,7 @@ public class AzureBlobConfiguration {
 
     @Bean
     public BlobServiceClient serviceConnection() {
+        log.info("METHOD AzureBlobConfiguration.serviceConnection {}",connectionString);
         return new BlobServiceClientBuilder()
             .connectionString(connectionString)
             .buildClient();
