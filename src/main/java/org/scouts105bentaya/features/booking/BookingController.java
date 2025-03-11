@@ -126,8 +126,8 @@ public class BookingController {
     //TODO: que el usuario solo pueda subirlo si no ha confirmado los documentos, pero que no colisione con el documento
     // del estado LEFT
     @PreAuthorize("hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userOwnsBooking(#bookingId)")
-    @PostMapping(value = "/document/{bookingId}")
-    public void uploadBookingDocument(@PathVariable Integer bookingId, @RequestBody MultipartFile file) {
+    @PostMapping(value = "/document/{bookingId}", consumes = "multipart/form-data")
+    public void uploadBookingDocument(@PathVariable Integer bookingId, @RequestParam("file") MultipartFile file) {
         log.info("METHOD BookingController.uploadBookingDocument --- PARAMS bookingId: {}{}", bookingId, SecurityUtils.getLoggedUserUsernameForLog());
         bookingService.saveBookingDocument(bookingId, file);
     }
