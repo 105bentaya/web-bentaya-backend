@@ -23,8 +23,7 @@ public class BookingDocument {
     private Integer id;
     @ManyToOne
     private Booking booking;
-    @Column(columnDefinition = "MEDIUMBLOB")
-    private byte[] fileData;
+    @Column(nullable = false)
     private String fileUuid;
     private String fileName;
     @Enumerated(EnumType.STRING)

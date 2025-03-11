@@ -46,6 +46,10 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
                 ErrorResponseHandler.authErrorHandler(response, EXCEPTION_MESSAGE);
                 response.getWriter().flush();
             }
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().flush();
+            logger.error(e);
         }
     }
 

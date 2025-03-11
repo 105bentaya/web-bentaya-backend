@@ -11,7 +11,7 @@
   </p>
   <p th:if="${uploadedDocument}">
     El usuario ha subido el registro de estados, que podrá ver en el apartado de documentos de la
-    <a th:href="'https://105bentaya.org/centros-scout/gestion/'${id}">reserva</a>.
+    <a th:href="'https://105bentaya.org/centros-scout/gestion/' + ${id}">reserva</a>.
   </p>
   <p th:unless="${uploadedDocument}">
     El usuario no ha subido el registro de estados.
