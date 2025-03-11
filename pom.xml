@@ -10,7 +10,7 @@
     </parent>
     <groupId>org.105bentaya</groupId>
     <artifactId>web-bentaya-backend</artifactId>
-    <version>2.0.1</version>
+    <version>2.1.0</version>
     <name>web-bentaya-backend</name>
     <description>Página Web del Grupo Scout 105 Bentaya</description>
     <properties>
@@ -80,6 +80,13 @@
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-mysql</artifactId>
             <version>10.12.0</version>
+        </dependency>
+
+        <!--AZURE STORAGE BLOB-->
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-storage-blob</artifactId>
+            <version>12.29.1</version>
         </dependency>
 
 
