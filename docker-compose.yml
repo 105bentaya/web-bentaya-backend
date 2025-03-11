@@ -14,9 +14,3 @@ services:
       # Opens port 3306 on the container
       - '3306'
     restart: 'no'
-  azurite:
-    image: mcr.microsoft.com/azure-storage/azurite:3.34.0
-    ports:
-      - '10000:10000'
-    command: azurite-blob --blobHost 0.0.0.0 --blobPort 10000
-    restart: 'no'

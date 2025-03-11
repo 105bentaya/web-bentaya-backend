@@ -25,7 +25,6 @@ public class BookingDocument {
     private Booking booking;
     @Column(columnDefinition = "MEDIUMBLOB")
     private byte[] fileData;
-    private String fileUuid;
     private String fileName;
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "varchar")
