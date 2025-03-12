@@ -56,4 +56,5 @@ También tendrás que especificar en 'Active profiles' local-mysql.
     * JWT_SECRET (string del JWT)
     * JWT_CALENDAR_SECRET (string del JWT del calendario)
     * BENTAYA_WEB_URL (url de la web)
-   * AZURE_BLOB_CONNECTION_STRING (connection string de la cuenta de Azure Connections para guardar archivos)
+    * AZURE_BLOB_CONNECTION_STRING (connection string de la cuenta de Azure Connections para guardar archivos)
+    * BACKEND_URL (dirección del backend, para la respuesta del TPV)
