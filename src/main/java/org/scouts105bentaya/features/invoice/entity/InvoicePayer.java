@@ -3,6 +3,7 @@ package org.scouts105bentaya.features.invoice.entity;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -25,6 +26,7 @@ public class InvoicePayer {
     private String payer;
 
     @JsonSerialize(using = GroupSerializer.class)
+    @JsonDeserialize(using = GroupDeserializer.class)
     @ManyToOne
     private Group group;
 
