@@ -18,10 +18,13 @@ import org.scouts105bentaya.features.booking.enums.BookingDocumentStatus;
 import org.scouts105bentaya.features.booking.enums.BookingStatus;
 import org.scouts105bentaya.features.booking.repository.BookingDocumentRepository;
 import org.scouts105bentaya.features.booking.repository.BookingRepository;
+import org.scouts105bentaya.features.booking.specification.BookingSpecification;
+import org.scouts105bentaya.features.booking.specification.BookingSpecificationFilter;
 import org.scouts105bentaya.features.booking.util.BookingIntervalHelper;
 import org.scouts105bentaya.features.booking.util.IntervalUtils;
 import org.scouts105bentaya.shared.service.AuthService;
 import org.scouts105bentaya.shared.service.BlobService;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -60,8 +63,8 @@ public class BookingService {
         this.blobService = blobService;
     }
 
-    public List<Booking> findAll() {
-        return bookingRepository.findAll();
+    public Page<Booking> findAll(BookingSpecificationFilter filter) {
+        return bookingRepository.findAll(new BookingSpecification(filter), filter.getPageable());
     }
 
     public List<Booking> findAllByCurrentUser() {

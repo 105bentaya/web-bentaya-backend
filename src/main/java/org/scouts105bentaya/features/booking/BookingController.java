@@ -14,6 +14,8 @@ import org.scouts105bentaya.features.booking.dto.OwnBookingFormDto;
 import org.scouts105bentaya.features.booking.dto.SimpleBookingDto;
 import org.scouts105bentaya.features.booking.enums.BookingDocumentStatus;
 import org.scouts105bentaya.features.booking.service.BookingService;
+import org.scouts105bentaya.features.booking.specification.BookingSpecificationFilter;
+import org.scouts105bentaya.shared.specification.PageDto;
 import org.scouts105bentaya.shared.util.SecurityUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -53,9 +55,9 @@ public class BookingController {
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
     @GetMapping
-    public List<BookingDto> getAll() {
-        log.info("METHOD BookingController.getAll{}", SecurityUtils.getLoggedUserUsernameForLog());
-        return bookingConverter.convertEntityCollectionToDtoList(bookingService.findAll());
+    public PageDto<BookingDto> getAll(BookingSpecificationFilter filterDto) {
+        log.info("METHOD BookingController.getAll --- {}{}", filterDto, SecurityUtils.getLoggedUserUsernameForLog());
+        return bookingConverter.convertEntityPageToPageDto(bookingService.findAll(filterDto));
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")

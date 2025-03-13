@@ -17,7 +17,7 @@ public class SpecificationFilter {
     private int countPerPage;
 
     public Pageable getPageable() {
-        return page < 0 ? Pageable.unpaged(getSort()) : PageRequest.of(page, countPerPage, getSort());
+        return page < 0 || countPerPage < 1 ? Pageable.unpaged(getSort()) : PageRequest.of(page, countPerPage, getSort());
     }
 
     private Sort getSort() {
