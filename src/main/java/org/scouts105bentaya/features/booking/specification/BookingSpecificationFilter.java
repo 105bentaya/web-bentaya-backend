@@ -18,4 +18,5 @@ public class BookingSpecificationFilter extends SpecificationFilter {
     private String organizationName;
     private String cif;
     private String[] filterDates;
+    private String endDate;
 }

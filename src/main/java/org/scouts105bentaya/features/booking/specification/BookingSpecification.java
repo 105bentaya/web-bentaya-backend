@@ -25,6 +25,7 @@ public class BookingSpecification implements Specification<Booking> {
         predicates.inList(root.get("status"), filter.getStatuses());
         predicates.like(root.get("organizationName"), filter.getOrganizationName());
         predicates.like(root.get("cif"), filter.getCif());
+        predicates.localDateTimeIsAfterDate(root.get("endDate"), filter.getEndDate());
         predicates.localDateTimeRangeIntersectsFilterDateRange(root.get("startDate"), root.get("endDate"), filter.getFilterDates());
 
         return predicates.getPredicatesAnd();

@@ -5,12 +5,15 @@ import org.joda.time.Interval;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.booking.ScoutCenter;
+import org.scouts105bentaya.features.booking.converter.BookingConverter;
 import org.scouts105bentaya.features.booking.converter.BookingFormConverter;
 import org.scouts105bentaya.features.booking.dto.BookingDateDto;
 import org.scouts105bentaya.features.booking.dto.BookingDateFormDto;
+import org.scouts105bentaya.features.booking.dto.BookingDto;
 import org.scouts105bentaya.features.booking.dto.BookingFormDto;
 import org.scouts105bentaya.features.booking.dto.BookingStatusUpdateDto;
 import org.scouts105bentaya.features.booking.dto.OwnBookingFormDto;
+import org.scouts105bentaya.features.booking.dto.PendingBookingsDto;
 import org.scouts105bentaya.features.booking.dto.SimpleBookingDto;
 import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.booking.entity.BookingDocument;
@@ -46,6 +49,7 @@ public class BookingService {
     private final BookingStatusService bookingStatusService;
     private final AuthService authService;
     private final BlobService blobService;
+    private final BookingConverter bookingConverter;
 
     public BookingService(
         BookingFormConverter bookingFormConverter,
@@ -53,14 +57,15 @@ public class BookingService {
         BookingStatusService bookingStatusService,
         BookingDocumentRepository bookingDocumentRepository,
         AuthService authService,
-        BlobService blobService
-    ) {
+        BlobService blobService,
+        BookingConverter bookingConverter) {
         this.bookingFormConverter = bookingFormConverter;
         this.bookingRepository = bookingRepository;
         this.bookingStatusService = bookingStatusService;
         this.bookingDocumentRepository = bookingDocumentRepository;
         this.authService = authService;
         this.blobService = blobService;
+        this.bookingConverter = bookingConverter;
     }
 
     public Page<Booking> findAll(BookingSpecificationFilter filter) {
@@ -294,5 +299,31 @@ public class BookingService {
             .headers(headers)
             .contentType(MediaType.APPLICATION_PDF)
             .body(blobService.getBlob(bookingDocument.getFileUuid()));
+    }
+
+    public PendingBookingsDto findAllPending(BookingSpecificationFilter filter) {
+        filter.setSortedBy("creationDate");
+
+        filter.setStatuses(List.of(BookingStatus.NEW));
+        List<BookingDto> newBookings = getBookingDtoList(filter);
+
+        filter.setSortedBy("startDate");
+        filter.setStatuses(List.of(BookingStatus.RESERVED));
+        List<BookingDto> acceptedBookings = getBookingDtoList(filter);
+
+        filter.setStatuses(List.of(BookingStatus.OCCUPIED, BookingStatus.FULLY_OCCUPIED));
+        filter.setEndDate(LocalDateTime.now().toString());
+        List<BookingDto> confirmedBookings = getBookingDtoList(filter);
+
+        filter.setStatuses(List.of(BookingStatus.OCCUPIED, BookingStatus.FULLY_OCCUPIED, BookingStatus.FINISHED, BookingStatus.LEFT));
+        filter.setEndDate(null);
+        filter.setFilterDates(new String[]{LocalDateTime.now().minusDays(3).toString(), LocalDateTime.now().toString()});
+        List<BookingDto> finishedBookings = getBookingDtoList(filter);
+
+        return new PendingBookingsDto(newBookings, acceptedBookings, confirmedBookings, finishedBookings);
+    }
+
+    private List<BookingDto> getBookingDtoList(BookingSpecificationFilter filter) {
+        return bookingConverter.convertEntityCollectionToDtoList(bookingRepository.findAll(new BookingSpecification(filter)));
     }
 }

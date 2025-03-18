@@ -37,6 +37,12 @@ public class SpecificationPredicateHelper {
         }
     }
 
+    public void localDateTimeIsAfterDate(Expression<LocalDateTime> root, String date) {
+        if (date != null) {
+            predicates.add(cb.greaterThanOrEqualTo(root, LocalDateTime.parse(date)));
+        }
+    }
+
     public void localDateTimeBetweenFilterRange(Expression<LocalDateTime> root, String filterStartDate, String filterEndDate) {
         if (filterStartDate != null && filterEndDate != null) {
             dateBetweenFilterRange(root, LocalDateTime.parse(filterStartDate), LocalDateTime.parse(filterEndDate));

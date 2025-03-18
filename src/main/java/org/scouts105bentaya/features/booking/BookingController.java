@@ -11,6 +11,7 @@ import org.scouts105bentaya.features.booking.dto.BookingDto;
 import org.scouts105bentaya.features.booking.dto.BookingFormDto;
 import org.scouts105bentaya.features.booking.dto.BookingStatusUpdateDto;
 import org.scouts105bentaya.features.booking.dto.OwnBookingFormDto;
+import org.scouts105bentaya.features.booking.dto.PendingBookingsDto;
 import org.scouts105bentaya.features.booking.dto.SimpleBookingDto;
 import org.scouts105bentaya.features.booking.enums.BookingDocumentStatus;
 import org.scouts105bentaya.features.booking.service.BookingService;
@@ -58,6 +59,13 @@ public class BookingController {
     public PageDto<BookingDto> getAll(BookingSpecificationFilter filterDto) {
         log.info("METHOD BookingController.getAll --- {}{}", filterDto, SecurityUtils.getLoggedUserUsernameForLog());
         return bookingConverter.convertEntityPageToPageDto(bookingService.findAll(filterDto));
+    }
+
+    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
+    @GetMapping("/pending")
+    public PendingBookingsDto getAllPending(BookingSpecificationFilter filterDto) {
+        log.info("METHOD BookingController.getAllPending --- {}{}", filterDto, SecurityUtils.getLoggedUserUsernameForLog());
+        return bookingService.findAllPending(filterDto);
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
