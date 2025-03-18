@@ -165,9 +165,9 @@ public class BookingService {
         );
     }
 
-    public List<BookingDateDto> getBookingDates(ScoutCenter scoutCenter) {
+    public List<BookingDateDto> getBookingDates(BookingSpecificationFilter filter) {
         return this.bookingRepository
-            .findBookingByScoutCenter(scoutCenter).stream()
+            .findAll(new BookingSpecification(filter)).stream()
             .map(booking -> new BookingDateDto(
                 booking.getStartDate(),
                 booking.getEndDate(),

@@ -89,10 +89,10 @@ public class BookingController {
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
-    @GetMapping("/dates/{center}")
-    public List<BookingDateDto> getBookingForCalendar(@PathVariable ScoutCenter center) {
+    @GetMapping("/dates")
+    public List<BookingDateDto> getBookingForCalendar(BookingSpecificationFilter filterDto) {
         log.info("METHOD BookingController.getBookingForCalendar{}", SecurityUtils.getLoggedUserUsernameForLog());
-        return bookingService.getBookingDates(center);
+        return bookingService.getBookingDates(filterDto);
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
