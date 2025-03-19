@@ -2,6 +2,7 @@ package org.scouts105bentaya.features.booking.converter;
 
 import org.scouts105bentaya.features.booking.dto.BookingFormDto;
 import org.scouts105bentaya.features.booking.entity.Booking;
+import org.scouts105bentaya.features.booking.repository.ScoutCenterRepository;
 import org.scouts105bentaya.shared.GenericConstants;
 import org.scouts105bentaya.shared.GenericConverter;
 import org.springframework.stereotype.Component;
@@ -10,6 +11,13 @@ import static java.time.temporal.ChronoUnit.MINUTES;
 
 @Component
 public class BookingFormConverter extends GenericConverter<Booking, BookingFormDto> {
+    private final ScoutCenterRepository scoutCenterRepository;
+
+    public BookingFormConverter(ScoutCenterRepository scoutCenterRepository) {
+        super();
+        this.scoutCenterRepository = scoutCenterRepository;
+    }
+
     @Override
     public Booking convertFromDto(BookingFormDto dto) {
         Booking entity = new Booking();
@@ -21,7 +29,7 @@ public class BookingFormConverter extends GenericConverter<Booking, BookingFormD
         entity.setContactMail(dto.email());
         entity.setContactPhone(dto.phone());
         entity.setPacks(dto.packs());
-        entity.setScoutCenter(dto.scoutCenter());
+        entity.setScoutCenter(scoutCenterRepository.get(dto.scoutCenterId()));
         entity.setStartDate(dto.startDate().truncatedTo(MINUTES));
         entity.setEndDate(dto.endDate().truncatedTo(MINUTES));
         entity.setObservations(dto.observations());

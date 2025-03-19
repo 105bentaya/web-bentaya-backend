@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.joda.time.Interval;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
-import org.scouts105bentaya.features.booking.ScoutCenter;
 import org.scouts105bentaya.features.booking.converter.BookingConverter;
 import org.scouts105bentaya.features.booking.converter.BookingFormConverter;
 import org.scouts105bentaya.features.booking.dto.BookingDateDto;
@@ -21,6 +20,7 @@ import org.scouts105bentaya.features.booking.enums.BookingDocumentStatus;
 import org.scouts105bentaya.features.booking.enums.BookingStatus;
 import org.scouts105bentaya.features.booking.repository.BookingDocumentRepository;
 import org.scouts105bentaya.features.booking.repository.BookingRepository;
+import org.scouts105bentaya.features.booking.repository.ScoutCenterRepository;
 import org.scouts105bentaya.features.booking.specification.BookingSpecification;
 import org.scouts105bentaya.features.booking.specification.BookingSpecificationFilter;
 import org.scouts105bentaya.features.booking.util.BookingIntervalHelper;
@@ -50,6 +50,7 @@ public class BookingService {
     private final AuthService authService;
     private final BlobService blobService;
     private final BookingConverter bookingConverter;
+    private final ScoutCenterRepository scoutCenterRepository;
 
     public BookingService(
         BookingFormConverter bookingFormConverter,
@@ -58,7 +59,7 @@ public class BookingService {
         BookingDocumentRepository bookingDocumentRepository,
         AuthService authService,
         BlobService blobService,
-        BookingConverter bookingConverter) {
+        BookingConverter bookingConverter, ScoutCenterRepository scoutCenterRepository) {
         this.bookingFormConverter = bookingFormConverter;
         this.bookingRepository = bookingRepository;
         this.bookingStatusService = bookingStatusService;
@@ -66,6 +67,7 @@ public class BookingService {
         this.authService = authService;
         this.blobService = blobService;
         this.bookingConverter = bookingConverter;
+        this.scoutCenterRepository = scoutCenterRepository;
     }
 
     public Page<Booking> findAll(BookingSpecificationFilter filter) {
@@ -155,9 +157,9 @@ public class BookingService {
         throw new WebBentayaBadRequestException("No se puede actualizar la reserva al estado solicitado");
     }
 
-    public List<SimpleBookingDto> getReservationDates(ScoutCenter scoutCenter) {
+    public List<SimpleBookingDto> getReservationDates(Integer scoutCenterId) {
         return this.bookingRepository
-            .findBookingByScoutCenterAndEndDateIsAfter(scoutCenter, LocalDateTime.now()/*.plusDays(7)*/)
+            .findBookingByScoutCenterIdAndEndDateIsAfter(scoutCenterId, LocalDateTime.now()/*.plusDays(7)*/)
             .stream().filter(booking -> booking.getStatus().shouldShowInInformationCalendar())
             .map(this::createReservationDate).toList();
     }
@@ -198,7 +200,7 @@ public class BookingService {
     private void saveOwnBooking(OwnBookingFormDto dto, Booking booking) {
         booking.setStartDate(dto.startDate());
         booking.setEndDate(dto.endDate());
-        booking.setScoutCenter(dto.scoutCenter());
+        booking.setScoutCenter(scoutCenterRepository.get(dto.scoutCenterId()));
         booking.setPacks(dto.packs());
         booking.setObservations(dto.observations());
         booking.setExclusiveReservation(dto.exclusiveReservation());
@@ -238,8 +240,8 @@ public class BookingService {
             log.warn("validateBookingDates - booking end date is not after start date");
             throw new WebBentayaBadRequestException("La fecha de salida no puede ser posterior a la de entrada.");
         }
-        List<Booking> sameCenterBookings = this.bookingRepository.findBookingByScoutCenterAndEndDateIsAfterAndStartDateIsBefore(
-            booking.getScoutCenter(), booking.getStartDate().minusMinutes(1), booking.getEndDate().plusMinutes(1)
+        List<Booking> sameCenterBookings = this.bookingRepository.findBookingByScoutCenterIdAndEndDateIsAfterAndStartDateIsBefore(
+            booking.getScoutCenter().getId(), booking.getStartDate().minusMinutes(1), booking.getEndDate().plusMinutes(1)
         );
         Interval mainInterval = IntervalUtils.intervalFromBooking(booking);
         BookingIntervalHelper helper = new BookingIntervalHelper(sameCenterBookings, mainInterval);
@@ -250,8 +252,8 @@ public class BookingService {
     }
 
     public List<SimpleBookingDto> getBookingDatesForm(BookingDateFormDto dto) {
-        List<Booking> sameCenterBookings = this.bookingRepository.findBookingByScoutCenterAndEndDateIsAfterAndStartDateIsBefore(
-            dto.scoutCenter(), dto.startDate().minusMinutes(1), dto.endDate().plusMinutes(1)
+        List<Booking> sameCenterBookings = this.bookingRepository.findBookingByScoutCenterIdAndEndDateIsAfterAndStartDateIsBefore(
+            dto.scoutCenterId(), dto.startDate().minusMinutes(1), dto.endDate().plusMinutes(1)
         );
         Interval mainInterval = IntervalUtils.intervalFromBooking(dto);
         BookingIntervalHelper helper = new BookingIntervalHelper(sameCenterBookings, mainInterval);

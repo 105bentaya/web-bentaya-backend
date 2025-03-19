@@ -23,6 +23,8 @@ public class ScoutCenter {
     @Column(nullable = false)
     private String name;
     @Column(nullable = false)
+    private String place;
+    @Column(nullable = false)
     private int maxCapacity;
     @Column(nullable = false)
     private int minExclusiveCapacity;

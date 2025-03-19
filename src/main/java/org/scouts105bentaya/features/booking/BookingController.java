@@ -174,9 +174,9 @@ public class BookingController {
 
     //PUBLIC
 
-    @GetMapping("/public/{center}")
-    public List<SimpleBookingDto> getBasicBookingStatusesByCenter(@PathVariable ScoutCenter center) {
-        return bookingService.getReservationDates(center);
+    @GetMapping("/public/{centerId}")
+    public List<SimpleBookingDto> getBasicBookingStatusesByCenter(@PathVariable Integer centerId) {
+        return bookingService.getReservationDates(centerId);
     }
 
     @PostMapping("/public/check-booking")

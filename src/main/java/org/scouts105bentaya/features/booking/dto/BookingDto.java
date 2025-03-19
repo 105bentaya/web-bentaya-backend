@@ -5,7 +5,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import org.hibernate.validator.constraints.Length;
-import org.scouts105bentaya.features.booking.ScoutCenter;
 import org.scouts105bentaya.features.booking.enums.BookingStatus;
 
 import java.time.LocalDateTime;
@@ -14,7 +13,7 @@ import java.time.ZonedDateTime;
 public record BookingDto(
     Integer id,
     @NotNull BookingStatus status,
-    @NotNull ScoutCenter scoutCenter,
+    @NotNull BasicScoutCenterDto scoutCenter,
     @Length(max = 255) @NotBlank String organizationName,
     @Length(max = 255) @NotBlank String cif,
     @Length(max = 511) @NotBlank String facilityUse,

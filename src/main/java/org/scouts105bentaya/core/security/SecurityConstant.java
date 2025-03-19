@@ -18,7 +18,8 @@ final class SecurityConstant {
         "/api/donation/public/**",
         "/api/booking/public/**",
         "/api/senior/form",
-        "/api/event/public/**"
+        "/api/event/public/**",
+        "/api/scout-center/public/**",
     };
 
     static final String API_URL = "/api/**";

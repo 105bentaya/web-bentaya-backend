@@ -1,19 +1,28 @@
 package org.scouts105bentaya.features.booking.converter;
 
+import org.scouts105bentaya.features.booking.dto.BasicScoutCenterDto;
 import org.scouts105bentaya.features.booking.dto.BookingDto;
 import org.scouts105bentaya.features.booking.entity.Booking;
+import org.scouts105bentaya.features.booking.repository.ScoutCenterRepository;
 import org.scouts105bentaya.shared.GenericConverter;
 import org.springframework.stereotype.Component;
 
 @Component
 public class BookingConverter extends GenericConverter<Booking, BookingDto> {
 
+    private final ScoutCenterRepository scoutCenterRepository;
+
+    public BookingConverter(ScoutCenterRepository scoutCenterRepository) {
+        super();
+        this.scoutCenterRepository = scoutCenterRepository;
+    }
+
     @Override
     public Booking convertFromDto(BookingDto dto) {
         Booking entity = new Booking();
         entity.setId(dto.id());
         entity.setStatus(dto.status());
-        entity.setScoutCenter(dto.scoutCenter());
+        entity.setScoutCenter(scoutCenterRepository.get(dto.id()));
         entity.setOrganizationName(dto.organizationName());
         entity.setCif(dto.cif());
         entity.setFacilityUse(dto.facilityUse());
@@ -39,7 +48,7 @@ public class BookingConverter extends GenericConverter<Booking, BookingDto> {
         return new BookingDto(
             entity.getId(),
             entity.getStatus(),
-            entity.getScoutCenter(),
+            BasicScoutCenterDto.of(entity.getScoutCenter()),
             entity.getOrganizationName(),
             entity.getCif(),
             entity.getFacilityUse(),

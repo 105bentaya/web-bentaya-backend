@@ -4,18 +4,18 @@ import jakarta.activation.DataSource;
 import jakarta.mail.util.ByteArrayDataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.features.booking.entity.Booking;
+import org.scouts105bentaya.features.booking.entity.ScoutCenterFile;
 import org.scouts105bentaya.features.booking.enums.BookingStatus;
 import org.scouts105bentaya.features.booking.repository.BookingRepository;
 import org.scouts105bentaya.features.setting.enums.SettingEnum;
 import org.scouts105bentaya.features.user.UserService;
+import org.scouts105bentaya.shared.service.BlobService;
 import org.scouts105bentaya.shared.service.EmailService;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
-import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
@@ -27,18 +27,20 @@ public class BookingStatusService {
     private final TemplateEngine htmlTemplateEngine;
     private final EmailService emailService;
     private final UserService userService;
+    private final BlobService blobService;
     @Value("${bentaya.web.url}") private String url;
 
     public BookingStatusService(
         BookingRepository bookingRepository,
         TemplateEngine htmlTemplateEngine,
         EmailService emailService,
-        UserService userService
-    ) {
+        UserService userService,
+        BlobService blobService) {
         this.bookingRepository = bookingRepository;
         this.htmlTemplateEngine = htmlTemplateEngine;
         this.emailService = emailService;
         this.userService = userService;
+        this.blobService = blobService;
     }
 
     public void saveFromForm(Booking booking) {
@@ -173,11 +175,11 @@ public class BookingStatusService {
             "Reserva de Centros Scout Nº %d Confirmada",
             booking.getId()
         );
-        try {
-            DataSource dataSource = this.generatePdfDataSource(booking.getScoutCenter().getPdfName());
+        if (booking.getScoutCenter().getRulePdf() != null) {
+            DataSource dataSource = this.getRulePdf(booking.getScoutCenter().getRulePdf());
             this.emailService.sendSimpleEmailWithHtmlAndAttachment(subject, infoHtmlContent, dataSource, userMail);
-        } catch (IOException e) {
-            log.error("Error trying to fetch pdf: {}", e.getMessage());
+        } else {
+            log.warn("Could not find rule pdf for scout center {}", booking.getScoutCenter().getId());
             this.emailService.sendSimpleEmailWithHtml(subject, infoHtmlContent, userMail);
         }
     }
@@ -236,11 +238,11 @@ public class BookingStatusService {
         context.setVariable("price", booking.getPrice());
 
         final String infoHtmlContent = this.htmlTemplateEngine.process("booking-reservation-accepted.html", context);
-        try {
-            DataSource dataSource = this.generatePdfDataSource(booking.getScoutCenter().getPdfName());
+        if (booking.getScoutCenter().getRulePdf() != null) {
+            DataSource dataSource = this.getRulePdf(booking.getScoutCenter().getRulePdf());
             this.emailService.sendSimpleEmailWithHtmlAndAttachment("Reserva de Centro Scout Aceptada", infoHtmlContent, dataSource, userMail);
-        } catch (IOException e) {
-            log.error("Error trying to fetch pdf: {}", e.getMessage());
+        } else {
+            log.warn("Could not find rule pdf for scout center {}", booking.getScoutCenter().getId());
             this.emailService.sendSimpleEmailWithHtml("Reserva de Centro Scout Aceptada", infoHtmlContent, userMail);
         }
     }
@@ -290,10 +292,10 @@ public class BookingStatusService {
         this.emailService.sendSimpleEmailWithHtml("Centro Scout - Nueva Reserva", userHtmlContent, booking.getContactMail());
     }
 
-    private DataSource generatePdfDataSource(String pdfName) throws IOException {
-        byte[] bytes = new ClassPathResource("documents/" + pdfName).getContentAsByteArray();
-        ByteArrayDataSource dataSource = new ByteArrayDataSource(bytes, "application/pdf");
-        dataSource.setName(pdfName);
+    private DataSource getRulePdf(ScoutCenterFile file) {
+        byte[] bytes = blobService.getBlob(file.getUuid());
+        ByteArrayDataSource dataSource = new ByteArrayDataSource(bytes, file.getMimeType());
+        dataSource.setName(file.getName());
         return dataSource;
     }
 

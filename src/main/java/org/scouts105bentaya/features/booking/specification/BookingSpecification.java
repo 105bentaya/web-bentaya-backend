@@ -21,7 +21,7 @@ public class BookingSpecification implements Specification<Booking> {
     public Predicate toPredicate(Root<Booking> root, CriteriaQuery<?> query, @NonNull CriteriaBuilder criteriaBuilder) {
         SpecificationPredicateHelper predicates = new SpecificationPredicateHelper(criteriaBuilder);
 
-        predicates.inList(root.get("scoutCenter"), filter.getScoutCenters());
+        predicates.inList(root.get("scoutCenter").get("id"), filter.getScoutCenters());
         predicates.inList(root.get("status"), filter.getStatuses());
         predicates.like(root.get("organizationName"), filter.getOrganizationName());
         predicates.like(root.get("cif"), filter.getCif());
