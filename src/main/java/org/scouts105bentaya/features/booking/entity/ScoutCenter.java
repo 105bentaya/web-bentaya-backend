@@ -1,13 +1,14 @@
 package org.scouts105bentaya.features.booking.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -28,13 +29,15 @@ public class ScoutCenter {
     private int maxCapacity;
     @Column(nullable = false)
     private int minExclusiveCapacity;
-    @ManyToOne
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     private ScoutCenterFile rulePdf;
-    @ManyToOne
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     private ScoutCenterFile incidencesDoc;
-    @ManyToOne
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     private ScoutCenterFile attendanceDoc;
-    @ManyToMany
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    private ScoutCenterFile mainPhoto;
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ScoutCenterFile> photos;
     @Column(nullable = false)
     private String information;
@@ -43,4 +46,6 @@ public class ScoutCenter {
     private List<String> features;
     @Column(nullable = false)
     private int price;
+    @Column(nullable = false)
+    private String icon;
 }

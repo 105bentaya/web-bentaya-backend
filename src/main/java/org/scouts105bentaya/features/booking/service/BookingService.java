@@ -270,7 +270,7 @@ public class BookingService {
         document.setBooking(booking);
         document.setFileName(file.getOriginalFilename());
         document.setStatus(BookingDocumentStatus.PENDING);
-        document.setFileUuid(blobService.uploadBlob(file));
+        document.setFileUuid(blobService.createBlob(file));
         bookingDocumentRepository.save(document);
     }
 

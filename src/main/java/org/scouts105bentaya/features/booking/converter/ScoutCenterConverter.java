@@ -24,7 +24,8 @@ public class ScoutCenterConverter extends GenericConverter<ScoutCenter, ScoutCen
             entity.getMinExclusiveCapacity(),
             entity.getInformation(),
             entity.getFeatures(),
-            entity.getPrice()
+            entity.getPrice(),
+            entity.getIcon()
         );
     }
 }

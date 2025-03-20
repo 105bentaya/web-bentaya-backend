@@ -10,6 +10,7 @@ public record ScoutCenterDto(
     int minExclusiveCapacity,
     String information,
     List<String> features,
-    int price
+    int price,
+    String icon
 ) {
 }

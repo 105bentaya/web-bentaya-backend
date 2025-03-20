@@ -17,12 +17,15 @@ CREATE TABLE scout_center
     rule_pdf_id            INT                NULL,
     incidences_doc_id      INT                NULL,
     attendance_doc_id      INT                NULL,
+    main_photo_id          INT                NULL,
     information            VARCHAR(1023)      NOT NULL,
     price                  INT                NOT NULL,
+    icon                   VARCHAR(63)        NOT NULL,
     CONSTRAINT pk_scoutcenter PRIMARY KEY (id),
     CONSTRAINT FK_SCOUTCENTER_ON_ATTENDANCEDOC FOREIGN KEY (attendance_doc_id) REFERENCES scout_center_file (id),
     CONSTRAINT FK_SCOUTCENTER_ON_INCIDENCESDOC FOREIGN KEY (incidences_doc_id) REFERENCES scout_center_file (id),
-    CONSTRAINT FK_SCOUTCENTER_ON_RULEPDF FOREIGN KEY (rule_pdf_id) REFERENCES scout_center_file (id)
+    CONSTRAINT FK_SCOUTCENTER_ON_RULEPDF FOREIGN KEY (rule_pdf_id) REFERENCES scout_center_file (id),
+    CONSTRAINT FK_SCOUTCENTER_ON_MAINPHOTO FOREIGN KEY (main_photo_id) REFERENCES scout_center_file (id)
 );
 
 CREATE TABLE scout_center_features
@@ -37,22 +40,23 @@ CREATE TABLE scout_center_photos
     scout_center_id INT NOT NULL,
     photos_id       INT NOT NULL,
     CONSTRAINT fk_scocenpho_on_scout_center FOREIGN KEY (scout_center_id) REFERENCES scout_center (id),
-    CONSTRAINT fk_scocenpho_on_scout_center_file FOREIGN KEY (photos_id) REFERENCES scout_center_file (id)
+    CONSTRAINT fk_scocenpho_on_scout_center_file FOREIGN KEY (photos_id) REFERENCES scout_center_file (id),
+    CONSTRAINT uc_scout_center_photos_photos UNIQUE (photos_id)
 );
 
-INSERT INTO scout_center (id, name, max_capacity, min_exclusive_capacity, information, price, place)
+INSERT INTO scout_center (id, name, max_capacity, min_exclusive_capacity, information, price, place, icon)
 VALUES (1, 'Aula de la Naturaleza El Palmital', 36, 25,
         'El Aula de la Naturaleza El Palmital ubicada en Santa María de Guía y bastante cerca de Moya es un sitio ideal para hacer actividades ambientales. Aunque el sitio no cuenta con zonas específicas de naturaleza, cuenta con unos alrededores magníficos donde hacer rutas y otro tipo de juegos/talleres educativos al aire libre. Este es un espacio cedido por el Ayuntamiento de Santa María de Guía a nuestra Asociación que es quien lo gestiona.',
-        600, 'El Palmital, Guía'),
+        600, 'El Palmital, Guía', 'fa-solid fa-bed'),
        (2, 'Campamento Picacho-Doñana', 390, 30,
         'El Campamento Picacho-Doñana, ubicado en la montaña del picacho es un espacio abierto enorme para poder realizar actividades de campamento. Existen varias parcelas definidas donde poder montar las casetas, llegando a haber como máximo unas 390 personas acampadas a la vez. El campamento está a la altura de los espacios de acampada que podemos encontrar en la isla y está además a unos pocos minutos de Arucas, donde pueden comprar abastecimiento para la actividad que vayan a realizar o acudir a un centro sanitario si fuera necesario.',
-        200, 'Santidad, Arucas'),
+        200, 'Santidad, Arucas', 'fa-solid fa-tree'),
        (3, 'Refugio Luis Martín', 45, 0,
         'El refugio en lo alto del Campamento Picacho-Doñana es uno de los mágicos sitios de los que disponemos, rodeado de vegetación autóctona canaria como es el drago.',
-        200, 'El Picacho, Arucas'),
+        200, 'El Picacho, Arucas', 'fa-solid fa-tent'),
        (4, 'Refugio Bentayga', 45, 0,
         'El Refugio Tejeda se encuentra bajo la sombra del Roque Bentayga. Es una pequeña casita con un cuarto multiespacio que hace de zona de estar y habitación. Se encuentra en mitad del barranco, dando la posibilidad de hacer rutas en subida, sentido Tejeda o en bajada. Además, tiene cerca las Cuevas del Rey, un espacio arqueológico único en la isla.',
-        250, 'La Higuerilla, Tejeda');
+        250, 'La Higuerilla, Tejeda', 'fa-solid fa-house-chimney');
 
 
 INSERT INTO scout_center_features
