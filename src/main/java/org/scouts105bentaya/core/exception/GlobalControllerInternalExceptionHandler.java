@@ -45,7 +45,7 @@ public class GlobalControllerInternalExceptionHandler extends ResponseEntityExce
 
     @ExceptionHandler(WebBentayaBadRequestException.class)
     public ResponseEntity<Map<String, String>> handleBadRequestException(WebBentayaBadRequestException ex) {
-        log.warn(ex.getMessage());
+        log.warn("Bad Request: {}", ex.getMessage());
         return ResponseEntity
             .status(HttpStatus.BAD_REQUEST)
             .body(getExceptionMessage(ex));
@@ -53,7 +53,7 @@ public class GlobalControllerInternalExceptionHandler extends ResponseEntityExce
 
     @ExceptionHandler(WebBentayaConflictException.class)
     public ResponseEntity<Map<String, String>> handleConflictException(WebBentayaConflictException ex) {
-        log.warn(ex.getMessage());
+        log.warn("Conflict: {}", ex.getMessage());
         return ResponseEntity
             .status(HttpStatus.CONFLICT)
             .body(getExceptionMessage(ex));
@@ -61,7 +61,7 @@ public class GlobalControllerInternalExceptionHandler extends ResponseEntityExce
 
     @ExceptionHandler({WebBentayaNotFoundException.class, WebBentayaUserNotFoundException.class, WebBentayaRoleNotFoundException.class})
     public ResponseEntity<Map<String, String>> handleNotFoundException(WebBentayaNotFoundException ex) {
-        log.warn(ex.getMessage());
+        log.warn("Not found: {}", ex.getMessage());
         return ResponseEntity
             .status(HttpStatus.NOT_FOUND)
             .body(getExceptionMessage(ex, "El recurso solicitado no pudo ser encontrado"));

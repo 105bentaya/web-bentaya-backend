@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
+import org.scouts105bentaya.features.booking.dto.ScoutCenterDto;
 import org.scouts105bentaya.features.booking.entity.ScoutCenter;
 import org.scouts105bentaya.features.booking.entity.ScoutCenterFile;
 import org.scouts105bentaya.features.booking.repository.ScoutCenterFileRepository;
@@ -137,5 +138,17 @@ public class ScoutCenterService {
         scoutCenter.getPhotos().remove(file);
         scoutCenterFileRepository.deleteById(photoId);
         publicBlobService.deleteBlob(file.getUuid());
+    }
+
+    public ScoutCenter updateScoutCenter(Integer id, ScoutCenterDto newScoutCenter) {
+        ScoutCenter scoutCenter = scoutCenterRepository.get(id);
+        scoutCenter.setName(newScoutCenter.name())
+            .setPlace(newScoutCenter.place())
+            .setPrice(newScoutCenter.price())
+            .setMaxCapacity(newScoutCenter.maxCapacity())
+            .setMinExclusiveCapacity(newScoutCenter.minExclusiveCapacity())
+            .setInformation(newScoutCenter.information())
+            .setFeatures(newScoutCenter.features());
+        return scoutCenterRepository.save(scoutCenter);
     }
 }

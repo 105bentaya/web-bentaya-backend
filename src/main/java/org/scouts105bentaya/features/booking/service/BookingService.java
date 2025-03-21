@@ -188,7 +188,7 @@ public class BookingService {
         this.saveOwnBooking(dto, new Booking());
     }
 
-    public void updateOwnBooking(OwnBookingFormDto dto, Integer id) {
+    public void updateOwnBooking(OwnBookingFormDto dto, Integer id) {//todo revisar
         Booking booking = this.bookingRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
         if (!booking.isOwnBooking()) {
             log.warn("updateOwnBooking - booking is not own booking");

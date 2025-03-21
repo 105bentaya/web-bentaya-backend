@@ -6,6 +6,6 @@ public class WebBentayaNotFoundException extends RuntimeException {
     }
 
     public WebBentayaNotFoundException() {
-        super();
+        super("Recurso no encontrado");
     }
 }

@@ -94,6 +94,11 @@ public class AuthLogic {
             .anyMatch(booking -> booking.getId().equals(bookingId));
     }
 
+    public boolean userHasAccessToScoutCenter(int scoutCenterId) { //todo change so he only can access bookings that have not finalized, TFG-17
+        return authService.getLoggedUser().getBookingList().stream()
+            .anyMatch(booking -> booking.getScoutCenter().getId().equals(scoutCenterId));
+    }
+
     public boolean userOwnsBookingDocument(int documentId) {
         return authService.getLoggedUser().getBookingList().stream()
             .map(Booking::getBookingDocumentList)

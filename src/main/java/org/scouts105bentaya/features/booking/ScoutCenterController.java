@@ -11,12 +11,14 @@ import org.scouts105bentaya.features.booking.dto.ScoutCenterWithFilesDto;
 import org.scouts105bentaya.features.booking.entity.ScoutCenterFile;
 import org.scouts105bentaya.features.booking.repository.ScoutCenterRepository;
 import org.scouts105bentaya.features.booking.service.ScoutCenterService;
+import org.scouts105bentaya.shared.util.SecurityUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -48,81 +50,96 @@ public class ScoutCenterController {
 
     @GetMapping("/public")
     public List<ScoutCenterDto> getAllScoutCenters() {
+        log.info("getAllScoutCenters");
         return scoutCenterConverter.convertEntityCollectionToDtoList(scoutCenterRepository.findAll());
     }
 
     @GetMapping("/public/info")
     public List<ScoutCenterInformationDto> getAllScoutCentersInfo() {
+        log.info("getAllScoutCentersInfo");
         return scoutCenterRepository.findAll().stream().map(ScoutCenterInformationDto::of).toList();
     }
 
     @GetMapping("/public/photo/{uuid}")
     public ResponseEntity<byte[]> getPublicPhoto(@PathVariable String uuid) {
+        log.info("getPublicPhoto {}", uuid);
         return scoutCenterService.getPhoto(uuid);
     }
 
-    @GetMapping("/public/photos/{centerId}")
-    public List<ScoutCenterFile> getScoutCentersPhotos(@PathVariable int centerId) {
-        return scoutCenterRepository.get(centerId).getPhotos();
-    }
-
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
-    @GetMapping()
+    @GetMapping
     public List<ScoutCenterWithFilesDto> getAllScoutCentersWithFiles() {
+        log.info("getAllScoutCentersWithFiles{}", SecurityUtils.getLoggedUserUsernameForLog());
         return scoutCenterWithFilesConverter.convertEntityCollectionToDtoList(scoutCenterRepository.findAll());
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
+    @PostMapping("/{centerId}")
+    public ScoutCenterDto updateScoutCenter(@PathVariable Integer centerId, @RequestBody ScoutCenterDto scoutCenterDto) {
+        log.info("updateScoutCenter {}{}", centerId, SecurityUtils.getLoggedUserUsernameForLog());
+        return scoutCenterConverter.convertFromEntity(scoutCenterService.updateScoutCenter(centerId, scoutCenterDto));
+    }
+
+    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userHasAccessToScoutCenter(#centerId)")
     @GetMapping("/rules/{centerId}")
     public ResponseEntity<byte[]> getRuleFile(@PathVariable int centerId) {
+        log.info("getRuleFile {}{}", centerId, SecurityUtils.getLoggedUserUsernameForLog());
         return scoutCenterService.getRulePDF(centerId);
     }
 
-    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
+    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userHasAccessToScoutCenter(#centerId)")
     @GetMapping("/incidences/{centerId}")
     public ResponseEntity<byte[]> getIncidenceFile(@PathVariable int centerId) {
+        log.info("getIncidenceFile {}{}", centerId, SecurityUtils.getLoggedUserUsernameForLog());
         return scoutCenterService.getIncidenceFile(centerId);
     }
 
-    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
+    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userHasAccessToScoutCenter(#centerId)")
     @GetMapping("/attendance/{centerId}")
-    public ResponseEntity<byte[]> getAttendanceFile(@PathVariable int centerId) {
+    public ResponseEntity<byte[]> getAttendanceFile(@PathVariable int centerId) { //todo, same file for every booking, tfg 14
+        log.info("getAttendanceFile {}{}", centerId, SecurityUtils.getLoggedUserUsernameForLog());
         return scoutCenterService.getAttendanceFile(centerId);
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
     @PostMapping("/rules/{centerId}")
     public ScoutCenterFile uploadRuleFile(@PathVariable int centerId, @RequestPart("file") @NotNull MultipartFile file) {
+        log.info("uploadRuleFile {}{}", centerId, SecurityUtils.getLoggedUserUsernameForLog());
         return scoutCenterService.uploadRuleFile(centerId, file);
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
     @PostMapping("/incidences/{centerId}")
     public ScoutCenterFile uploadIncidencesFile(@PathVariable int centerId, @RequestPart("file") @NotNull MultipartFile file) {
+        log.info("uploadIncidencesFile {}{}", centerId, SecurityUtils.getLoggedUserUsernameForLog());
         return scoutCenterService.uploadIncidenceFile(centerId, file);
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
     @PostMapping("/attendance/{centerId}")
     public ScoutCenterFile uploadAttendanceFile(@PathVariable int centerId, @RequestPart("file") @NotNull MultipartFile file) {
+        log.info("uploadAttendanceFile {}{}", centerId, SecurityUtils.getLoggedUserUsernameForLog());
         return scoutCenterService.uploadAttendanceFile(centerId, file);
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
     @PostMapping("/main-photo/{centerId}")
     public ScoutCenterFile uploadMainPhoto(@PathVariable int centerId, @RequestPart("file") @NotNull MultipartFile file) {
+        log.info("uploadMainPhoto {}{}", centerId, SecurityUtils.getLoggedUserUsernameForLog());
         return scoutCenterService.uploadMainPhotoFile(centerId, file);
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
     @PostMapping("/photos/{centerId}")
     public List<ScoutCenterFile> uploadPhotos(@PathVariable int centerId, @RequestPart("files") @NotEmpty List<MultipartFile> files) {
+        log.info("uploadPhotos {}{}", centerId, SecurityUtils.getLoggedUserUsernameForLog());
         return scoutCenterService.uploadPhotos(centerId, files);
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
     @DeleteMapping("/photos/{centerId}/{photoId}")
     public void deletePhoto(@PathVariable int centerId, @PathVariable int photoId) {
+        log.info("deletePhoto {}{}", centerId, SecurityUtils.getLoggedUserUsernameForLog());
         scoutCenterService.deletePhoto(centerId, photoId);
     }
 }
