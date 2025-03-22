@@ -1,14 +1,14 @@
-package org.scouts105bentaya.features.booking.service;
+package org.scouts105bentaya.features.scout_center;
 
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
-import org.scouts105bentaya.features.booking.dto.ScoutCenterDto;
-import org.scouts105bentaya.features.booking.entity.ScoutCenter;
-import org.scouts105bentaya.features.booking.entity.ScoutCenterFile;
-import org.scouts105bentaya.features.booking.repository.ScoutCenterFileRepository;
-import org.scouts105bentaya.features.booking.repository.ScoutCenterRepository;
+import org.scouts105bentaya.features.scout_center.dto.ScoutCenterDto;
+import org.scouts105bentaya.features.scout_center.entity.ScoutCenter;
+import org.scouts105bentaya.features.scout_center.entity.ScoutCenterFile;
+import org.scouts105bentaya.features.scout_center.repository.ScoutCenterFileRepository;
+import org.scouts105bentaya.features.scout_center.repository.ScoutCenterRepository;
 import org.scouts105bentaya.shared.service.BlobService;
 import org.scouts105bentaya.shared.service.GeneralBlobService;
 import org.scouts105bentaya.shared.service.PublicBlobService;

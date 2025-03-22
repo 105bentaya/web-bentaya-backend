@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import org.hibernate.validator.constraints.Length;
 import org.scouts105bentaya.features.booking.enums.BookingStatus;
+import org.scouts105bentaya.features.scout_center.dto.BasicScoutCenterDto;
 
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;

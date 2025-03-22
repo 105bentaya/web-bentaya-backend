@@ -20,11 +20,11 @@ import org.scouts105bentaya.features.booking.enums.BookingDocumentStatus;
 import org.scouts105bentaya.features.booking.enums.BookingStatus;
 import org.scouts105bentaya.features.booking.repository.BookingDocumentRepository;
 import org.scouts105bentaya.features.booking.repository.BookingRepository;
-import org.scouts105bentaya.features.booking.repository.ScoutCenterRepository;
 import org.scouts105bentaya.features.booking.specification.BookingSpecification;
 import org.scouts105bentaya.features.booking.specification.BookingSpecificationFilter;
 import org.scouts105bentaya.features.booking.util.BookingIntervalHelper;
 import org.scouts105bentaya.features.booking.util.IntervalUtils;
+import org.scouts105bentaya.features.scout_center.repository.ScoutCenterRepository;
 import org.scouts105bentaya.shared.service.AuthService;
 import org.scouts105bentaya.shared.service.BlobService;
 import org.springframework.data.domain.Page;
@@ -147,7 +147,7 @@ public class BookingService {
             }
         } else if (currentBooking.getStatus() == BookingStatus.OCCUPIED || currentBooking.getStatus() == BookingStatus.FULLY_OCCUPIED) {
             if (newStatusDto.getNewStatus() == BookingStatus.CANCELED) {
-                return this.bookingStatusService.bookingCanceled(currentBooking, newStatusDto.getObservations());
+            return this.bookingStatusService.bookingCanceled(currentBooking, newStatusDto.getObservations());
             } else if (newStatusDto.getNewStatus() == BookingStatus.LEFT) {
                 return this.bookingStatusService.bookingFromOccupiedToLeftByUser(currentBooking, newStatusDto.getObservations());
             }

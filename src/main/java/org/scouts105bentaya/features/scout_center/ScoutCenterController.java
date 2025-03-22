@@ -1,16 +1,13 @@
-package org.scouts105bentaya.features.booking;
+package org.scouts105bentaya.features.scout_center;
 
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
-import org.scouts105bentaya.features.booking.converter.ScoutCenterConverter;
-import org.scouts105bentaya.features.booking.converter.ScoutCenterWithFilesConverter;
-import org.scouts105bentaya.features.booking.dto.ScoutCenterDto;
-import org.scouts105bentaya.features.booking.dto.ScoutCenterInformationDto;
-import org.scouts105bentaya.features.booking.dto.ScoutCenterWithFilesDto;
-import org.scouts105bentaya.features.booking.entity.ScoutCenterFile;
-import org.scouts105bentaya.features.booking.repository.ScoutCenterRepository;
-import org.scouts105bentaya.features.booking.service.ScoutCenterService;
+import org.scouts105bentaya.features.scout_center.dto.ScoutCenterDto;
+import org.scouts105bentaya.features.scout_center.dto.ScoutCenterInformationDto;
+import org.scouts105bentaya.features.scout_center.dto.ScoutCenterWithFilesDto;
+import org.scouts105bentaya.features.scout_center.entity.ScoutCenterFile;
+import org.scouts105bentaya.features.scout_center.repository.ScoutCenterRepository;
 import org.scouts105bentaya.shared.util.SecurityUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -31,27 +28,21 @@ import java.util.List;
 @RequestMapping("api/scout-center")
 public class ScoutCenterController {
 
-    private final ScoutCenterConverter scoutCenterConverter;
     private final ScoutCenterRepository scoutCenterRepository;
-    private final ScoutCenterWithFilesConverter scoutCenterWithFilesConverter;
     private final ScoutCenterService scoutCenterService;
 
     public ScoutCenterController(
-        ScoutCenterConverter scoutCenterConverter,
         ScoutCenterRepository scoutCenterRepository,
-        ScoutCenterWithFilesConverter scoutCenterWithFilesConverter,
         ScoutCenterService scoutCenterService
     ) {
-        this.scoutCenterConverter = scoutCenterConverter;
         this.scoutCenterRepository = scoutCenterRepository;
-        this.scoutCenterWithFilesConverter = scoutCenterWithFilesConverter;
         this.scoutCenterService = scoutCenterService;
     }
 
     @GetMapping("/public")
     public List<ScoutCenterDto> getAllScoutCenters() {
         log.info("getAllScoutCenters");
-        return scoutCenterConverter.convertEntityCollectionToDtoList(scoutCenterRepository.findAll());
+        return scoutCenterRepository.findAll().stream().map(ScoutCenterDto::of).toList();
     }
 
     @GetMapping("/public/info")
@@ -70,14 +61,14 @@ public class ScoutCenterController {
     @GetMapping
     public List<ScoutCenterWithFilesDto> getAllScoutCentersWithFiles() {
         log.info("getAllScoutCentersWithFiles{}", SecurityUtils.getLoggedUserUsernameForLog());
-        return scoutCenterWithFilesConverter.convertEntityCollectionToDtoList(scoutCenterRepository.findAll());
+        return scoutCenterRepository.findAll().stream().map(ScoutCenterWithFilesDto::of).toList();
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
     @PostMapping("/{centerId}")
     public ScoutCenterDto updateScoutCenter(@PathVariable Integer centerId, @RequestBody ScoutCenterDto scoutCenterDto) {
         log.info("updateScoutCenter {}{}", centerId, SecurityUtils.getLoggedUserUsernameForLog());
-        return scoutCenterConverter.convertFromEntity(scoutCenterService.updateScoutCenter(centerId, scoutCenterDto));
+        return ScoutCenterDto.of(scoutCenterService.updateScoutCenter(centerId, scoutCenterDto));
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userHasAccessToScoutCenter(#centerId)")

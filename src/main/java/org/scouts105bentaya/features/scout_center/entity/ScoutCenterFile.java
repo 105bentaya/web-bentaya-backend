@@ -1,4 +1,4 @@
-package org.scouts105bentaya.features.booking.entity;
+package org.scouts105bentaya.features.scout_center.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

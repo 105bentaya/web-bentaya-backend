@@ -1,7 +1,7 @@
-package org.scouts105bentaya.features.booking.dto;
+package org.scouts105bentaya.features.scout_center.dto;
 
-import org.scouts105bentaya.features.booking.entity.ScoutCenter;
-import org.scouts105bentaya.features.booking.entity.ScoutCenterFile;
+import org.scouts105bentaya.features.scout_center.entity.ScoutCenter;
+import org.scouts105bentaya.features.scout_center.entity.ScoutCenterFile;
 
 import java.util.List;
 
