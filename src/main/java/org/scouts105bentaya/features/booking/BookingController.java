@@ -4,15 +4,15 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.features.booking.converter.BookingConverter;
 import org.scouts105bentaya.features.booking.converter.BookingDocumentConverter;
-import org.scouts105bentaya.features.booking.dto.BookingDateDto;
-import org.scouts105bentaya.features.booking.dto.BookingDateFormDto;
+import org.scouts105bentaya.features.booking.dto.BookingCalendarInfoDto;
+import org.scouts105bentaya.features.booking.dto.BookingDateAndStatusDto;
 import org.scouts105bentaya.features.booking.dto.BookingDocumentDto;
 import org.scouts105bentaya.features.booking.dto.BookingDto;
-import org.scouts105bentaya.features.booking.dto.BookingFormDto;
-import org.scouts105bentaya.features.booking.dto.BookingStatusUpdateDto;
-import org.scouts105bentaya.features.booking.dto.OwnBookingFormDto;
 import org.scouts105bentaya.features.booking.dto.PendingBookingsDto;
-import org.scouts105bentaya.features.booking.dto.SimpleBookingDto;
+import org.scouts105bentaya.features.booking.dto.in.BookingDateFormDto;
+import org.scouts105bentaya.features.booking.dto.in.BookingFormDto;
+import org.scouts105bentaya.features.booking.dto.in.BookingStatusUpdateDto;
+import org.scouts105bentaya.features.booking.dto.in.OwnBookingFormDto;
 import org.scouts105bentaya.features.booking.enums.BookingDocumentStatus;
 import org.scouts105bentaya.features.booking.service.BookingService;
 import org.scouts105bentaya.features.booking.specification.BookingSpecificationFilter;
@@ -69,11 +69,34 @@ public class BookingController {
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
+    @GetMapping("/dates")
+    public List<BookingCalendarInfoDto> getBookingForCalendar(BookingSpecificationFilter filterDto) {
+        log.info("METHOD BookingController.getBookingForCalendar{}", SecurityUtils.getLoggedUserUsernameForLog());
+        return bookingService.getBookingDates(filterDto);
+    }
+
+    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
     @GetMapping("/{id}")
     public BookingDto getById(@PathVariable Integer id) {
         log.info("METHOD BookingController.getById{}", SecurityUtils.getLoggedUserUsernameForLog());
         return bookingConverter.convertFromEntity(bookingService.findById(id));
     }
+
+    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
+    @PutMapping("update-status")
+    public BookingDto updateBookingStatus(@RequestBody @Valid BookingStatusUpdateDto dto) {
+        log.info("METHOD BookingController.updateBookingStatus{}", SecurityUtils.getLoggedUserUsernameForLog());
+        return bookingConverter.convertFromEntity(bookingService.updateStatusByManager(dto));
+    }
+
+    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
+    @PutMapping("/document/{id}")
+    public void updateBookingDocumentStatus(@PathVariable Integer id, @RequestParam BookingDocumentStatus status) {
+        log.info("METHOD BookingController.updateBookingDocumentStatus{}", SecurityUtils.getLoggedUserUsernameForLog());
+        bookingService.updateBookingDocument(id, status);
+    }
+
+    //OWN
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
     @PostMapping("/own/new")
@@ -96,27 +119,6 @@ public class BookingController {
         return bookingConverter.convertFromEntity(bookingService.cancelOwnBooking(id, reason));
     }
 
-    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
-    @GetMapping("/dates")
-    public List<BookingDateDto> getBookingForCalendar(BookingSpecificationFilter filterDto) {
-        log.info("METHOD BookingController.getBookingForCalendar{}", SecurityUtils.getLoggedUserUsernameForLog());
-        return bookingService.getBookingDates(filterDto);
-    }
-
-    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
-    @PutMapping("update-status")
-    public BookingDto updateBookingStatus(@RequestBody @Valid BookingStatusUpdateDto dto) {
-        log.info("METHOD BookingController.updateBookingStatus{}", SecurityUtils.getLoggedUserUsernameForLog());
-        return bookingConverter.convertFromEntity(bookingService.updateStatusByManager(dto));
-    }
-
-    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
-    @PutMapping("/document/{id}")
-    public void updateBookingDocumentStatus(@PathVariable Integer id, @RequestParam BookingDocumentStatus status) {
-        log.info("METHOD BookingController.updateBookingDocumentStatus{}", SecurityUtils.getLoggedUserUsernameForLog());
-        bookingService.updateBookingDocument(id, status);
-    }
-
     //USER
 
     @PreAuthorize("hasRole('SCOUT_CENTER_REQUESTER')")
@@ -133,8 +135,6 @@ public class BookingController {
         return bookingConverter.convertFromEntity(bookingService.findLatestByCurrentUser());
     }
 
-    //TODO: que el usuario solo pueda subirlo si no ha confirmado los documentos, pero que no colisione con el documento
-    // del estado LEFT
     @PreAuthorize("hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userOwnsBooking(#bookingId)")
     @PostMapping(value = "/document/{bookingId}", consumes = "multipart/form-data")
     public void uploadBookingDocument(@PathVariable Integer bookingId, @RequestParam("file") MultipartFile file) {
@@ -149,7 +149,7 @@ public class BookingController {
         return bookingConverter.convertFromEntity(bookingService.updateStatusByUser(dto));
     }
 
-    //BOTH
+    //SHARED
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userOwnsBooking(#id)")
     @GetMapping("/document/{id}")
@@ -175,13 +175,13 @@ public class BookingController {
     //PUBLIC
 
     @GetMapping("/public/{centerId}")
-    public List<SimpleBookingDto> getBasicBookingStatusesByCenter(@PathVariable Integer centerId) {
+    public List<BookingDateAndStatusDto> getBasicBookingStatusesByCenter(@PathVariable Integer centerId) {
         return bookingService.getReservationDates(centerId);
     }
 
     @PostMapping("/public/check-booking")
-    public List<SimpleBookingDto> getIntervalBookingStatusesByCenter(@RequestBody BookingDateFormDto dto) {
-        return this.bookingService.getBookingDatesForm(dto);
+    public List<BookingDateAndStatusDto> getIntervalBookingStatusesByCenter(@RequestBody BookingDateFormDto dto) {
+        return this.bookingService.getScoutCenterBookingDatesStatuses(dto);
     }
 
     @PostMapping("/public/form")

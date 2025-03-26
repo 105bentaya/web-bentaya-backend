@@ -35,7 +35,8 @@ public class BookingStatusService {
         TemplateEngine htmlTemplateEngine,
         EmailService emailService,
         UserService userService,
-        BlobService blobService) {
+        BlobService blobService
+    ) {
         this.bookingRepository = bookingRepository;
         this.htmlTemplateEngine = htmlTemplateEngine;
         this.emailService = emailService;
@@ -56,12 +57,50 @@ public class BookingStatusService {
         }
     }
 
-    public Booking bookingFromNewToRejected(Booking currentBooking, String reason) {
+    private void sendNewBookingMails(Booking booking, String newUserPassword) {
+        String userSubject = "Solicitud de Reserva nº %d - %s".formatted(booking.getId(), booking.getScoutCenter().getName());
+        String managementSubject = "%s - %d - Nueva Solicitud de Reserva".formatted(booking.getScoutCenter().getName(), booking.getId());
+
+        Context context = this.getBookingBasicContext(booking, userSubject);
+
+        context.setVariable("organization", booking.getOrganizationName());
+        context.setVariable("cif", booking.getCif());
+        context.setVariable("use", booking.getFacilityUse());
+        context.setVariable("contactName", booking.getContactName());
+        context.setVariable("contactRelationship", booking.getContactRelationship());
+        context.setVariable("contactPhone", booking.getContactPhone());
+        context.setVariable("packs", booking.getPacks());
+        context.setVariable("startDate", booking.getStartDate());
+        context.setVariable("endDate", booking.getEndDate());
+        context.setVariable("exclusiveness", booking.isExclusiveReservation());
+        context.setVariable("observations", Optional.ofNullable(booking.getObservations())
+            .filter(observations -> !observations.isBlank())
+            .orElse("Ninguna")
+        );
+        context.setVariable("newUser", newUserPassword != null);
+        context.setVariable("password", newUserPassword);
+
+        final String userHtmlContent = this.htmlTemplateEngine.process("booking/user/new-reservation.html", context);
+        context.setVariable("subject", managementSubject);
+        final String managementHtmlContent = this.htmlTemplateEngine.process("booking/management/new-reservation.html", context);
+
+        this.emailService.sendSimpleEmailWithHtml(userSubject, userHtmlContent, booking.getContactMail());
+        this.emailService.sendSimpleEmailWithHtml(managementSubject, managementHtmlContent, getBookingEmails());
+    }
+
+    public Booking bookingRejected(Booking currentBooking, String reason) {
         currentBooking.setStatus(BookingStatus.REJECTED);
         currentBooking.setStatusObservations(reason);
         Booking savedBooking = bookingRepository.save(currentBooking);
         this.sendRejectionMail(currentBooking);
         return savedBooking;
+    }
+
+    private void sendRejectionMail(Booking booking) {
+        String subject = "Reserva nº %d Rechazada - %s".formatted(booking.getId(), booking.getScoutCenter().getName());
+        Context context = this.getBookingBasicContext(booking, subject);
+        final String infoHtmlContent = this.htmlTemplateEngine.process("booking/user/rejection.html", context);
+        this.emailService.sendSimpleEmailWithHtml(subject, infoHtmlContent, booking.getUser().getUsername());
     }
 
     public Booking bookingFromNewToReserved(Booking currentBooking, String observations, Float price) {
@@ -73,12 +112,59 @@ public class BookingStatusService {
         return savedBooking;
     }
 
+    private void sendReservedMail(Booking booking) {
+        String subject = "Reserva nº %d Acepada - %s".formatted(booking.getId(), booking.getScoutCenter().getName());
+        Context context = this.getBookingBasicContext(booking, subject);
+        context.setVariable("price", booking.getPrice());
+        final String infoHtmlContent = this.htmlTemplateEngine.process("booking/user/accepted.html", context);
+        this.sendMailWithRulePdf(booking, subject, infoHtmlContent);
+    }
+
+    public Booking bookingFromReservedToOccupied(Booking currentBooking, String observations, boolean isExclusive) {
+        currentBooking.setStatus(BookingStatus.OCCUPIED);
+        currentBooking.setStatusObservations(observations);
+        Booking savedBooking = bookingRepository.save(currentBooking);
+        this.sendAcceptedMail(currentBooking, currentBooking.isExclusiveReservation() && !isExclusive);
+        return savedBooking;
+    }
+
+    private void sendAcceptedMail(Booking booking, boolean exclusivenessRejected) {
+        String subject = "Reserva nº %d Confirmada - %s".formatted(booking.getId(), booking.getScoutCenter().getName());
+        Context context = this.getBookingBasicContext(booking, subject);
+        context.setVariable("exclusivenessRejected", exclusivenessRejected);
+        final String infoHtmlContent = this.htmlTemplateEngine.process("booking/user/confirmed.html", context);
+        this.sendMailWithRulePdf(booking, subject, infoHtmlContent);
+    }
+
+    private void sendMailWithRulePdf(Booking booking, String subject, String infoHtmlContent) {
+        if (booking.getScoutCenter().getRulePdf() != null) {
+            DataSource dataSource = this.getRulePdf(booking.getScoutCenter().getRulePdf());
+            this.emailService.sendSimpleEmailWithHtmlAndAttachment(subject, infoHtmlContent, dataSource, booking.getUser().getUsername());
+        } else {
+            log.warn("Could not find rule pdf for scout center {}", booking.getScoutCenter().getId());
+            this.emailService.sendSimpleEmailWithHtml(subject, infoHtmlContent, booking.getUser().getUsername());
+        }
+    }
+
     public Booking bookingCanceled(Booking currentBooking, String observations) {
         currentBooking.setStatus(BookingStatus.CANCELED);
         currentBooking.setStatusObservations(observations);
         Booking savedBooking = bookingRepository.save(currentBooking);
         this.sendCancellationMail(currentBooking);
         return savedBooking;
+    }
+
+    private void sendCancellationMail(Booking booking) {
+        String userSubject = "Reserva nº %d Cancelada - %s".formatted(booking.getId(), booking.getScoutCenter().getName());
+        String managementSubject = "%s - %d - Reserva Cancelada".formatted(booking.getScoutCenter().getName(), booking.getId());
+
+        Context context = this.getBookingBasicContext(booking, userSubject);
+        final String userHtmlContent = this.htmlTemplateEngine.process("booking/users/cancelled.html", context);
+        context.setVariable("subject", managementSubject);
+        final String managementHtmlContent = this.htmlTemplateEngine.process("booking/management/cancelled.html", context);
+
+        this.emailService.sendSimpleEmailWithHtml(userSubject, userHtmlContent, booking.getContactMail());
+        this.emailService.sendSimpleEmailWithHtml(managementSubject, managementHtmlContent, getBookingEmails());
     }
 
     public Booking bookingFromReservedToReservedByUser(Booking currentBooking) {
@@ -92,6 +178,16 @@ public class BookingStatusService {
         return currentBooking;
     }
 
+    private void sendNotifyDocumentsUploadedMail(Booking booking) {
+        //todo, maybe change to accept observations¿?¿?
+        String subject = "%s - %d - Documentos Disponibles".formatted(booking.getScoutCenter().getName(), booking.getId());
+
+        Context context = this.getBookingBasicContext(booking, subject);
+
+        final String infoHtmlContent = this.htmlTemplateEngine.process("booking/management/notify-documents.html", context);
+        this.emailService.sendSimpleEmailWithHtml(subject, infoHtmlContent, getBookingEmails());
+    }
+
     public Booking bookingFromReservedToReservedByManager(Booking currentBooking, String observations) {
         currentBooking.setUserConfirmedDocuments(false);
         currentBooking.setStatusObservations(observations);
@@ -100,196 +196,14 @@ public class BookingStatusService {
         return savedBooking;
     }
 
-    public Booking bookingFromReservedToOccupied(Booking currentBooking, String observations, boolean fully) {
-        currentBooking.setStatus(fully ? BookingStatus.FULLY_OCCUPIED : BookingStatus.OCCUPIED);
-        currentBooking.setStatusObservations(observations);
-        Booking savedBooking = bookingRepository.save(currentBooking);
-        this.sendAcceptedMail(currentBooking, currentBooking.isExclusiveReservation() && !fully);
-        return savedBooking;
-    }
-
-    //TODO: el string documents habría que cambiarlo por un nuevo campo boolean
-    public Booking bookingFromOccupiedToLeftByUser(Booking currentBooking, String documents) {
-        currentBooking.setStatus(BookingStatus.LEFT);
-        currentBooking.setUserConfirmedDocuments(documents != null && !documents.isBlank());
-        Booking savedBooking = bookingRepository.save(currentBooking);
-        this.sendLeftMail(currentBooking);
-        return savedBooking;
-    }
-
-    public Booking bookingToFinished(Booking currentBooking, String observations) {
-        currentBooking.setStatus(BookingStatus.FINISHED);
-        currentBooking.setStatusObservations(observations);
-        Booking savedBooking = bookingRepository.save(currentBooking);
-        this.sendFinishedMail(currentBooking);
-        return savedBooking;
-    }
-
-    private void sendFinishedMail(Booking booking) {
-        String userMail = booking.getUser().getUsername();
-
-        Context context = new Context();
-        context.setVariable("id", booking.getId());
-        context.setVariable("center", booking.getScoutCenter().getName());
-        context.setVariable("statusObservation", booking.getStatusObservations());
-        context.setVariable("contactMail", userMail);
-        context.setVariable("url", url);
-
-        // todo: que el link te lleva al formulario de reservas. Si no está iniciada la sesión, que te lleve al portal de inicio de sesión y después vuelvas al formulario (usar query param)
-        final String infoHtmlContent = this.htmlTemplateEngine.process("booking-finished.html", context);
-        String subject = String.format(
-            "Reserva de Centros Scout Nº %d Revisada",
-            booking.getId()
-        );
-
-        this.emailService.sendSimpleEmailWithHtml(subject, infoHtmlContent, userMail);
-    }
-
-    private void sendLeftMail(Booking booking) {
-        Context context = new Context();
-        context.setVariable("id", booking.getId());
-        context.setVariable("center", booking.getScoutCenter().getName());
-        context.setVariable("uploadedDocument", booking.isUserConfirmedDocuments());
-
-        final String infoHtmlContent = this.htmlTemplateEngine.process("booking-left.html", context);
-        String subject = String.format(
-            "Centro Scout %s - Finalizada la reserva Nº %d ",
-            booking.getScoutCenter().getName(), booking.getId()
-        );
-
-        this.emailService.sendSimpleEmailWithHtml(subject, infoHtmlContent, getBookingEmails());
-    }
-
-    private void sendAcceptedMail(Booking booking, boolean exclusivenessRejected) {
-        String userMail = booking.getUser().getUsername();
-
-        Context context = new Context();
-        context.setVariable("id", booking.getId());
-        context.setVariable("center", booking.getScoutCenter().getName());
-        context.setVariable("statusObservation", booking.getStatusObservations());
-        context.setVariable("contactMail", userMail);
-        context.setVariable("exclusivenessRejected", exclusivenessRejected);
-
-        final String infoHtmlContent = this.htmlTemplateEngine.process("booking-accepted.html", context);
-        String subject = String.format(
-            "Reserva de Centros Scout Nº %d Confirmada",
-            booking.getId()
-        );
-        if (booking.getScoutCenter().getRulePdf() != null) {
-            DataSource dataSource = this.getRulePdf(booking.getScoutCenter().getRulePdf());
-            this.emailService.sendSimpleEmailWithHtmlAndAttachment(subject, infoHtmlContent, dataSource, userMail);
-        } else {
-            log.warn("Could not find rule pdf for scout center {}", booking.getScoutCenter().getId());
-            this.emailService.sendSimpleEmailWithHtml(subject, infoHtmlContent, userMail);
-        }
-    }
-
     private void sendNotifyWrongDocumentsMail(Booking booking) {
-        String userMail = booking.getUser().getUsername();
+        //todo cambiar frontend a aviso o similar, no 'subsanar documentos'; a lo mejor permitir siempre el botón
+        String subject = "Reserva nº %d - Aviso - %s".formatted(booking.getId(), booking.getScoutCenter().getName());
 
-        Context context = new Context();
-        context.setVariable("id", booking.getId());
-        context.setVariable("center", booking.getScoutCenter().getName());
-        context.setVariable("statusObservation", booking.getStatusObservations());
-        context.setVariable("contactMail", userMail);
+        Context context = this.getBookingBasicContext(booking, subject);
 
-        final String infoHtmlContent = this.htmlTemplateEngine.process("booking-notify-documents-wrong.html", context);
-        String subject = String.format(
-            "Reserva de Centros Scout Nº %d - Documentos rechazados",
-            booking.getId()
-        );
-        this.emailService.sendSimpleEmailWithHtml(subject, infoHtmlContent, userMail);
-    }
-
-    private void sendNotifyDocumentsUploadedMail(Booking booking) {
-        Context context = new Context();
-        context.setVariable("id", booking.getId());
-        context.setVariable("center", booking.getScoutCenter().getName());
-        context.setVariable("statusObservation", booking.getStatusObservations());
-
-        final String infoHtmlContent = this.htmlTemplateEngine.process("booking-notify-documents-uploaded.html", context);
-        String subject = String.format(
-            "Centro Scout %s - Documentos disponibles para reserva Nº %d",
-            booking.getScoutCenter().getName(),
-            booking.getId()
-        );
-        this.emailService.sendSimpleEmailWithHtml(subject, infoHtmlContent, getBookingEmails());
-    }
-
-    private void sendCancellationMail(Booking booking) {
-        Context context = new Context();
-        context.setVariable("id", booking.getId());
-        context.setVariable("center", booking.getScoutCenter().getName());
-        context.setVariable("statusObservation", booking.getStatusObservations());
-
-        final String infoHtmlContent = this.htmlTemplateEngine.process("booking-cancellation.html", context);
-        String subject = String.format("Centro Scout %s - Reserva Nº %d cancelada", booking.getScoutCenter().getName(), booking.getId());
-        this.emailService.sendSimpleEmailWithHtml(subject, infoHtmlContent, getBookingEmails());
-    }
-
-    private void sendReservedMail(Booking booking) {
-        String userMail = booking.getUser().getUsername();
-
-        Context context = new Context();
-        context.setVariable("id", booking.getId());
-        context.setVariable("center", booking.getScoutCenter().getName());
-        context.setVariable("statusObservation", booking.getStatusObservations());
-        context.setVariable("contactMail", userMail);
-        context.setVariable("price", booking.getPrice());
-
-        final String infoHtmlContent = this.htmlTemplateEngine.process("booking-reservation-accepted.html", context);
-        if (booking.getScoutCenter().getRulePdf() != null) {
-            DataSource dataSource = this.getRulePdf(booking.getScoutCenter().getRulePdf());
-            this.emailService.sendSimpleEmailWithHtmlAndAttachment("Reserva de Centro Scout Aceptada", infoHtmlContent, dataSource, userMail);
-        } else {
-            log.warn("Could not find rule pdf for scout center {}", booking.getScoutCenter().getId());
-            this.emailService.sendSimpleEmailWithHtml("Reserva de Centro Scout Aceptada", infoHtmlContent, userMail);
-        }
-    }
-
-    private void sendRejectionMail(Booking booking) {
-        String userMail = booking.getUser().getUsername();
-
-        Context context = new Context();
-        context.setVariable("id", booking.getId());
-        context.setVariable("center", booking.getScoutCenter().getName());
-        context.setVariable("statusObservation", booking.getStatusObservations());
-        context.setVariable("contactMail", userMail);
-
-        final String infoHtmlContent = this.htmlTemplateEngine.process("booking-rejection.html", context);
-        this.emailService.sendSimpleEmailWithHtml("Reserva de Centro Scout Rechazada", infoHtmlContent, userMail);
-    }
-
-    private void sendNewBookingMails(Booking booking, String newUserPassword) {
-        Context context = new Context();
-        context.setVariable("center", booking.getScoutCenter().getName());
-        context.setVariable("organization", booking.getOrganizationName());
-        context.setVariable("cif", booking.getCif());
-        context.setVariable("use", booking.getFacilityUse());
-        context.setVariable("contactName", booking.getContactName());
-        context.setVariable("contactRelationship", booking.getContactRelationship());
-        context.setVariable("contactMail", booking.getContactMail());
-        context.setVariable("contactPhone", booking.getContactPhone());
-        context.setVariable("id", booking.getId());
-        context.setVariable("packs", booking.getPacks());
-        context.setVariable("startDate", booking.getStartDate());
-        context.setVariable("endDate", booking.getEndDate());
-        context.setVariable("exclusiveness", booking.isExclusiveReservation());
-        context.setVariable("observations", Optional.ofNullable(booking.getObservations())
-            .filter(observations -> !observations.isBlank())
-            .orElse("Ninguna")
-        );
-
-        final String infoHtmlContent = this.htmlTemplateEngine.process("booking-new-reservation.html", context);
-
-        context.setVariable("newUser", newUserPassword != null);
-        context.setVariable("password", newUserPassword);
-
-        final String userHtmlContent = this.htmlTemplateEngine.process("booking-new-reservation.html", context);
-
-        String subject = String.format("Centro Scout %s - Nueva Reserva", booking.getScoutCenter().getName());
-        this.emailService.sendSimpleEmailWithHtml(subject, infoHtmlContent, getBookingEmails());
-        this.emailService.sendSimpleEmailWithHtml("Centro Scout - Nueva Reserva", userHtmlContent, booking.getContactMail());
+        final String infoHtmlContent = this.htmlTemplateEngine.process("booking/users/warning.html", context);
+        this.emailService.sendSimpleEmailWithHtml(subject, infoHtmlContent, booking.getUser().getUsername());
     }
 
     private DataSource getRulePdf(ScoutCenterFile file) {
@@ -301,5 +215,19 @@ public class BookingStatusService {
 
     private String[] getBookingEmails() {
         return this.emailService.getSettingEmails(SettingEnum.BOOKING_MAIL);
+    }
+
+    private Context getBookingBasicContext(Booking booking, String subject) {
+        Context context = new Context();
+        context.setVariable("id", booking.getId());
+        context.setVariable("center", booking.getScoutCenter().getName());
+        context.setVariable("statusObservation", booking.getStatusObservations());
+        context.setVariable("contactMail", booking.getUser().getUsername());
+        context.setVariable("bookingInformationMail", this.getBookingEmails()[0]);
+        context.setVariable("webUrl", url);
+        context.setVariable("subject", subject);
+        context.setVariable("color", "#ED5565");
+
+        return context;
     }
 }

@@ -1,119 +1,97 @@
 package org.scouts105bentaya.features.booking.util;
 
+import lombok.extern.slf4j.Slf4j;
 import org.joda.time.Interval;
-import org.scouts105bentaya.features.booking.dto.SimpleBookingDto;
+import org.scouts105bentaya.features.booking.dto.BookingDateAndStatusDto;
 import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.booking.enums.BookingStatus;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
-import static org.scouts105bentaya.features.booking.enums.BookingStatus.FULLY_OCCUPIED;
-import static org.scouts105bentaya.features.booking.enums.BookingStatus.OCCUPIED;
-import static org.scouts105bentaya.features.booking.enums.BookingStatus.RESERVED;
 import static org.scouts105bentaya.features.booking.util.IntervalUtils.intervalFromBooking;
 import static org.scouts105bentaya.features.booking.util.IntervalUtils.jodaLocalDateTimeToJavaDateTime;
-import static org.scouts105bentaya.features.booking.util.IntervalUtils.mergeIntervalList;
-import static org.scouts105bentaya.features.booking.util.IntervalUtils.removeOverlappingSectionsFromSecondIntervalList;
 
-public class BookingIntervalHelper {
+@Slf4j
+public final class BookingIntervalHelper {
 
-    private final List<Booking> sameCenterBookings;
-    private final Interval mainInterval;
-    List<Interval> fullyOccupiedIntervals;
-    List<Interval> occupiedIntervals;
-    List<Interval> reservedIntervals;
-    private List<Booking> overlappingBookingsIntervalList;
-
-    //todo not working properly, getting same ranges for occupied and fully occupied
-//    Durante las siguientes fechas el centro está parcialmente ocupado, por lo que su reserva puede no ser aceptada si sobrepasa el aforo restante:
-//        25/09 23:00 - 26/09 23:45
-//    Durante las siguientes fechas el centro está totalmente ocupado, por lo que no se puede realizar la reserva:
-//        25/09 23:00 - 26/09 23:45
-    public BookingIntervalHelper(List<Booking> sameCenterBookings, Interval mainInterval) {
-        if (sameCenterBookings.stream().map(Booking::getScoutCenter).distinct().count() > 1) {
-            throw new RuntimeException("Not all bookings have same center");
-        }
-        this.mainInterval = mainInterval;
-        this.sameCenterBookings = sameCenterBookings;
+    private BookingIntervalHelper() {
     }
 
-    public boolean overlapsWithFullyOccupiedBooking() {
-        this.overlappingBookingsIntervalList = sameCenterBookings.stream()
-            .filter(booking -> booking.getStatus() == FULLY_OCCUPIED)
-            .filter(this::bookingOverlapsWithMainInterval)
-            .toList();
-
-        return !adjustIntervalsToBooking(
-            mergeIntervalList(getSortedIntervalListByBookingStatus(FULLY_OCCUPIED)), FULLY_OCCUPIED
-        ).isEmpty();
+    public static boolean overlapsWithFullyOccupiedBooking(List<Booking> sameCenterBookings, Interval intervalToCheck) {
+        validateBookingCenters(sameCenterBookings);
+        return sameCenterBookings.stream()
+            .filter(booking -> booking.getStatus() == BookingStatus.OCCUPIED && booking.isExclusiveReservation())
+            .anyMatch(booking -> bookingOverlapsWithMainInterval(booking, intervalToCheck));
     }
 
-    public List<SimpleBookingDto> getOverlappingBookingIntervals() {
-        this.overlappingBookingsIntervalList = sameCenterBookings.stream()
-            .filter(this::bookingStatusIsNeeded)
-            .filter(this::bookingOverlapsWithMainInterval)
+    public static List<BookingDateAndStatusDto> getOverlappingBookingIntervals(List<Booking> sameCenterBookings, Interval intervalToCheck) {
+        validateBookingCenters(sameCenterBookings);
+        List<Booking> overlappingBookings = sameCenterBookings.stream()
+            .filter(booking -> booking.getStatus().reservedOrOccupied())
+            .filter(booking -> bookingOverlapsWithMainInterval(booking, intervalToCheck))
             .toList();
 
-        fullyOccupiedIntervals = getSortedIntervalListByBookingStatus(FULLY_OCCUPIED);
-        occupiedIntervals = getSortedIntervalListByBookingStatus(OCCUPIED);
-        reservedIntervals = getSortedIntervalListByBookingStatus(RESERVED);
+        List<Interval> fullyOccupied = bookingToInterval(overlappingBookings, BookingStatus.OCCUPIED, true, intervalToCheck);
 
-        fullyOccupiedIntervals = mergeIntervalList(fullyOccupiedIntervals);
-        occupiedIntervals = mergeIntervalList(occupiedIntervals);
-        reservedIntervals = mergeIntervalList(reservedIntervals);
+        List<Interval> partiallyOccupied = bookingToInterval(overlappingBookings, BookingStatus.OCCUPIED, false, intervalToCheck);
+        partiallyOccupied = IntervalUtils.removeIntervalListOverlappingSectionsWithIntervalList(fullyOccupied, partiallyOccupied);
 
-        occupiedIntervals = removeOverlappingSectionsFromSecondIntervalList(fullyOccupiedIntervals, occupiedIntervals);
-        reservedIntervals = removeOverlappingSectionsFromSecondIntervalList(fullyOccupiedIntervals, reservedIntervals);
 
-        List<SimpleBookingDto> result = new ArrayList<>();
-        result.addAll(adjustIntervalsToBooking(fullyOccupiedIntervals, FULLY_OCCUPIED));
-        result.addAll(adjustIntervalsToBooking(occupiedIntervals, OCCUPIED));
-        result.addAll(adjustIntervalsToBooking(reservedIntervals, RESERVED));
+        List<Interval> reserved = bookingToInterval(overlappingBookings, BookingStatus.RESERVED, null, intervalToCheck);
+        reserved = IntervalUtils.removeIntervalListOverlappingSectionsWithIntervalList(Stream.concat(fullyOccupied.stream(), partiallyOccupied.stream()).toList(), reserved);
+
+        List<BookingDateAndStatusDto> result = new ArrayList<>();
+        result.addAll(intervalListToBookingDateAndStatusList(fullyOccupied, BookingStatus.OCCUPIED, true, intervalToCheck));
+        result.addAll(intervalListToBookingDateAndStatusList(partiallyOccupied, BookingStatus.OCCUPIED, false, intervalToCheck));
+        result.addAll(intervalListToBookingDateAndStatusList(reserved, BookingStatus.RESERVED, null, intervalToCheck));
         return result;
     }
 
+    private static List<BookingDateAndStatusDto> intervalListToBookingDateAndStatusList(List<Interval> intervals, BookingStatus status, Boolean fullyOccupied, Interval mainInterval) {
+        return IntervalUtils.mergeIntervalList(intervals).stream()
+            .map(interval -> adjustIntervalsToBooking(interval, mainInterval))
+            .map(interval -> new BookingDateAndStatusDto(
+                jodaLocalDateTimeToJavaDateTime(interval.getStart()),
+                jodaLocalDateTimeToJavaDateTime(interval.getEnd()),
+                status,
+                fullyOccupied
+            )).toList();
+    }
 
-    private List<Interval> getSortedIntervalListByBookingStatus(BookingStatus status) {
-        return this.overlappingBookingsIntervalList.stream()
-            .filter(booking -> booking.getStatus() == status)
+    private static Interval adjustIntervalsToBooking(Interval intervalToAdjust, Interval mainInterval) {
+        if (intervalToAdjust.getStart().isBefore(mainInterval.getStart())) {
+            intervalToAdjust = intervalToAdjust.withStart(mainInterval.getStart());
+        }
+        if (intervalToAdjust.getEnd().isAfter(mainInterval.getEnd())) {
+            intervalToAdjust = intervalToAdjust.withEnd(mainInterval.getEnd());
+        }
+        return intervalToAdjust;
+    }
+
+    private static List<Interval> bookingToInterval(List<Booking> bookings, BookingStatus status, Boolean exclusiveReservation, Interval mainInterval) {
+        return bookings.stream()
+            .filter(predicateFromStatus(status, exclusiveReservation))
             .map(IntervalUtils::intervalFromBooking)
-            .sorted(Comparator.comparingLong(Interval::getStartMillis))
+            .map(interval -> adjustIntervalsToBooking(interval, mainInterval))
             .toList();
     }
 
-    private List<SimpleBookingDto> adjustIntervalsToBooking(List<Interval> intervals, BookingStatus status) {
-        return intervals.stream()
-            .filter(interval -> interval.overlaps(mainInterval))
-            .map(interval -> {
-                if (interval.getStart().isBefore(mainInterval.getStart())) {
-                    interval = interval.withStart(mainInterval.getStart());
-                }
-                if (interval.getEnd().isAfter(mainInterval.getEnd())) {
-                    interval = interval.withEnd(mainInterval.getEnd());
-                }
-                return createIntervalDto(interval, status);
-            }).toList();
+    private static Predicate<Booking> predicateFromStatus(BookingStatus status, Boolean exclusiveReservation) {
+        if (status == BookingStatus.RESERVED) return booking -> booking.getStatus() == BookingStatus.RESERVED;
+        return booking -> booking.getStatus() == status && booking.isExclusiveReservation() == exclusiveReservation;
     }
 
-    private SimpleBookingDto createIntervalDto(Interval interval, BookingStatus status) {
-        return new SimpleBookingDto(
-            jodaLocalDateTimeToJavaDateTime(interval.getStart()),
-            jodaLocalDateTimeToJavaDateTime(interval.getEnd()),
-            status
-        );
-    }
-
-    private boolean bookingStatusIsNeeded(Booking booking) {
-        BookingStatus status = booking.getStatus();
-        return status == RESERVED ||
-               status == OCCUPIED ||
-               status == FULLY_OCCUPIED;
-    }
-
-    private boolean bookingOverlapsWithMainInterval(Booking booking) {
+    private static boolean bookingOverlapsWithMainInterval(Booking booking, Interval mainInterval) {
         Interval bookingInterval = intervalFromBooking(booking);
         return bookingInterval.overlap(mainInterval) != null && bookingInterval.toDurationMillis() > 0;
+    }
+
+    private static void validateBookingCenters(List<Booking> bookings) {
+        if (bookings.stream().map(Booking::getScoutCenter).distinct().count() > 1) {
+            throw new IllegalArgumentException("Bookings are not of same scout center");
+        }
     }
 }

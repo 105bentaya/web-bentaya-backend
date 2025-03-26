@@ -1,4 +1,4 @@
-package org.scouts105bentaya.features.booking.dto;
+package org.scouts105bentaya.features.booking.dto.in;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -18,6 +18,9 @@ public class BookingStatusUpdateDto {
     @Getter
     @NotNull
     private BookingStatus newStatus;
+
+    @Getter
+    private Boolean exclusive;
 
     @Length(max = 2047)
     private String observations;

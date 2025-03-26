@@ -6,14 +6,14 @@ import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.booking.converter.BookingConverter;
 import org.scouts105bentaya.features.booking.converter.BookingFormConverter;
-import org.scouts105bentaya.features.booking.dto.BookingDateDto;
-import org.scouts105bentaya.features.booking.dto.BookingDateFormDto;
+import org.scouts105bentaya.features.booking.dto.BookingCalendarInfoDto;
+import org.scouts105bentaya.features.booking.dto.BookingDateAndStatusDto;
 import org.scouts105bentaya.features.booking.dto.BookingDto;
-import org.scouts105bentaya.features.booking.dto.BookingFormDto;
-import org.scouts105bentaya.features.booking.dto.BookingStatusUpdateDto;
-import org.scouts105bentaya.features.booking.dto.OwnBookingFormDto;
 import org.scouts105bentaya.features.booking.dto.PendingBookingsDto;
-import org.scouts105bentaya.features.booking.dto.SimpleBookingDto;
+import org.scouts105bentaya.features.booking.dto.in.BookingDateFormDto;
+import org.scouts105bentaya.features.booking.dto.in.BookingFormDto;
+import org.scouts105bentaya.features.booking.dto.in.BookingStatusUpdateDto;
+import org.scouts105bentaya.features.booking.dto.in.OwnBookingFormDto;
 import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.booking.entity.BookingDocument;
 import org.scouts105bentaya.features.booking.enums.BookingDocumentStatus;
@@ -27,9 +27,8 @@ import org.scouts105bentaya.features.booking.util.IntervalUtils;
 import org.scouts105bentaya.features.scout_center.repository.ScoutCenterRepository;
 import org.scouts105bentaya.shared.service.AuthService;
 import org.scouts105bentaya.shared.service.BlobService;
+import org.scouts105bentaya.shared.util.FileUtils;
 import org.springframework.data.domain.Page;
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -52,14 +51,7 @@ public class BookingService {
     private final BookingConverter bookingConverter;
     private final ScoutCenterRepository scoutCenterRepository;
 
-    public BookingService(
-        BookingFormConverter bookingFormConverter,
-        BookingRepository bookingRepository,
-        BookingStatusService bookingStatusService,
-        BookingDocumentRepository bookingDocumentRepository,
-        AuthService authService,
-        BlobService blobService,
-        BookingConverter bookingConverter, ScoutCenterRepository scoutCenterRepository) {
+    public BookingService(BookingFormConverter bookingFormConverter, BookingRepository bookingRepository, BookingStatusService bookingStatusService, BookingDocumentRepository bookingDocumentRepository, AuthService authService, BlobService blobService, BookingConverter bookingConverter, ScoutCenterRepository scoutCenterRepository) {
         this.bookingFormConverter = bookingFormConverter;
         this.bookingRepository = bookingRepository;
         this.bookingStatusService = bookingStatusService;
@@ -79,8 +71,7 @@ public class BookingService {
     }
 
     public Booking findLatestByCurrentUser() {
-        return bookingRepository.findFirstByUserIdOrderByCreationDateDesc(authService.getLoggedUser().getId())
-            .orElseThrow(() -> new WebBentayaNotFoundException("No se han encontrado reservas asociadas a este usuario"));
+        return bookingRepository.findFirstByUserIdOrderByCreationDateDesc(authService.getLoggedUser().getId()).orElseThrow(() -> new WebBentayaNotFoundException("No se han encontrado reservas asociadas a este usuario"));
     }
 
     public Booking findById(Integer id) {
@@ -92,37 +83,24 @@ public class BookingService {
     }
 
     // Diagrama de estados
-    // https://drive.google.com/file/d/10-IZ8xB_kYPx5XaoRHSfIKLbIq9vOo5q/view?usp=sharing
+    // https://drive.google.com/file/d/1UxVY4xrxK12tbuVHWrrCflXzZphYJMRi/view?usp=sharing
     public Booking updateStatusByManager(BookingStatusUpdateDto newStatusDto) {
         Booking currentBooking = this.findById(newStatusDto.getId());
         if (currentBooking.isOwnBooking()) {
             log.warn("updateStatusByManager - booking is own booking");
             throw new WebBentayaBadRequestException("No se puede actualizar una reserva propia");
         }
-        if (currentBooking.getStatus() == BookingStatus.NEW) {
-            if (newStatusDto.getNewStatus() == BookingStatus.REJECTED) {
-                return bookingStatusService.bookingFromNewToRejected(currentBooking, newStatusDto.getObservations());
-            } else if (newStatusDto.getNewStatus() == BookingStatus.RESERVED) {
-                return bookingStatusService.bookingFromNewToReserved(currentBooking, newStatusDto.getObservations(), newStatusDto.getPrice());
-            }
+
+        if (currentBooking.getStatus() == BookingStatus.NEW && newStatusDto.getNewStatus() == BookingStatus.RESERVED) {
+            return bookingStatusService.bookingFromNewToReserved(currentBooking, newStatusDto.getObservations(), newStatusDto.getPrice());
         } else if (currentBooking.getStatus() == BookingStatus.RESERVED) {
-            if (newStatusDto.getNewStatus() == BookingStatus.REJECTED) {
-                return bookingStatusService.bookingFromNewToRejected(currentBooking, newStatusDto.getObservations());
-            } else if (newStatusDto.getNewStatus() == BookingStatus.OCCUPIED || newStatusDto.getNewStatus() == BookingStatus.FULLY_OCCUPIED) {
-                return bookingStatusService.bookingFromReservedToOccupied(
-                    currentBooking,
-                    newStatusDto.getObservations(),
-                    newStatusDto.getNewStatus() == BookingStatus.FULLY_OCCUPIED
-                );
+            if (newStatusDto.getNewStatus() == BookingStatus.OCCUPIED) {
+                return bookingStatusService.bookingFromReservedToOccupied(currentBooking, newStatusDto.getObservations(), newStatusDto.getExclusive());
             } else if (newStatusDto.getNewStatus() == BookingStatus.RESERVED) {
                 return this.bookingStatusService.bookingFromReservedToReservedByManager(currentBooking, newStatusDto.getObservations());
             }
-        } else if (currentBooking.getStatus() == BookingStatus.OCCUPIED || currentBooking.getStatus() == BookingStatus.FULLY_OCCUPIED) {
-            if (newStatusDto.getNewStatus() == BookingStatus.FINISHED) {
-                return this.bookingStatusService.bookingToFinished(currentBooking, newStatusDto.getObservations());
-            }
-        } else if (currentBooking.getStatus() == BookingStatus.LEFT && newStatusDto.getNewStatus() == BookingStatus.FINISHED) {
-            return this.bookingStatusService.bookingToFinished(currentBooking, newStatusDto.getObservations());
+        } else if (newStatusDto.getNewStatus() == BookingStatus.REJECTED) {
+            return this.bookingStatusService.bookingRejected(currentBooking, newStatusDto.getObservations());
         }
 
         log.warn("updateStatusByManager - new booking status is invalid");
@@ -135,53 +113,28 @@ public class BookingService {
             log.warn("updateStatusByUser - booking is own booking");
             throw new WebBentayaBadRequestException("No se puede actualizar una reserva propia");
         }
-        if (currentBooking.getStatus() == BookingStatus.NEW) {
-            if (newStatusDto.getNewStatus() == BookingStatus.CANCELED) {
-                return this.bookingStatusService.bookingCanceled(currentBooking, newStatusDto.getObservations());
-            }
-        } else if (currentBooking.getStatus() == BookingStatus.RESERVED) {
-            if (newStatusDto.getNewStatus() == BookingStatus.CANCELED) {
-                return this.bookingStatusService.bookingCanceled(currentBooking, newStatusDto.getObservations());
-            } else if (newStatusDto.getNewStatus() == BookingStatus.RESERVED) {
-                return this.bookingStatusService.bookingFromReservedToReservedByUser(currentBooking);
-            }
-        } else if (currentBooking.getStatus() == BookingStatus.OCCUPIED || currentBooking.getStatus() == BookingStatus.FULLY_OCCUPIED) {
-            if (newStatusDto.getNewStatus() == BookingStatus.CANCELED) {
+
+        if (currentBooking.getStatus() == BookingStatus.RESERVED && newStatusDto.getNewStatus() == BookingStatus.RESERVED) {
+            return this.bookingStatusService.bookingFromReservedToReservedByUser(currentBooking);
+        } else if (newStatusDto.getNewStatus() == BookingStatus.CANCELED && currentBooking.getStartDate().isBefore(LocalDateTime.now())) {
             return this.bookingStatusService.bookingCanceled(currentBooking, newStatusDto.getObservations());
-            } else if (newStatusDto.getNewStatus() == BookingStatus.LEFT) {
-                return this.bookingStatusService.bookingFromOccupiedToLeftByUser(currentBooking, newStatusDto.getObservations());
-            }
         }
 
         log.warn("updateStatusByUser - new booking status is invalid");
         throw new WebBentayaBadRequestException("No se puede actualizar la reserva al estado solicitado");
     }
 
-    public List<SimpleBookingDto> getReservationDates(Integer scoutCenterId) {
-        return this.bookingRepository
-            .findBookingByScoutCenterIdAndEndDateIsAfter(scoutCenterId, LocalDateTime.now()/*.plusDays(7)*/)
-            .stream().filter(booking -> booking.getStatus().shouldShowInInformationCalendar())
-            .map(this::createReservationDate).toList();
+    public List<BookingDateAndStatusDto> getReservationDates(Integer scoutCenterId) {
+        return this.bookingRepository.findBookingByScoutCenterIdAndEndDateIsAfter(scoutCenterId, LocalDateTime.now()/*.plusDays(7)*/).stream().filter(booking -> booking.getStatus().reservedOrOccupied()).map(this::createReservationDate).toList();
     }
 
-    private SimpleBookingDto createReservationDate(Booking booking) {
-        return new SimpleBookingDto(
-            booking.getStartDate(),
-            booking.getEndDate(),
-            booking.getStatus()
-        );
+    private BookingDateAndStatusDto createReservationDate(Booking booking) {
+        return new BookingDateAndStatusDto(booking.getStartDate(), booking.getEndDate(), booking.getStatus(), booking.isExclusiveReservation());
     }
 
-    public List<BookingDateDto> getBookingDates(BookingSpecificationFilter filter) {
-        return this.bookingRepository
-            .findAll(new BookingSpecification(filter)).stream()
-            .map(booking -> new BookingDateDto(
-                booking.getStartDate(),
-                booking.getEndDate(),
-                booking.getStatus(),
-                booking.getId(),
-                booking.getPacks()
-            )).toList();
+    public List<BookingCalendarInfoDto> getBookingDates(BookingSpecificationFilter filter) {
+        return this.bookingRepository.findAll(new BookingSpecification(filter)).stream()
+            .map(BookingCalendarInfoDto::fromBooking).toList();
     }
 
     public void addOwnBooking(OwnBookingFormDto dto) {
@@ -208,7 +161,7 @@ public class BookingService {
 
         this.validateBookingDates(booking);
 
-        booking.setStatus(dto.exclusiveReservation() ? BookingStatus.FULLY_OCCUPIED : BookingStatus.OCCUPIED);
+        booking.setStatus(BookingStatus.OCCUPIED);
         booking.setCreationDate(ZonedDateTime.now());
 
         bookingRepository.save(booking);
@@ -240,29 +193,23 @@ public class BookingService {
             log.warn("validateBookingDates - booking end date is not after start date");
             throw new WebBentayaBadRequestException("La fecha de salida no puede ser posterior a la de entrada.");
         }
-        List<Booking> sameCenterBookings = this.bookingRepository.findBookingByScoutCenterIdAndEndDateIsAfterAndStartDateIsBefore(
-            booking.getScoutCenter().getId(), booking.getStartDate().minusMinutes(1), booking.getEndDate().plusMinutes(1)
-        );
+        List<Booking> sameCenterBookings = this.bookingRepository.findAllOverlapping(booking.getStartDate(), booking.getEndDate(), booking.getScoutCenter().getId());
         Interval mainInterval = IntervalUtils.intervalFromBooking(booking);
-        BookingIntervalHelper helper = new BookingIntervalHelper(sameCenterBookings, mainInterval);
-        if (helper.overlapsWithFullyOccupiedBooking()) {
+        if (BookingIntervalHelper.overlapsWithFullyOccupiedBooking(sameCenterBookings, mainInterval)) {
             log.warn("validateBookingDates - selected date is taken");
             throw new WebBentayaBadRequestException("Algunas de las fechas seleccionadas no están disponibles");
         }
     }
 
-    public List<SimpleBookingDto> getBookingDatesForm(BookingDateFormDto dto) {
-        List<Booking> sameCenterBookings = this.bookingRepository.findBookingByScoutCenterIdAndEndDateIsAfterAndStartDateIsBefore(
-            dto.scoutCenterId(), dto.startDate().minusMinutes(1), dto.endDate().plusMinutes(1)
-        );
+    public List<BookingDateAndStatusDto> getScoutCenterBookingDatesStatuses(BookingDateFormDto dto) {
+        List<Booking> sameCenterBookings = this.bookingRepository.findAllOverlapping(dto.startDate(), dto.endDate(), dto.scoutCenterId());
         Interval mainInterval = IntervalUtils.intervalFromBooking(dto);
-        BookingIntervalHelper helper = new BookingIntervalHelper(sameCenterBookings, mainInterval);
-        return helper.getOverlappingBookingIntervals();
+        return BookingIntervalHelper.getOverlappingBookingIntervals(sameCenterBookings, mainInterval);
     }
 
     public void saveBookingDocument(Integer bookingId, MultipartFile file) {
         Booking booking = this.findById(bookingId);
-        if (booking.getStatus() != BookingStatus.RESERVED && booking.getStatus() != BookingStatus.OCCUPIED && booking.getStatus() != BookingStatus.FULLY_OCCUPIED) {
+        if (!booking.getStatus().reservedOrOccupied()) {
             log.warn("saveBookingDocument - booking status {} is not valid for uploading documents", booking.getStatus());
             throw new WebBentayaBadRequestException("No se añadir documentos en este paso de la reserva");
         }
@@ -292,15 +239,11 @@ public class BookingService {
 
     public ResponseEntity<byte[]> getPDF(Integer id) {
         BookingDocument bookingDocument = this.findBookingDocumentById(id);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentDisposition(ContentDisposition.attachment().filename(bookingDocument.getFileName()).build());
-        headers.add(HttpHeaders.CONTENT_TYPE, "application/pdf");
-        return ResponseEntity
-            .ok()
-            .headers(headers)
-            .contentType(MediaType.APPLICATION_PDF)
-            .body(blobService.getBlob(bookingDocument.getFileUuid()));
+        return FileUtils.getFileResponseEntity(
+            blobService.getBlob(bookingDocument.getFileUuid()),
+            bookingDocument.getFileName(),
+            MediaType.APPLICATION_PDF
+        );
     }
 
     public PendingBookingsDto findAllPending(BookingSpecificationFilter filter) {
@@ -313,11 +256,11 @@ public class BookingService {
         filter.setStatuses(List.of(BookingStatus.RESERVED));
         List<BookingDto> acceptedBookings = getBookingDtoList(filter);
 
-        filter.setStatuses(List.of(BookingStatus.OCCUPIED, BookingStatus.FULLY_OCCUPIED));
+        filter.setStatuses(List.of(BookingStatus.OCCUPIED));
         filter.setEndDate(LocalDateTime.now().toString());
         List<BookingDto> confirmedBookings = getBookingDtoList(filter);
 
-        filter.setStatuses(List.of(BookingStatus.OCCUPIED, BookingStatus.FULLY_OCCUPIED, BookingStatus.FINISHED, BookingStatus.LEFT));
+        filter.setStatuses(List.of(BookingStatus.OCCUPIED));
         filter.setEndDate(null);
         filter.setFilterDates(new String[]{LocalDateTime.now().minusDays(3).toString(), LocalDateTime.now().toString()});
         List<BookingDto> finishedBookings = getBookingDtoList(filter);

@@ -1,4 +1,4 @@
-package org.scouts105bentaya.features.booking.dto;
+package org.scouts105bentaya.features.booking.dto.in;
 
 import java.time.LocalDateTime;
 

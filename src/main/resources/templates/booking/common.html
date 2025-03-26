@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${subject}">common</title>
+  <style>
+      .separator {
+          margin-top: 80px;
+          margin-bottom: 80px
+      }
+
+      .common-container {
+          max-width: 600px;
+          margin: 20px auto;
+          background: #ffffff;
+          padding: 25px;
+          border-radius: 10px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+  </style>
+</head>
+<body style="font-family: Arial, sans-serif;background-color: #f4f4f4;margin: 0;padding: 5px 0;">
+<div class="common-container">
+
+  <div th:fragment="container(content)"
+       style="max-width: 600px;margin: 20px auto;background: #ffffff;padding: 25px;border-radius: 10px;box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
+    <div th:replace="${content}"></div>
+  </div>
+
+  <p th:fragment="important-text(impotantText)" style="margin-left: 0.6rem;padding-left: 0.4rem;padding-right: 1rem;"
+     th:styleappend="'border-left: 3px solid ' + ${color}"
+     th:text="${impotantText}"
+  ></p>
+
+  <div class="separator"></div>
+
+  <div th:fragment="hr" th:style="'border: 1px solid ' + ${color}">
+  </div>
+
+  <div class="separator"></div>
+
+  <div th:fragment="header">
+    <div class="header" th:text="${subject}"
+         th:styleappend="'background: ' + ${color}"
+         style="color: #ffffff;text-align: center;padding: 20px;font-size: 22px;font-weight: bold;border-top-left-radius: 10px;border-top-right-radius: 10px;">
+      subject
+    </div>
+  </div>
+
+  <div class="separator"></div>
+
+  <div th:fragment="user-footer">
+    <div class="footer"
+         style="text-align: center;padding: 20px;font-size: 14px;color: #777777;border-top: 1px solid #dddddd;margin-top: 30px;">
+      <div>
+        Disfrute de su estancia en la naturaleza🏕️
+        <br>
+        Para cualquier duda, contáctenos en
+        <a class="color-main" th:href="'mailto:' + ${bookingInformationMail}" th:text="${bookingInformationMail}"
+           th:style="'color:' + ${color}">
+          bookingInformationMail
+        </a>
+        <br>
+      </div>
+      <p style="margin-bottom: 0">
+        <b>Atentamente,</b>
+        <br>
+        ⚜<b>El sistema de mensajería de Scouts 105 Bentaya</b>⚜
+      </p>
+    </div>
+  </div>
+
+  <div class="separator"></div>
+
+  <div th:fragment="management-footer">
+    <div class="footer"
+         style="text-align: center;padding: 10px;font-size: 14px;color: #777777;border-top: 1px solid #dddddd;margin-top: 30px;">
+      <p style="margin-bottom: 0">
+        <b>Atentamente,</b>
+        <br>
+        ⚜<b>El sistema de mensajería de Scouts 105 Bentaya</b>⚜
+      </p>
+    </div>
+  </div>
+
+  <div class="separator"></div>
+
+  <div th:fragment="management-access">
+    <table style="width: 100%">
+      <tr>
+        <td style="text-align: center">
+          <a class="button" th:href="${webUrl} + '/centros-scout/gestion/reserva/' + ${id}"
+             style="display: inline-block;padding: 10px 20px;margin-top: 10px;color: white;text-decoration: none;border-radius: 12px;font-weight: bold;text-align: center;"
+             th:styleappend="'background: ' + ${color}"
+          >
+            Acceder al panel de gestión
+          </a>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="separator"></div>
+
+  <div th:fragment="new-user">
+    <div>
+      <p>
+        Para hacer seguimiento de su reserva en nuestro sitio web, debe entrar usando las siguientes
+        credenciales:
+      </p>
+      <ul>
+        <li><b>Usuario:</b> <span th:text="${contactMail}">contactMail</span></li>
+        <li><b>Contraseña:</b> <span th:text="${password}">password</span></li>
+      </ul>
+      <p style="margin-bottom: 0.5rem">Le recomendamos cambiar la contraseña en su primer acceso.</p>
+    </div>
+    <table style="width: 100%">
+      <tr>
+        <td style="text-align: center">
+          <a class="button" href="localhost:4200/centros-scout/seguimiento"
+             th:href="${webUrl} + '/centros-scout/seguimiento'"
+             th:styleappend="'background: ' + ${color}"
+             style="display: inline-block;padding: 10px 20px;color: white;text-decoration: none;border-radius: 12px;font-weight: bold;text-align: center;">Acceder
+            al seguimiento</a>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="separator"></div>
+
+  <div th:fragment="user-access">
+    <div>
+      <p style="margin-bottom: 0.5rem">
+        Puede acceder al panel de seguimiento con el usuario
+        <b><span th:text="${contactMail}">contactMail</span></b>
+        a través de nuestro sitio web o mediante el siguiente enlace
+      </p>
+    </div>
+    <table style="width: 100%">
+      <tr>
+        <td style="text-align: center">
+          <a class="button" href="localhost:4200/centros-scout/seguimiento"
+             th:href="${webUrl} + '/centros-scout/seguimiento'"
+             th:styleappend="'background: ' + ${color}"
+             style="display: inline-block;padding: 10px 20px;color: white;text-decoration: none;border-radius: 12px;font-weight: bold;text-align: center;">Acceder
+            al seguimiento</a>
+        </td>
+      </tr>
+    </table>
+    <div style="margin-top: 1.5rem">
+      <p style="margin-bottom: 0.5rem">Si olvidó su contraseña, puede restablecerla en el siguiente enlace</p>
+      <table style="width: 100%">
+        <tr>
+          <td style="text-align: center">
+            <a class="button" th:href="${webUrl} + '/login?forgot=true'"
+               th:styleappend="'background: ' + ${color}"
+               style="display: inline-block;padding: 10px 20px;color: white;text-decoration: none;border-radius: 12px;font-weight: bold;text-align: center;">Restablecer
+              contraseña</a>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="separator"></div>
+
+  <div th:fragment="booking-info">
+    <div class="section-title"
+         style="font-size: 18px;font-weight: bold;margin-top: 18px;"
+         th:styleappend="'border-bottom: 2px solid ' + ${color}">Datos de
+      la organización
+    </div>
+    <ul class="section-content" style="margin-top: 4px;list-style: none;padding-left: 0;">
+      <li><b>Nombre:</b> <span th:text="${organization}">organization</span></li>
+      <li><b>CIF:</b> <span th:text="${cif}">cif</span></li>
+      <li><b>Uso de instalaciones:</b> <span th:text="${use}">use</span></li>
+    </ul>
+
+    <div class="section-title"
+         style="font-size: 18px;font-weight: bold;margin-top: 18px;"
+         th:styleappend="'border-bottom: 2px solid ' + ${color}">Datos de
+      contacto
+    </div>
+    <ul class="section-content" style="margin-top: 4px;list-style: none;padding-left: 0;">
+      <li><b>Nombre:</b> <span th:text="${contactName}">contactName</span></li>
+      <li><b>Relación con la entidad:</b> <span th:text="${contactRelationship}">contactRelationship</span></li>
+      <li><b>Correo:</b> <span th:text="${contactMail}">contactMail</span></li>
+      <li><b>Teléfono:</b> <span th:text="${contactPhone}">contactPhone</span></li>
+    </ul>
+
+    <div class="section-title"
+         style="font-size: 18px;font-weight: bold;margin-top: 18px;"
+         th:styleappend="'border-bottom: 2px solid ' + ${color}">Detalles
+      de la reserva
+    </div>
+    <ul class="section-content" style="margin-top: 4px;list-style: none;padding-left: 0;">
+      <li><b>Número de reserva:</b> <span th:text="${id}">id</span></li>
+      <li><b>Centro scout solicitado:</b> <span th:text="${center}">center</span></li>
+      <li><b>Número de personas:</b> <span th:text="${packs}">packs</span></li>
+      <li><b>Fecha de entrada:</b> <span
+        th:text="${#temporals.format(startDate, 'dd/MM/yyyy HH:mm')}">startDate</span>
+      </li>
+      <li><b>Fecha de salida:</b> <span th:text="${#temporals.format(endDate, 'dd/MM/yyyy HH:mm')}">endDate</span>
+      </li>
+      <li><b>Centro en exclusividad:</b>
+        <span th:if="${exclusiveness}">Sí</span>
+        <span th:unless="${exclusiveness}">No</span>
+      </li>
+      <li><b>Observaciones:</b> <span th:text="${observations}">observations</span></li>
+    </ul>
+  </div>
+
+</div>
+</body>
+</html>

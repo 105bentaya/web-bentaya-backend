@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${subject}">Reserva Confirmada</title>
+
+</head>
+<body style="font-family: Arial, sans-serif;background-color: #f4f4f4;margin: 0;padding: 5px 0;">
+<div th:replace="~{booking/common :: container(~{::#content})}">
+  <div id="content">
+    <div th:replace="~{booking/common :: header}"></div>
+    <div class="content" style="padding: 20px;font-size: 16px;color: #111111;line-height: 1.5;">
+
+      <div>
+        <p>
+          Su reserva con número
+          <b th:text="${id}">id</b>
+          para el centro scout
+          <b th:text="${center}">center</b>
+          ha sido confirmada.
+        </p>
+        <div th:if="${exclusivenessRejected}">
+          <span>No obstante, la exclusividad no ha podido ser aceptada por el siguiente motivo:</span>
+          <p th:replace="~{booking/common :: important-text(${statusObservation})}">
+            statusObservation
+          </p>
+        </div>
+        <div th:if="${!exclusivenessRejected && statusObservation != null}">
+          <span>Se han incluido las siguientes observaciones:</span>
+          <p th:replace="~{booking/common :: important-text(${statusObservation})}">
+            statusObservation
+          </p>
+        </div>
+        <p>
+          Para retirar las llaves del lugar, pónganse en contacto con la persona responsable del centro scout la semana
+          anterior a su reserva y con al menos dos días de antelación respecto al inicio de la misma. La información de
+          contacto la puede consultar en el documento de las normas.
+        </p>
+
+        <div th:replace="~{booking/common :: hr}"></div>
+
+        <div th:replace="~{booking/common :: user-access }"></div>
+      </div>
+      <div th:replace="~{booking/common :: user-footer}"></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

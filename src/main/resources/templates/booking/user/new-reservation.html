@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${subject}">Nueva Reserva</title>
+
+</head>
+<body style="font-family: Arial, sans-serif;background-color: #f4f4f4;margin: 0;padding: 5px 0;">
+<div th:replace="~{booking/common :: container(~{::#content})}">
+  <div id="content">
+    <div th:replace="~{booking/common :: header}"></div>
+    <div class="content" style="padding: 20px;font-size: 16px;color: #111111;line-height: 1.5;">
+      <p>Estimado/a <b><span th:text="${contactName}">contactName</span></b>,</p>
+      <p>Su solicitud de reserva para el centro scout <b><span th:text="${center}">center</span></b> ha sido recibida con
+        éxito. A continuación, los detalles de su reserva:
+      </p>
+
+      <div th:replace="~{booking/common :: booking-info}"></div>
+
+      <div th:replace="~{booking/common :: hr}"></div>
+
+      <div th:replace="~{booking/common :: (${newUser} ? 'new-user' : 'user-access' ) }"></div>
+    </div>
+    <div th:replace="~{booking/common :: user-footer}"></div>
+  </div>
+</div>
+</body>
+</html>

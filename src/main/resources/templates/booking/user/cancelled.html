@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${subject}">Reserva Cancelada</title>
+
+</head>
+<body style="font-family: Arial, sans-serif;background-color: #f4f4f4;margin: 0;padding: 5px 0;">
+<div th:replace="~{booking/common :: container(~{::#content})}">
+  <div id="content">
+    <div th:replace="~{booking/common :: header}"></div>
+    <div class="content" style="padding: 20px;font-size: 16px;color: #111111;line-height: 1.5;">
+      <p>
+        Ha cancelado su reserva con número
+        <b th:text="${id}"></b>
+        para el centro scout
+        <b th:text="${center}"></b>.
+      </p>
+      <div>
+        <span>El motivo indicado es el siguiente:</span>
+        <p th:replace="~{booking/common :: important-text(${statusObservation})}">
+          statusObservation
+        </p>
+      </div>
+      <p>
+        Si lo desea, desde el panel seguimiento puede realizar una nueva reserva sin necesidad de introducir todos los
+        datos nuevamente.
+      </p>
+      <div th:replace="~{booking/common :: hr}"></div>
+
+      <div th:replace="~{booking/common :: user-access }"></div>
+    </div>
+    <div th:replace="~{booking/common :: user-footer}"></div>
+  </div>
+</div>
+</body>
+</html>

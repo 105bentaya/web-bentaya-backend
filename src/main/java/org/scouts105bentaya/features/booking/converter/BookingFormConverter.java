@@ -1,6 +1,6 @@
 package org.scouts105bentaya.features.booking.converter;
 
-import org.scouts105bentaya.features.booking.dto.BookingFormDto;
+import org.scouts105bentaya.features.booking.dto.in.BookingFormDto;
 import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.scout_center.repository.ScoutCenterRepository;
 import org.scouts105bentaya.shared.GenericConstants;

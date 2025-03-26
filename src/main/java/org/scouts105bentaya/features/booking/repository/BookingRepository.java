@@ -3,6 +3,7 @@ package org.scouts105bentaya.features.booking.repository;
 import org.scouts105bentaya.features.booking.entity.Booking;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -13,9 +14,10 @@ import java.util.Optional;
 public interface BookingRepository extends JpaRepository<Booking, Integer>, JpaSpecificationExecutor<Booking> {
     List<Booking> findBookingByScoutCenterIdAndEndDateIsAfter(Integer scoutCenterId, LocalDateTime endDate);
 
-    List<Booking> findBookingByScoutCenterIdAndEndDateIsAfterAndStartDateIsBefore(Integer scoutCenterId, LocalDateTime startDate, LocalDateTime endDate);
-
     List<Booking> findBookingByUserId(Integer userId);
 
     Optional<Booking> findFirstByUserIdOrderByCreationDateDesc(Integer userId);
+
+    @Query("SELECT b FROM Booking b WHERE b.scoutCenter.id = :centerId AND b.startDate < :endDate and b.endDate > :startDate")
+    List<Booking> findAllOverlapping(LocalDateTime startDate, LocalDateTime endDate, Integer centerId);
 }

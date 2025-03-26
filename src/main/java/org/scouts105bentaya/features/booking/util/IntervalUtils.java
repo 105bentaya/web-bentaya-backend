@@ -3,12 +3,14 @@ package org.scouts105bentaya.features.booking.util;
 import org.joda.time.DateTime;
 import org.joda.time.Instant;
 import org.joda.time.Interval;
-import org.scouts105bentaya.features.booking.dto.BookingDateFormDto;
+import org.joda.time.base.AbstractInterval;
+import org.scouts105bentaya.features.booking.dto.in.BookingDateFormDto;
 import org.scouts105bentaya.features.booking.entity.Booking;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public final class IntervalUtils {
@@ -24,7 +26,7 @@ public final class IntervalUtils {
         return intervalFromLocalDateTimes(booking.startDate(), booking.endDate());
     }
 
-    private static Interval intervalFromLocalDateTimes(LocalDateTime startDate, LocalDateTime endDate) {
+    public static Interval intervalFromLocalDateTimes(LocalDateTime startDate, LocalDateTime endDate) {
         Instant instant1 = Instant.ofEpochSecond(startDate.toEpochSecond(ZoneOffset.ofHours(0)));
         Instant instant2 = Instant.ofEpochSecond(endDate.toEpochSecond(ZoneOffset.ofHours(0)));
         return new Interval(instant1, instant2);
@@ -40,63 +42,64 @@ public final class IntervalUtils {
         );
     }
 
-    public static List<Interval> removeOverlappingSectionsFromSecondIntervalList(List<Interval> master, List<Interval> slave) {
-        List<Interval> result = new ArrayList<>();
-
-        for (Interval currentInterval : slave) {
-            List<Interval> overlappingIntervals = master.stream()
-                .filter(interval -> interval.overlaps(currentInterval))
-                .toList();
-
-            if (!overlappingIntervals.isEmpty()) {
-                Interval newInterval = currentInterval;
-                for (Interval interval : overlappingIntervals) {
-                    if (currentInterval.getStart().isAfter(interval.getStart()) && currentInterval.getEnd().isBefore(interval.getEnd())) {
-                        newInterval = null;
-                        break;
-                    } else if (currentInterval.getStart().isBefore(interval.getStart()) && currentInterval.getEnd().isBefore(interval.getEnd())) {
-                        newInterval = newInterval.withEnd(interval.getStart());
-                    } else if (currentInterval.getStart().isAfter(interval.getStart()) && currentInterval.getEnd().isAfter(interval.getEnd())) {
-                        newInterval = newInterval.withStart(interval.getEnd());
-                    } else if (currentInterval.getStart().isBefore(interval.getStart()) && currentInterval.getEnd().isAfter(interval.getEnd())) {
-                        result.add(newInterval.withEnd(interval.getStart()));
-                        newInterval = newInterval.withStart(interval.getEnd());
-                    }
-                }
-                if (newInterval != null) {
-                    result.add(newInterval);
-                }
-            } else {
-                result.add(currentInterval);
-            }
-        }
-        return result;
-    }
-
-    // se puede mejorar bastante, mirar chatgpt
     public static List<Interval> mergeIntervalList(List<Interval> intervals) {
+        intervals = new ArrayList<>(intervals);
+        intervals.sort(Comparator.comparing(AbstractInterval::getStart));
+
         List<Interval> result = new ArrayList<>();
         for (Interval currentInterval : intervals) {
-            List<Interval> overlappingIntervals = result.stream()
-                .filter(interval -> interval.overlaps(currentInterval) || interval.abuts(currentInterval)).toList();
-            if (!overlappingIntervals.isEmpty()) {
-                result.removeAll(overlappingIntervals);
-                Interval mergedInterval = currentInterval;
-                for (Interval interval : overlappingIntervals) {
-                    mergedInterval = mergeIntervals(mergedInterval, interval);
-                }
-                result.add(mergedInterval);
-            } else {
+            int last = result.size() - 1;
+            if (result.isEmpty() || !(result.get(last).overlaps(currentInterval) || result.get(last).abuts(currentInterval))) {
                 result.add(currentInterval);
+            } else {
+                result.set(last, mergeIntervals(result.get(last), currentInterval));
             }
         }
+
         return result;
     }
 
-    // operación de unión entre ambos intervalos
     public static Interval mergeIntervals(Interval firstInterval, Interval secondInterval) {
-        DateTime start = firstInterval.getStart().isBefore(secondInterval.getStart()) ? firstInterval.getStart() : secondInterval.getStart();
-        DateTime end = firstInterval.getEnd().isAfter(secondInterval.getEnd()) ? firstInterval.getEnd() : secondInterval.getEnd();
+        if (!firstInterval.overlaps(secondInterval) && !firstInterval.abuts(secondInterval))
+            throw new IllegalArgumentException("Intervals do not overlap");
+        DateTime start = firstInterval.getStart().isAfter(secondInterval.getStart()) ? secondInterval.getStart() : firstInterval.getStart();
+        DateTime end = firstInterval.getEnd().isBefore(secondInterval.getEnd()) ? secondInterval.getEnd() : firstInterval.getEnd();
         return new Interval(start, end);
+    }
+
+    public static List<Interval> removeIntervalListOverlappingSectionsWithIntervalList(List<Interval> mainIntervals, List<Interval> intervalsToCheck) {
+        return intervalsToCheck.stream()
+            .flatMap(intervalToCheck -> removeIntervalOverlappingSectionsWithIntervalList(mergeIntervalList(mainIntervals), intervalToCheck).stream())
+            .toList();
+    }
+
+    private static List<Interval> removeIntervalOverlappingSectionsWithIntervalList(List<Interval> mainIntervals, Interval intervalToCheck) {
+        List<Interval> intervalToCheckRemaining = new ArrayList<>();
+        intervalToCheckRemaining.add(intervalToCheck);
+        mainIntervals = mainIntervals.stream().filter(mainInterval -> mainInterval.overlaps(intervalToCheck)).toList();
+
+        for (Interval mainInterval : mainIntervals) {
+            List<Interval> newParts = new ArrayList<>();
+            for (Interval part : intervalToCheckRemaining) {
+                newParts.addAll(removeIntervalOverlappingSectionsWithInterval(mainInterval, part));
+            }
+            intervalToCheckRemaining = newParts;
+        }
+        return intervalToCheckRemaining;
+    }
+
+    private static List<Interval> removeIntervalOverlappingSectionsWithInterval(Interval mainInterval, Interval intervalToCheck) {
+        List<Interval> result = new ArrayList<>();
+        if (intervalToCheck.overlaps(mainInterval)) {
+            if (intervalToCheck.getStart().isBefore(mainInterval.getStart())) {
+                result.add(new Interval(intervalToCheck.getStart(), mainInterval.getStart()));
+            }
+            if (intervalToCheck.getEnd().isAfter(mainInterval.getEnd())) {
+                result.add(new Interval(mainInterval.getEnd(), intervalToCheck.getEnd()));
+            }
+        } else {
+            result.add(mainInterval);
+        }
+        return result;
     }
 }

@@ -1,4 +1,4 @@
-package org.scouts105bentaya.features.booking.dto;
+package org.scouts105bentaya.features.booking.dto.in;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

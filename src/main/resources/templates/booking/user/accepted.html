@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${subject}">Reserva Aceptada</title>
+
+</head>
+<body style="font-family: Arial, sans-serif;background-color: #f4f4f4;margin: 0;padding: 5px 0;">
+<div th:replace="~{booking/common :: container(~{::#content})}">
+  <div id="content">
+    <div th:replace="~{booking/common :: header}"></div>
+    <div class="content" style="padding: 20px;font-size: 16px;color: #111111;line-height: 1.5;">
+
+      <p>
+        Su reserva con número
+        <b th:text="${id}">id</b>
+        para el centro scout
+        <b th:text="${center}">center</b>
+        ha sido aceptada.
+      </p>
+      <div th:if="${statusObservation != null}">
+        <span>Se han incluido las siguientes observaciones:</span>
+        <p th:replace="~{booking/common :: important-text(${statusObservation})}">
+          statusObservation
+        </p>
+      </div>
+      <p>
+        La aportación de mantenimiento que debe abonar para la reserva es de
+        <b><span th:text="${#numbers.formatDecimal(price, 0, 'POINT', 2, 'COMMA')}">price</span>€</b>.
+      </p>
+      <p>
+        Puede consultar las normas del lugar y la cuenta para realizar el ingreso en el PDF adjunto. Además, desde el
+        panel de seguimiento, también podrá acceder a las normas y deberá subir los documentos requeridos, así como el
+        recibo de la aportación.
+      </p>
+      <div th:replace="~{booking/common :: hr}"></div>
+
+      <div th:replace="~{booking/common :: user-access }"></div>
+    </div>
+    <div th:replace="~{booking/common :: user-footer}"></div>
+  </div>
+</div>
+</body>
+</html>

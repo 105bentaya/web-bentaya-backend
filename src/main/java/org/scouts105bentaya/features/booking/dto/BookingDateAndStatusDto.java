@@ -4,11 +4,10 @@ import org.scouts105bentaya.features.booking.enums.BookingStatus;
 
 import java.time.LocalDateTime;
 
-public record BookingDateDto(
+public record BookingDateAndStatusDto(
     LocalDateTime startDate,
     LocalDateTime endDate,
     BookingStatus status,
-    Integer id,
-    Integer packs
+    Boolean fullyOccupied
 ) {
 }

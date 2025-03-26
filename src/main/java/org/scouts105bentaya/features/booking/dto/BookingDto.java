@@ -1,10 +1,5 @@
 package org.scouts105bentaya.features.booking.dto;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import org.hibernate.validator.constraints.Length;
 import org.scouts105bentaya.features.booking.enums.BookingStatus;
 import org.scouts105bentaya.features.scout_center.dto.BasicScoutCenterDto;
 
@@ -13,19 +8,19 @@ import java.time.ZonedDateTime;
 
 public record BookingDto(
     Integer id,
-    @NotNull BookingStatus status,
-    @NotNull BasicScoutCenterDto scoutCenter,
-    @Length(max = 255) @NotBlank String organizationName,
-    @Length(max = 255) @NotBlank String cif,
-    @Length(max = 511) @NotBlank String facilityUse,
-    @Positive @NotNull int packs,
-    @Length(max = 255) @NotBlank String contactName,
-    @Length(max = 255) @NotBlank String contactRelationship,
-    @Length(max = 255) @NotBlank @Email String contactMail,
-    @Length(max = 255) @NotBlank String contactPhone,
-    @NotNull LocalDateTime startDate,
-    @NotNull LocalDateTime endDate,
-    @Length(max = 1023) String observations,
+    BookingStatus status,
+    BasicScoutCenterDto scoutCenter,
+    String organizationName,
+    String cif,
+    String facilityUse,
+    int packs,
+    String contactName,
+    String contactRelationship,
+    String contactMail,
+    String contactPhone,
+    LocalDateTime startDate,
+    LocalDateTime endDate,
+    String observations,
     String statusObservations,
     boolean exclusiveReservation,
     ZonedDateTime creationDate,
