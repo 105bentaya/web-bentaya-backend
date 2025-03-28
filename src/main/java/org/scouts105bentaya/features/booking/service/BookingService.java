@@ -24,6 +24,8 @@ import org.scouts105bentaya.features.booking.specification.BookingSpecificationF
 import org.scouts105bentaya.features.booking.util.BookingIntervalHelper;
 import org.scouts105bentaya.features.booking.util.IntervalUtils;
 import org.scouts105bentaya.features.scout_center.repository.ScoutCenterRepository;
+import org.scouts105bentaya.features.setting.SettingService;
+import org.scouts105bentaya.features.setting.enums.SettingEnum;
 import org.scouts105bentaya.shared.service.AuthService;
 import org.scouts105bentaya.shared.service.BlobService;
 import org.scouts105bentaya.shared.util.dto.FileTransferDto;
@@ -49,6 +51,7 @@ public class BookingService {
     private final BlobService blobService;
     private final BookingConverter bookingConverter;
     private final ScoutCenterRepository scoutCenterRepository;
+    private final SettingService settingService;
 
     public BookingService(
         BookingFormConverter bookingFormConverter,
@@ -58,7 +61,8 @@ public class BookingService {
         AuthService authService,
         BlobService blobService,
         BookingConverter bookingConverter,
-        ScoutCenterRepository scoutCenterRepository
+        ScoutCenterRepository scoutCenterRepository,
+        SettingService settingService
     ) {
         this.bookingFormConverter = bookingFormConverter;
         this.bookingRepository = bookingRepository;
@@ -68,6 +72,7 @@ public class BookingService {
         this.blobService = blobService;
         this.bookingConverter = bookingConverter;
         this.scoutCenterRepository = scoutCenterRepository;
+        this.settingService = settingService;
     }
 
     public Page<Booking> findAll(BookingSpecificationFilter filter) {
@@ -147,7 +152,16 @@ public class BookingService {
     public void saveFromForm(BookingFormDto dto) {
         Booking booking = bookingFormConverter.convertFromDto(dto);
         this.validateBookingDates(booking);
+        this.validateIfDateIsAllowed(booking);
         this.bookingStatusService.saveFromForm(booking);
+    }
+
+    private void validateIfDateIsAllowed(Booking booking) {
+        String settingDate = settingService.findByName(SettingEnum.BOOKING_DATE).getValue();
+        LocalDateTime maxDate = ZonedDateTime.parse(settingDate).toLocalDate().plusDays(1).atStartOfDay();
+        if (booking.getStartDate().isAfter(maxDate)) {
+            throw new WebBentayaBadRequestException("No se puede hacer una reserva para estas fechas");
+        }
     }
 
     private void validateBookingDates(Booking booking) {

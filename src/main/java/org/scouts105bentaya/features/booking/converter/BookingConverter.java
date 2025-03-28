@@ -4,6 +4,8 @@ import org.scouts105bentaya.features.booking.dto.BookingDto;
 import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.scout_center.dto.BasicScoutCenterDto;
 import org.scouts105bentaya.features.scout_center.repository.ScoutCenterRepository;
+import org.scouts105bentaya.features.setting.SettingService;
+import org.scouts105bentaya.features.setting.enums.SettingEnum;
 import org.scouts105bentaya.shared.GenericConstants;
 import org.scouts105bentaya.shared.GenericConverter;
 import org.springframework.stereotype.Component;
@@ -11,16 +13,17 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.function.IntPredicate;
 
 @Component
 public class BookingConverter extends GenericConverter<Booking, BookingDto> {
 
     private final ScoutCenterRepository scoutCenterRepository;
+    private final SettingService settingService;
 
-    public BookingConverter(ScoutCenterRepository scoutCenterRepository) {
+    public BookingConverter(ScoutCenterRepository scoutCenterRepository, SettingService settingService) {
         super();
         this.scoutCenterRepository = scoutCenterRepository;
+        this.settingService = settingService;
     }
 
     @Override
@@ -85,13 +88,14 @@ public class BookingConverter extends GenericConverter<Booking, BookingDto> {
     }
 
     private int bookingBillableDays(Booking booking) {
-        LocalDateTime billableStart = truncateBookingDates(booking.getStartDate(), hour -> hour > 21);
-        LocalDateTime billableEnd = truncateBookingDates(booking.getEndDate(), hour -> hour > 9);
+        LocalDateTime billableStart = truncateBookingDates(booking.getStartDate(), SettingEnum.BOOKING_MAX_DAY_NUMBER);
+        LocalDateTime billableEnd = truncateBookingDates(booking.getEndDate(), SettingEnum.BOOKING_MIN_DAY_NUMBER);
 
         return (int) Math.max(1, billableStart.until(billableEnd, ChronoUnit.DAYS));
     }
 
-    private LocalDateTime truncateBookingDates(LocalDateTime date, IntPredicate dayIsBillable) {
-        return dayIsBillable.test(date.getHour()) ? date.truncatedTo(ChronoUnit.DAYS).plusDays(1) : date.truncatedTo(ChronoUnit.DAYS);
+    private LocalDateTime truncateBookingDates(LocalDateTime date, SettingEnum setting) {
+        int maxHour = Integer.parseInt(settingService.findByName(setting).getValue());
+        return date.getHour() > maxHour ? date.truncatedTo(ChronoUnit.DAYS).plusDays(1) : date.truncatedTo(ChronoUnit.DAYS);
     }
 }
