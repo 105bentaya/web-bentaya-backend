@@ -15,7 +15,6 @@ import org.scouts105bentaya.features.booking.repository.BookingRepository;
 import org.scouts105bentaya.features.scout_center.ScoutCenterService;
 import org.scouts105bentaya.features.setting.enums.SettingEnum;
 import org.scouts105bentaya.features.user.UserService;
-import org.scouts105bentaya.shared.service.BlobService;
 import org.scouts105bentaya.shared.service.EmailService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -38,7 +37,6 @@ public class BookingStatusService {
     private final TemplateEngine htmlTemplateEngine;
     private final EmailService emailService;
     private final UserService userService;
-    private final BlobService blobService;
     private final ScoutCenterService scoutCenterService;
     @Value("${bentaya.web.url}") private String url;
 
@@ -47,14 +45,12 @@ public class BookingStatusService {
         TemplateEngine htmlTemplateEngine,
         EmailService emailService,
         UserService userService,
-        BlobService blobService,
         ScoutCenterService scoutCenterService
     ) {
         this.bookingRepository = bookingRepository;
         this.htmlTemplateEngine = htmlTemplateEngine;
         this.emailService = emailService;
         this.userService = userService;
-        this.blobService = blobService;
         this.scoutCenterService = scoutCenterService;
     }
 

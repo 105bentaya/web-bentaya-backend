@@ -27,9 +27,4 @@ public class Setting {
     @NotNull
     @Column(nullable = false)
     private String value;
-    @NotNull
-    @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "varchar", nullable = false)
-    private SettingType type;
-    private boolean canBeNull;
 }
