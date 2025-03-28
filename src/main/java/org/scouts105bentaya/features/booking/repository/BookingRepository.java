@@ -25,4 +25,7 @@ public interface BookingRepository extends JpaRepository<Booking, Integer>, JpaS
 
     @Query("SELECT b FROM Booking b WHERE b.scoutCenter.id = :centerId AND b.startDate < :endDate and b.endDate > :startDate")
     List<Booking> findAllOverlapping(LocalDateTime startDate, LocalDateTime endDate, Integer centerId);
+
+    @Query("SELECT b FROM Booking b WHERE b.ownBooking = false AND b.finished = false AND b.status = 'OCCUPIED' AND b.endDate < :date")
+    List<Booking> findBookingsToBeFinished(LocalDateTime date);
 }

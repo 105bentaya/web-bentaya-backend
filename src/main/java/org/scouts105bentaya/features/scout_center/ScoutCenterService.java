@@ -13,6 +13,7 @@ import org.scouts105bentaya.shared.service.BlobService;
 import org.scouts105bentaya.shared.service.GeneralBlobService;
 import org.scouts105bentaya.shared.service.PublicBlobService;
 import org.scouts105bentaya.shared.util.FileUtils;
+import org.scouts105bentaya.shared.util.dto.FileTransferDto;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -38,22 +39,22 @@ public class ScoutCenterService {
         this.scoutCenterFileRepository = scoutCenterFileRepository;
     }
 
-    public ResponseEntity<byte[]> getRulePDF(int centerId) {
+    public FileTransferDto getRulePDF(int centerId) {
         ScoutCenterFile ruleFile = Optional.ofNullable(scoutCenterRepository.get(centerId).getRulePdf())
             .orElseThrow(WebBentayaNotFoundException::new);
-        return FileUtils.getFileResponseEntity(blobService.getBlob(ruleFile.getUuid()), ruleFile.getName(), MediaType.APPLICATION_PDF);
+        return new FileTransferDto(blobService.getBlob(ruleFile.getUuid()), ruleFile.getName(), MediaType.APPLICATION_PDF);
     }
 
-    public ResponseEntity<byte[]> getIncidenceFile(int centerId) {
+    public FileTransferDto getIncidenceFile(int centerId) {
         ScoutCenterFile incidenceFile = Optional.ofNullable(scoutCenterRepository.get(centerId).getIncidencesDoc())
             .orElseThrow(WebBentayaNotFoundException::new);
-        return FileUtils.getFileResponseEntity(blobService.getBlob(incidenceFile.getUuid()), incidenceFile.getName(), incidenceFile.getMimeType());
+        return new FileTransferDto(blobService.getBlob(incidenceFile.getUuid()), incidenceFile.getName(), incidenceFile.getMimeType());
     }
 
-    public ResponseEntity<byte[]> getAttendanceFile(int centerId) {
+    public FileTransferDto getAttendanceFile(int centerId) {
         ScoutCenterFile attendanceFile = Optional.ofNullable(scoutCenterRepository.get(centerId).getAttendanceDoc())
             .orElseThrow(WebBentayaNotFoundException::new);
-        return FileUtils.getFileResponseEntity(blobService.getBlob(attendanceFile.getUuid()), attendanceFile.getName(), attendanceFile.getMimeType());
+        return new FileTransferDto(blobService.getBlob(attendanceFile.getUuid()), attendanceFile.getName(), attendanceFile.getMimeType());
     }
 
     public ScoutCenterFile uploadRuleFile(int centerId, @NotNull MultipartFile file) {
@@ -104,11 +105,11 @@ public class ScoutCenterService {
 
     public ResponseEntity<byte[]> getPhoto(String uuid) {
         ScoutCenterFile file = scoutCenterFileRepository.findByUuid(uuid).orElseThrow(WebBentayaNotFoundException::new);
-        return FileUtils.getFileResponseEntity(
+        return new FileTransferDto(
             publicBlobService.getBlob(uuid),
             file.getName(),
             file.getMimeType()
-        );
+        ).asResponseEntity();
     }
 
     public List<ScoutCenterFile> uploadPhotos(int centerId, @NotEmpty List<MultipartFile> files) {

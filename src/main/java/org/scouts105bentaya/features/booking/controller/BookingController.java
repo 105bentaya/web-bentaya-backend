@@ -149,8 +149,8 @@ public class BookingController {
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userOwnsBookingDocument(#documentId)")
     @GetMapping("/document/pdf/{documentId}")
-    public ResponseEntity<byte[]> getBookingPdf(@PathVariable Integer documentId) {
-        log.info("METHOD BookingController.getBookingPdf --- PARAMS id: {}{}", documentId, SecurityUtils.getLoggedUserUsernameForLog());
+    public ResponseEntity<byte[]> getBookingDocument(@PathVariable Integer documentId) {
+        log.info("METHOD BookingController.getBookingDocument --- PARAMS id: {}{}", documentId, SecurityUtils.getLoggedUserUsernameForLog());
         return bookingService.getBookingDocument(documentId);
     }
 

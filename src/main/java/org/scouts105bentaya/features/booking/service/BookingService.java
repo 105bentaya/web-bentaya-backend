@@ -26,7 +26,7 @@ import org.scouts105bentaya.features.booking.util.IntervalUtils;
 import org.scouts105bentaya.features.scout_center.repository.ScoutCenterRepository;
 import org.scouts105bentaya.shared.service.AuthService;
 import org.scouts105bentaya.shared.service.BlobService;
-import org.scouts105bentaya.shared.util.FileUtils;
+import org.scouts105bentaya.shared.util.dto.FileTransferDto;
 import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -201,11 +201,11 @@ public class BookingService {
 
     public ResponseEntity<byte[]> getBookingDocument(Integer id) {
         BookingDocument bookingDocument = this.findBookingDocumentById(id);
-        return FileUtils.getFileResponseEntity(
+        return new FileTransferDto(
             blobService.getBlob(bookingDocument.getFileUuid()),
             bookingDocument.getFileName(),
             MediaType.APPLICATION_PDF
-        );
+        ).asResponseEntity();
     }
 
     public PendingBookingsDto findAllPending(BookingSpecificationFilter filter) {

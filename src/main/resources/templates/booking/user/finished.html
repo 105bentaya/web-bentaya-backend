@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${subject}">Reserva Finalizada</title>
+
+</head>
+<body style="font-family: Arial, sans-serif;background-color: #f4f4f4;margin: 0;padding: 5px 0;">
+<div th:replace="~{booking/common :: container(~{::#content})}">
+  <div id="content">
+    <div th:replace="~{booking/common :: header}"></div>
+    <div class="content" style="padding: 20px;font-size: 16px;color: #111111;line-height: 1.5;">
+
+      <p>
+        Le informamos que su reserva con número
+        <b th:text="${id}">id</b>
+        en el centro scout
+        <b th:text="${center}">centro</b>
+        ha finalizado. Esperamos que haya disfrutado de la estancia y que la actividad haya sido todo un éxito.
+      </p>
+
+      <p>
+        Si aún no lo ha hecho, le pedimos que suba el documento de registros y estados. Esto nos ayuda a mantener y
+        mejorar nuestras instalaciones para futuras estancias. Puede hacerlo fácilmente desde el panel de seguimiento.
+      </p>
+
+      <p>
+        Además, si necesita hacer una nueva reserva, puede gestionarla desde el mismo panel sin tener que volver a
+        introducir todos los datos.
+      </p>
+
+      <div th:replace="~{booking/common :: hr}"></div>
+
+      <div th:replace="~{booking/common :: user-access }"></div>
+    </div>
+    <div th:replace="~{booking/common :: user-footer}"></div>
+  </div>
+</div>
+</body>
+</html>

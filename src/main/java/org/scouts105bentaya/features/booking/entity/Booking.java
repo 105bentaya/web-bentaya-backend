@@ -56,6 +56,7 @@ public class Booking {
     private boolean exclusiveReservation;
     private boolean userConfirmedDocuments;
     private boolean ownBooking;
+    private boolean finished;
     private ZonedDateTime creationDate;
     @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY)
     private List<BookingDocument> bookingDocumentList;

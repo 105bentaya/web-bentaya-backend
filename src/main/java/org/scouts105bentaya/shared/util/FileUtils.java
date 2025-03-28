@@ -2,10 +2,7 @@ package org.scouts105bentaya.shared.util;
 
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -32,18 +29,6 @@ public final class FileUtils {
     );
 
     private FileUtils() {
-    }
-
-    public static ResponseEntity<byte[]> getFileResponseEntity(byte[] file, String fileName, MediaType mediaType) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("X-Filename", fileName);
-        headers.add(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, "X-Filename");
-        headers.setContentDisposition(ContentDisposition.inline().filename(fileName).build());
-        return ResponseEntity.ok().headers(headers).contentType(mediaType).body(file);
-    }
-
-    public static ResponseEntity<byte[]> getFileResponseEntity(byte[] file, String fileName, String mediaType) {
-        return getFileResponseEntity(file, fileName, MediaType.parseMediaType(mediaType));
     }
 
     public static void validateFileIsDoc(MultipartFile file) {

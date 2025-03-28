@@ -2,7 +2,6 @@ package org.scouts105bentaya.features.booking.service;
 
 import jakarta.activation.DataSource;
 import jakarta.annotation.Nullable;
-import jakarta.mail.util.ByteArrayDataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
@@ -13,7 +12,7 @@ import org.scouts105bentaya.features.booking.dto.in.BookingWarningDto;
 import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.booking.enums.BookingStatus;
 import org.scouts105bentaya.features.booking.repository.BookingRepository;
-import org.scouts105bentaya.features.scout_center.entity.ScoutCenterFile;
+import org.scouts105bentaya.features.scout_center.ScoutCenterService;
 import org.scouts105bentaya.features.setting.enums.SettingEnum;
 import org.scouts105bentaya.features.user.UserService;
 import org.scouts105bentaya.shared.service.BlobService;
@@ -25,6 +24,7 @@ import org.thymeleaf.context.Context;
 
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -39,6 +39,7 @@ public class BookingStatusService {
     private final EmailService emailService;
     private final UserService userService;
     private final BlobService blobService;
+    private final ScoutCenterService scoutCenterService;
     @Value("${bentaya.web.url}") private String url;
 
     public BookingStatusService(
@@ -46,13 +47,15 @@ public class BookingStatusService {
         TemplateEngine htmlTemplateEngine,
         EmailService emailService,
         UserService userService,
-        BlobService blobService
+        BlobService blobService,
+        ScoutCenterService scoutCenterService
     ) {
         this.bookingRepository = bookingRepository;
         this.htmlTemplateEngine = htmlTemplateEngine;
         this.emailService = emailService;
         this.userService = userService;
         this.blobService = blobService;
+        this.scoutCenterService = scoutCenterService;
     }
 
     public void saveFromForm(Booking booking) {
@@ -157,7 +160,7 @@ public class BookingStatusService {
 
     private void sendMailWithRulePdf(Booking booking, String subject, String infoHtmlContent) {
         if (booking.getScoutCenter().getRulePdf() != null) {
-            DataSource dataSource = this.getRulePdf(booking.getScoutCenter().getRulePdf());
+            DataSource dataSource = scoutCenterService.getRulePDF(booking.getScoutCenter().getId()).asDataSource();
             this.emailService.sendSimpleEmailWithHtmlAndAttachment(subject, infoHtmlContent, dataSource, booking.getUser().getUsername());
         } else {
             log.warn("Could not find rule pdf for scout center {}", booking.getScoutCenter().getId());
@@ -232,11 +235,32 @@ public class BookingStatusService {
         this.emailService.sendSimpleEmailWithHtml(subject, infoHtmlContent, booking.getUser().getUsername());
     }
 
-    private DataSource getRulePdf(ScoutCenterFile file) {
-        byte[] bytes = blobService.getBlob(file.getUuid());
-        ByteArrayDataSource dataSource = new ByteArrayDataSource(bytes, file.getMimeType());
-        dataSource.setName(file.getName());
-        return dataSource;
+    public void checkForFinishedBookings() {
+        List<Booking> bookingsToBeFinished = this.bookingRepository.findBookingsToBeFinished(LocalDateTime.now().minusHours(6));
+        bookingsToBeFinished.forEach(booking -> {
+            log.info("Setting booking {} as finished", booking.getId());
+            booking.setFinished(true);
+            bookingRepository.save(booking);
+            this.sendFinishedEmail(booking);
+        });
+    }
+
+    public void sendFinishedEmail(Booking booking) {
+        String subject = "Reserva nº %d Finalizada - %s".formatted(booking.getId(), booking.getScoutCenter().getName());
+        Context context = this.getBookingBasicContext(booking, subject);
+        final String infoHtmlContent = this.htmlTemplateEngine.process("booking/user/finished.html", context);
+
+        if (booking.getScoutCenter().getIncidencesDoc() != null) {
+            this.emailService.sendSimpleEmailWithHtmlAndAttachment(
+                subject,
+                infoHtmlContent,
+                scoutCenterService.getIncidenceFile(booking.getScoutCenter().getId()).asDataSource(),
+                booking.getUser().getUsername()
+            );
+        } else {
+            log.warn("Could not find incidence file for scout center {}", booking.getScoutCenter().getId());
+            this.emailService.sendSimpleEmailWithHtml(subject, infoHtmlContent, booking.getUser().getUsername());
+        }
     }
 
     private String[] getBookingEmails() {

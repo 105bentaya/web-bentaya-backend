@@ -75,21 +75,21 @@ public class ScoutCenterController {
     @GetMapping("/rules/{centerId}")
     public ResponseEntity<byte[]> getRuleFile(@PathVariable int centerId) {
         log.info("getRuleFile {}{}", centerId, SecurityUtils.getLoggedUserUsernameForLog());
-        return scoutCenterService.getRulePDF(centerId);
+        return scoutCenterService.getRulePDF(centerId).asResponseEntity();
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userHasAccessToScoutCenter(#centerId)")
     @GetMapping("/incidences/{centerId}")
     public ResponseEntity<byte[]> getIncidenceFile(@PathVariable int centerId) {
         log.info("getIncidenceFile {}{}", centerId, SecurityUtils.getLoggedUserUsernameForLog());
-        return scoutCenterService.getIncidenceFile(centerId);
+        return scoutCenterService.getIncidenceFile(centerId).asResponseEntity();
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userHasAccessToScoutCenter(#centerId)")
     @GetMapping("/attendance/{centerId}")
     public ResponseEntity<byte[]> getAttendanceFile(@PathVariable int centerId) { //todo, same file for every booking, tfg 14
         log.info("getAttendanceFile {}{}", centerId, SecurityUtils.getLoggedUserUsernameForLog());
-        return scoutCenterService.getAttendanceFile(centerId);
+        return scoutCenterService.getAttendanceFile(centerId).asResponseEntity();
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
