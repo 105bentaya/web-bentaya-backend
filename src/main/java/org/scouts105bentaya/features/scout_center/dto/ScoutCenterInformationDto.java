@@ -16,7 +16,8 @@ public record ScoutCenterInformationDto(
     int price,
     List<ScoutCenterFile> photos,
     ScoutCenterFile mainPhoto,
-    String icon
+    String icon,
+    String color
 ) {
     public static ScoutCenterInformationDto of(ScoutCenter center) {
         return new ScoutCenterInformationDto(
@@ -30,7 +31,8 @@ public record ScoutCenterInformationDto(
             center.getPrice(),
             center.getPhotos(),
             center.getMainPhoto(),
-            center.getIcon()
+            center.getIcon(),
+            center.getColor()
         );
     }
 }

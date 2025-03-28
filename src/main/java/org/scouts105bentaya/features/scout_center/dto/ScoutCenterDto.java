@@ -1,19 +1,23 @@
 package org.scouts105bentaya.features.scout_center.dto;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import org.scouts105bentaya.features.scout_center.entity.ScoutCenter;
 
 import java.util.List;
 
 public record ScoutCenterDto(
     Integer id,
-    String name,
-    String place,
-    int maxCapacity,
-    int minExclusiveCapacity,
-    String information,
-    List<String> features,
-    int price,
-    String icon
+    @NotNull String name,
+    @NotNull String place,
+    @NotNull @Min(1) int maxCapacity,
+    @NotNull int minExclusiveCapacity,
+    @NotNull String information,
+    @NotNull @NotEmpty List<String> features,
+    @NotNull int price,
+    @NotNull String icon,
+    @NotNull String color
 ) {
     public static ScoutCenterDto of(ScoutCenter center) {
         return new ScoutCenterDto(
@@ -25,7 +29,8 @@ public record ScoutCenterDto(
             center.getInformation(),
             center.getFeatures(),
             center.getPrice(),
-            center.getIcon()
+            center.getIcon(),
+            center.getColor()
         );
     }
 }

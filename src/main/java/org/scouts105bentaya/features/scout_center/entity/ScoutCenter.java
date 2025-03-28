@@ -51,6 +51,8 @@ public class ScoutCenter {
     private int price;
     @Column(nullable = false)
     private String icon;
+    @Column(nullable = false, length = 7)
+    private String color;
 
     @Transient
     public boolean isAlwaysExclusive() {

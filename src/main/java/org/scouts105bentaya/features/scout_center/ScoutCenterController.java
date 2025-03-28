@@ -1,5 +1,6 @@
 package org.scouts105bentaya.features.scout_center;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
@@ -66,7 +67,7 @@ public class ScoutCenterController {
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
     @PostMapping("/{centerId}")
-    public ScoutCenterDto updateScoutCenter(@PathVariable Integer centerId, @RequestBody ScoutCenterDto scoutCenterDto) {
+    public ScoutCenterDto updateScoutCenter(@PathVariable Integer centerId, @RequestBody @Valid ScoutCenterDto scoutCenterDto) {
         log.info("updateScoutCenter {}{}", centerId, SecurityUtils.getLoggedUserUsernameForLog());
         return ScoutCenterDto.of(scoutCenterService.updateScoutCenter(centerId, scoutCenterDto));
     }

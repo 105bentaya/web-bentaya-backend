@@ -272,7 +272,7 @@ public class BookingStatusService {
         context.setVariable("bookingInformationMail", this.getBookingEmails()[0]);
         context.setVariable("webUrl", url);
         context.setVariable("subject", subject);
-        context.setVariable("color", "#ED5565");
+        context.setVariable("color", booking.getScoutCenter().getColor());
 
         return context;
     }

@@ -149,7 +149,9 @@ public class ScoutCenterService {
             .setMaxCapacity(newScoutCenter.maxCapacity())
             .setMinExclusiveCapacity(newScoutCenter.minExclusiveCapacity())
             .setInformation(newScoutCenter.information())
-            .setFeatures(newScoutCenter.features());
+            .setFeatures(newScoutCenter.features())
+            .setIcon(newScoutCenter.icon())
+            .setColor(newScoutCenter.color());
         return scoutCenterRepository.save(scoutCenter);
     }
 }
