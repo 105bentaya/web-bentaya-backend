@@ -6,4 +6,8 @@ public enum BookingStatus {
     public boolean reservedOrOccupied() {
         return this == RESERVED || this == OCCUPIED;
     }
+
+    public boolean canceledOrRejected() {
+        return this == CANCELED || this == REJECTED;
+    }
 }

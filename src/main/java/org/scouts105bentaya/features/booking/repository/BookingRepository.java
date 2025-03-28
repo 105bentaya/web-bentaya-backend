@@ -1,5 +1,6 @@
 package org.scouts105bentaya.features.booking.repository;
 
+import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.booking.entity.Booking;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -12,6 +13,10 @@ import java.util.Optional;
 
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Integer>, JpaSpecificationExecutor<Booking> {
+    default Booking get(Integer bookingId) {
+        return findById(bookingId).orElseThrow(WebBentayaNotFoundException::new);
+    }
+
     List<Booking> findBookingByScoutCenterIdAndEndDateIsAfter(Integer scoutCenterId, LocalDateTime endDate);
 
     List<Booking> findBookingByUserId(Integer userId);

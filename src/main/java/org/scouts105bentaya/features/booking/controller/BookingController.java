@@ -1,4 +1,4 @@
-package org.scouts105bentaya.features.booking;
+package org.scouts105bentaya.features.booking.controller;
 
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -11,9 +11,9 @@ import org.scouts105bentaya.features.booking.dto.BookingDto;
 import org.scouts105bentaya.features.booking.dto.PendingBookingsDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingDateFormDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingFormDto;
-import org.scouts105bentaya.features.booking.dto.in.BookingStatusUpdateDto;
 import org.scouts105bentaya.features.booking.dto.in.OwnBookingFormDto;
 import org.scouts105bentaya.features.booking.enums.BookingDocumentStatus;
+import org.scouts105bentaya.features.booking.repository.BookingRepository;
 import org.scouts105bentaya.features.booking.service.BookingService;
 import org.scouts105bentaya.features.booking.specification.BookingSpecificationFilter;
 import org.scouts105bentaya.shared.specification.PageDto;
@@ -41,15 +41,18 @@ public class BookingController {
     private final BookingService bookingService;
     private final BookingConverter bookingConverter;
     private final BookingDocumentConverter bookingDocumentConverter;
+    private final BookingRepository bookingRepository;
 
     public BookingController(
         BookingService bookingService,
         BookingConverter bookingConverter,
-        BookingDocumentConverter bookingDocumentConverter
+        BookingDocumentConverter bookingDocumentConverter,
+        BookingRepository bookingRepository
     ) {
         this.bookingService = bookingService;
         this.bookingConverter = bookingConverter;
         this.bookingDocumentConverter = bookingDocumentConverter;
+        this.bookingRepository = bookingRepository;
     }
 
     //MANAGER
@@ -79,14 +82,7 @@ public class BookingController {
     @GetMapping("/{id}")
     public BookingDto getById(@PathVariable Integer id) {
         log.info("METHOD BookingController.getById{}", SecurityUtils.getLoggedUserUsernameForLog());
-        return bookingConverter.convertFromEntity(bookingService.findById(id));
-    }
-
-    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
-    @PutMapping("update-status")
-    public BookingDto updateBookingStatus(@RequestBody @Valid BookingStatusUpdateDto dto) {
-        log.info("METHOD BookingController.updateBookingStatus{}", SecurityUtils.getLoggedUserUsernameForLog());
-        return bookingConverter.convertFromEntity(bookingService.updateStatusByManager(dto));
+        return bookingConverter.convertFromEntity(bookingRepository.get(id));
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
@@ -142,13 +138,6 @@ public class BookingController {
         bookingService.saveBookingDocument(bookingId, file);
     }
 
-    @PreAuthorize("hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userOwnsBooking(#dto.id)")
-    @PutMapping("update-status-user")
-    public BookingDto updateUserBookingStatus(@RequestBody @Valid BookingStatusUpdateDto dto) {
-        log.info("METHOD BookingController.updateUserBookingStatus --- PARAMS id: {}{}", dto.getId(), SecurityUtils.getLoggedUserUsernameForLog());
-        return bookingConverter.convertFromEntity(bookingService.updateStatusByUser(dto));
-    }
-
     //SHARED
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userOwnsBooking(#id)")
@@ -162,7 +151,7 @@ public class BookingController {
     @GetMapping("/document/pdf/{documentId}")
     public ResponseEntity<byte[]> getBookingPdf(@PathVariable Integer documentId) {
         log.info("METHOD BookingController.getBookingPdf --- PARAMS id: {}{}", documentId, SecurityUtils.getLoggedUserUsernameForLog());
-        return bookingService.getPDF(documentId);
+        return bookingService.getBookingDocument(documentId);
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userCanEditBookingDocument(#documentId)")

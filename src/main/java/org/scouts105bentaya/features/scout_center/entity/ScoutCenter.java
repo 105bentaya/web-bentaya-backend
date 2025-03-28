@@ -9,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -50,4 +51,9 @@ public class ScoutCenter {
     private int price;
     @Column(nullable = false)
     private String icon;
+
+    @Transient
+    public boolean isAlwaysExclusive() {
+        return this.minExclusiveCapacity < 1;
+    }
 }

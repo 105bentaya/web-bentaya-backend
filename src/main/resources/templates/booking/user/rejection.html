@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title th:text="${subject}">Reserva Rechazada</title>
+  <title th:text="${subject}">Reserva Denegada</title>
 
 </head>
 <body style="font-family: Arial, sans-serif;background-color: #f4f4f4;margin: 0;padding: 5px 0;">
@@ -17,7 +17,7 @@
         <b th:text="${id}"></b>
         para el centro scout
         <b th:text="${center}"></b>
-        ha sido rechazada por el siguiente motivo:
+        ha sido denegada por el siguiente motivo:
       </p>
 
       <p th:replace="~{booking/common :: important-text(${statusObservation})}">

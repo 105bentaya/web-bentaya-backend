@@ -24,6 +24,13 @@ public final class FileUtils {
         Map.entry(".rtf", "application/rtf")
     );
 
+    private static final Map<String, String> IMG_TYPES = Map.ofEntries(
+        Map.entry(".webp", "image/webp"),
+        Map.entry(".jpg", "image/jpeg"),
+        Map.entry(".png", "image/png"),
+        Map.entry(".svg", "image/svg+xml")
+    );
+
     private FileUtils() {
     }
 
@@ -40,7 +47,8 @@ public final class FileUtils {
     }
 
     public static void validateFileIsDoc(MultipartFile file) {
-        if (!DOC_TYPES.containsValue(file.getContentType())) {
+        String fileType = Optional.ofNullable(file.getContentType()).orElse("");
+        if (!DOC_TYPES.containsValue(fileType)) {
             logUnsupportedType(file);
             throw new WebBentayaBadRequestException("El archivo debe ser de tipo .docx, .odt o .rtf");
         }
@@ -55,8 +63,8 @@ public final class FileUtils {
 
     public static void validateFileIsImg(MultipartFile file) {
         String fileType = Optional.ofNullable(file.getContentType()).orElse("");
-        if (!fileType.startsWith("image/")) {
-            throw new WebBentayaBadRequestException("El archivo debe ser una imagen");
+        if (!IMG_TYPES.containsValue(fileType)) {
+            throw new WebBentayaBadRequestException("El archivo debe ser una imagen jpg, png o svg");
         }
     }
 

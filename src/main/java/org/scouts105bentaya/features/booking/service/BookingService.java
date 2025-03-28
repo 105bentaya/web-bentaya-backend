@@ -12,7 +12,6 @@ import org.scouts105bentaya.features.booking.dto.BookingDto;
 import org.scouts105bentaya.features.booking.dto.PendingBookingsDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingDateFormDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingFormDto;
-import org.scouts105bentaya.features.booking.dto.in.BookingStatusUpdateDto;
 import org.scouts105bentaya.features.booking.dto.in.OwnBookingFormDto;
 import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.booking.entity.BookingDocument;
@@ -44,14 +43,23 @@ public class BookingService {
 
     private final BookingFormConverter bookingFormConverter;
     private final BookingRepository bookingRepository;
-    private final BookingDocumentRepository bookingDocumentRepository;
     private final BookingStatusService bookingStatusService;
+    private final BookingDocumentRepository bookingDocumentRepository;
     private final AuthService authService;
     private final BlobService blobService;
     private final BookingConverter bookingConverter;
     private final ScoutCenterRepository scoutCenterRepository;
 
-    public BookingService(BookingFormConverter bookingFormConverter, BookingRepository bookingRepository, BookingStatusService bookingStatusService, BookingDocumentRepository bookingDocumentRepository, AuthService authService, BlobService blobService, BookingConverter bookingConverter, ScoutCenterRepository scoutCenterRepository) {
+    public BookingService(
+        BookingFormConverter bookingFormConverter,
+        BookingRepository bookingRepository,
+        BookingStatusService bookingStatusService,
+        BookingDocumentRepository bookingDocumentRepository,
+        AuthService authService,
+        BlobService blobService,
+        BookingConverter bookingConverter,
+        ScoutCenterRepository scoutCenterRepository
+    ) {
         this.bookingFormConverter = bookingFormConverter;
         this.bookingRepository = bookingRepository;
         this.bookingStatusService = bookingStatusService;
@@ -74,54 +82,8 @@ public class BookingService {
         return bookingRepository.findFirstByUserIdOrderByCreationDateDesc(authService.getLoggedUser().getId()).orElseThrow(() -> new WebBentayaNotFoundException("No se han encontrado reservas asociadas a este usuario"));
     }
 
-    public Booking findById(Integer id) {
-        return bookingRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
-    }
-
     public List<BookingDocument> findDocumentsByBookingId(Integer id) {
         return bookingDocumentRepository.findByBookingId(id);
-    }
-
-    // Diagrama de estados
-    // https://drive.google.com/file/d/1UxVY4xrxK12tbuVHWrrCflXzZphYJMRi/view?usp=sharing
-    public Booking updateStatusByManager(BookingStatusUpdateDto newStatusDto) {
-        Booking currentBooking = this.findById(newStatusDto.getId());
-        if (currentBooking.isOwnBooking()) {
-            log.warn("updateStatusByManager - booking is own booking");
-            throw new WebBentayaBadRequestException("No se puede actualizar una reserva propia");
-        }
-
-        if (currentBooking.getStatus() == BookingStatus.NEW && newStatusDto.getNewStatus() == BookingStatus.RESERVED) {
-            return bookingStatusService.bookingFromNewToReserved(currentBooking, newStatusDto.getObservations(), newStatusDto.getPrice());
-        } else if (currentBooking.getStatus() == BookingStatus.RESERVED) {
-            if (newStatusDto.getNewStatus() == BookingStatus.OCCUPIED) {
-                return bookingStatusService.bookingFromReservedToOccupied(currentBooking, newStatusDto.getObservations(), newStatusDto.getExclusive());
-            } else if (newStatusDto.getNewStatus() == BookingStatus.RESERVED) {
-                return this.bookingStatusService.bookingFromReservedToReservedByManager(currentBooking, newStatusDto.getObservations());
-            }
-        } else if (newStatusDto.getNewStatus() == BookingStatus.REJECTED) {
-            return this.bookingStatusService.bookingRejected(currentBooking, newStatusDto.getObservations());
-        }
-
-        log.warn("updateStatusByManager - new booking status is invalid");
-        throw new WebBentayaBadRequestException("No se puede actualizar la reserva al estado solicitado");
-    }
-
-    public Booking updateStatusByUser(BookingStatusUpdateDto newStatusDto) {
-        Booking currentBooking = this.findById(newStatusDto.getId());
-        if (currentBooking.isOwnBooking()) {
-            log.warn("updateStatusByUser - booking is own booking");
-            throw new WebBentayaBadRequestException("No se puede actualizar una reserva propia");
-        }
-
-        if (currentBooking.getStatus() == BookingStatus.RESERVED && newStatusDto.getNewStatus() == BookingStatus.RESERVED) {
-            return this.bookingStatusService.bookingFromReservedToReservedByUser(currentBooking);
-        } else if (newStatusDto.getNewStatus() == BookingStatus.CANCELED && currentBooking.getStartDate().isBefore(LocalDateTime.now())) {
-            return this.bookingStatusService.bookingCanceled(currentBooking, newStatusDto.getObservations());
-        }
-
-        log.warn("updateStatusByUser - new booking status is invalid");
-        throw new WebBentayaBadRequestException("No se puede actualizar la reserva al estado solicitado");
     }
 
     public List<BookingDateAndStatusDto> getReservationDates(Integer scoutCenterId) {
@@ -208,7 +170,7 @@ public class BookingService {
     }
 
     public void saveBookingDocument(Integer bookingId, MultipartFile file) {
-        Booking booking = this.findById(bookingId);
+        Booking booking = this.bookingRepository.get(bookingId);
         if (!booking.getStatus().reservedOrOccupied()) {
             log.warn("saveBookingDocument - booking status {} is not valid for uploading documents", booking.getStatus());
             throw new WebBentayaBadRequestException("No se añadir documentos en este paso de la reserva");
@@ -237,7 +199,7 @@ public class BookingService {
         this.bookingDocumentRepository.delete(bookingDocument);
     }
 
-    public ResponseEntity<byte[]> getPDF(Integer id) {
+    public ResponseEntity<byte[]> getBookingDocument(Integer id) {
         BookingDocument bookingDocument = this.findBookingDocumentById(id);
         return FileUtils.getFileResponseEntity(
             blobService.getBlob(bookingDocument.getFileUuid()),

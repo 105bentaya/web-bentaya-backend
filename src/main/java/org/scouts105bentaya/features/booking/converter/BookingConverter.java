@@ -4,8 +4,14 @@ import org.scouts105bentaya.features.booking.dto.BookingDto;
 import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.scout_center.dto.BasicScoutCenterDto;
 import org.scouts105bentaya.features.scout_center.repository.ScoutCenterRepository;
+import org.scouts105bentaya.shared.GenericConstants;
 import org.scouts105bentaya.shared.GenericConverter;
 import org.springframework.stereotype.Component;
+
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.function.IntPredicate;
 
 @Component
 public class BookingConverter extends GenericConverter<Booking, BookingDto> {
@@ -65,7 +71,27 @@ public class BookingConverter extends GenericConverter<Booking, BookingDto> {
             entity.getCreationDate(),
             entity.isUserConfirmedDocuments(),
             entity.isOwnBooking(),
-            entity.getPrice()
+            entity.getPrice(),
+            bookingMinutes(entity),
+            bookingBillableDays(entity)
         );
+    }
+
+    private int bookingMinutes(Booking booking) {
+        ZonedDateTime start = ZonedDateTime.of(booking.getStartDate(), GenericConstants.CANARY_ZONE_ID);
+        ZonedDateTime end = ZonedDateTime.of(booking.getEndDate(), GenericConstants.CANARY_ZONE_ID);
+
+        return (int) start.until(end, ChronoUnit.MINUTES);
+    }
+
+    private int bookingBillableDays(Booking booking) {
+        LocalDateTime billableStart = truncateBookingDates(booking.getStartDate(), hour -> hour > 21);
+        LocalDateTime billableEnd = truncateBookingDates(booking.getEndDate(), hour -> hour > 9);
+
+        return (int) Math.max(1, billableStart.until(billableEnd, ChronoUnit.DAYS));
+    }
+
+    private LocalDateTime truncateBookingDates(LocalDateTime date, IntPredicate dayIsBillable) {
+        return dayIsBillable.test(date.getHour()) ? date.truncatedTo(ChronoUnit.DAYS).plusDays(1) : date.truncatedTo(ChronoUnit.DAYS);
     }
 }

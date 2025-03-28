@@ -26,6 +26,8 @@ public record BookingDto(
     ZonedDateTime creationDate,
     boolean userConfirmedDocuments,
     boolean ownBooking,
-    Float price
+    Float price,
+    int minutes,
+    int billableDays
 ) {
 }
