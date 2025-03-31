@@ -3,18 +3,19 @@ package org.scouts105bentaya.features.booking.controller;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.features.booking.converter.BookingConverter;
-import org.scouts105bentaya.features.booking.converter.BookingDocumentConverter;
-import org.scouts105bentaya.features.booking.dto.data.BookingCalendarInfoDto;
-import org.scouts105bentaya.features.booking.dto.data.BookingDateAndStatusDto;
 import org.scouts105bentaya.features.booking.dto.BookingDocumentDto;
 import org.scouts105bentaya.features.booking.dto.BookingDto;
+import org.scouts105bentaya.features.booking.dto.data.BookingCalendarInfoDto;
+import org.scouts105bentaya.features.booking.dto.data.BookingDateAndStatusDto;
 import org.scouts105bentaya.features.booking.dto.data.PendingBookingsDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingDateFormDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingFormDto;
 import org.scouts105bentaya.features.booking.dto.in.OwnBookingFormDto;
 import org.scouts105bentaya.features.booking.enums.BookingDocumentStatus;
 import org.scouts105bentaya.features.booking.repository.BookingRepository;
+import org.scouts105bentaya.features.booking.service.BookingDocumentService;
 import org.scouts105bentaya.features.booking.service.BookingService;
+import org.scouts105bentaya.features.booking.service.OwnBookingService;
 import org.scouts105bentaya.features.booking.specification.BookingSpecificationFilter;
 import org.scouts105bentaya.shared.specification.PageDto;
 import org.scouts105bentaya.shared.util.SecurityUtils;
@@ -40,19 +41,22 @@ public class BookingController {
 
     private final BookingService bookingService;
     private final BookingConverter bookingConverter;
-    private final BookingDocumentConverter bookingDocumentConverter;
     private final BookingRepository bookingRepository;
+    private final OwnBookingService ownBookingService;
+    private final BookingDocumentService bookingDocumentService;
 
     public BookingController(
         BookingService bookingService,
         BookingConverter bookingConverter,
-        BookingDocumentConverter bookingDocumentConverter,
-        BookingRepository bookingRepository
+        BookingRepository bookingRepository,
+        OwnBookingService ownBookingService,
+        BookingDocumentService bookingDocumentService
     ) {
         this.bookingService = bookingService;
         this.bookingConverter = bookingConverter;
-        this.bookingDocumentConverter = bookingDocumentConverter;
         this.bookingRepository = bookingRepository;
+        this.ownBookingService = ownBookingService;
+        this.bookingDocumentService = bookingDocumentService;
     }
 
     //MANAGER
@@ -89,7 +93,7 @@ public class BookingController {
     @PutMapping("/document/{id}")
     public void updateBookingDocumentStatus(@PathVariable Integer id, @RequestParam BookingDocumentStatus status) {
         log.info("METHOD BookingController.updateBookingDocumentStatus{}", SecurityUtils.getLoggedUserUsernameForLog());
-        bookingService.updateBookingDocument(id, status);
+        bookingDocumentService.updateBookingDocument(id, status);
     }
 
     //OWN
@@ -98,21 +102,21 @@ public class BookingController {
     @PostMapping("/own/new")
     public void addOwnBooking(@RequestBody @Valid OwnBookingFormDto formDto) {
         log.info("METHOD BookingController.addOwnBooking{}", SecurityUtils.getLoggedUserUsernameForLog());
-        bookingService.addOwnBooking(formDto);
+        ownBookingService.addOwnBooking(formDto);
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
     @PutMapping("/own/update/{id}")
     public void updateOwnBooking(@RequestBody @Valid OwnBookingFormDto formDto, @PathVariable Integer id) {
         log.info("METHOD BookingController.updatedOwnBooking --- PARAMS: id{}{}", id, SecurityUtils.getLoggedUserUsernameForLog());
-        bookingService.updateOwnBooking(formDto, id);
+        ownBookingService.updateOwnBooking(formDto, id);
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
     @DeleteMapping("/own/cancel/{id}")
     public BookingDto cancelOwnBooking(@PathVariable Integer id, @RequestParam String reason) {
         log.info("METHOD BookingController.cancelOwnBooking --- PARAMS: id{}{}", id, SecurityUtils.getLoggedUserUsernameForLog());
-        return bookingConverter.convertFromEntity(bookingService.cancelOwnBooking(id, reason));
+        return bookingConverter.convertFromEntity(ownBookingService.cancelOwnBooking(id, reason));
     }
 
     //USER
@@ -135,7 +139,7 @@ public class BookingController {
     @PostMapping(value = "/document/{bookingId}", consumes = "multipart/form-data")
     public void uploadBookingDocument(@PathVariable Integer bookingId, @RequestParam("file") MultipartFile file) {
         log.info("METHOD BookingController.uploadBookingDocument --- PARAMS bookingId: {}{}", bookingId, SecurityUtils.getLoggedUserUsernameForLog());
-        bookingService.saveBookingDocument(bookingId, file);
+        bookingDocumentService.saveBookingDocument(bookingId, file);
     }
 
     //SHARED
@@ -144,21 +148,21 @@ public class BookingController {
     @GetMapping("/document/{id}")
     public List<BookingDocumentDto> getBookingDocuments(@PathVariable Integer id) {
         log.info("METHOD BookingController.getBookingDocuments --- PARAMS id: {}{}", id, SecurityUtils.getLoggedUserUsernameForLog());
-        return bookingDocumentConverter.convertEntityCollectionToDtoList(bookingService.findDocumentsByBookingId(id));
+        return bookingDocumentService.findDocumentsByBookingId(id);
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userOwnsBookingDocument(#documentId)")
     @GetMapping("/document/pdf/{documentId}")
     public ResponseEntity<byte[]> getBookingDocument(@PathVariable Integer documentId) {
         log.info("METHOD BookingController.getBookingDocument --- PARAMS id: {}{}", documentId, SecurityUtils.getLoggedUserUsernameForLog());
-        return bookingService.getBookingDocument(documentId);
+        return bookingDocumentService.getBookingDocument(documentId);
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userCanEditBookingDocument(#documentId)")
     @DeleteMapping("/document/{documentId}")
     public void deleteDocument(@PathVariable Integer documentId) {
         log.info("METHOD BookingController.deleteDocument --- PARAMS id: {}{}", documentId, SecurityUtils.getLoggedUserUsernameForLog());
-        bookingService.deleteDocument(documentId);
+        bookingDocumentService.deleteDocument(documentId);
     }
 
     //PUBLIC

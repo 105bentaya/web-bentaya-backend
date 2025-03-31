@@ -12,6 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -64,4 +65,7 @@ public class Booking {
 
     @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY)
     private List<BookingDocument> bookingDocumentList;
+
+    @OneToOne
+    private BookingDocumentFile incidencesFile;
 }

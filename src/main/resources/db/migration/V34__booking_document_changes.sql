@@ -3,15 +3,16 @@
 CREATE TABLE booking_document_file
 (
     id        INT AUTO_INCREMENT NOT NULL,
-    file_uuid VARCHAR(255)       NOT NULL,
-    file_name VARCHAR(255)       NOT NULL,
+    uuid VARCHAR(255)       NOT NULL,
+    name VARCHAR(255)       NOT NULL,
+    mime_type VARCHAR(255)       NOT NULL,
     CONSTRAINT pk_bookingdocumentfile PRIMARY KEY (id)
 );
 
 ## MOVE OLD VALUES TO NEW ENTITY
 
-INSERT INTO booking_document_file(id, file_uuid, file_name)
-SELECT id, file_name, file_uuid
+INSERT INTO booking_document_file(id, uuid, name, mime_type)
+SELECT id, file_name, file_uuid, 'application/pdf'
 FROM booking_document
 ORDER BY id;
 
@@ -95,6 +96,12 @@ ALTER TABLE booking_document
 
 ALTER TABLE booking
     ADD CONSTRAINT FK_BOOKING_ON_USER FOREIGN KEY (user_id) REFERENCES user (id);
+
+ALTER TABLE booking
+    ADD incidences_file_id INT NULL;
+
+ALTER TABLE booking
+    ADD CONSTRAINT FK_BOOKING_ON_INCIDENCES_FILE FOREIGN KEY (incidences_file_id) REFERENCES booking_document_file (id);
 
 ALTER TABLE booking
     MODIFY exclusive_reservation BIT(1) DEFAULT 0 NOT NULL;
