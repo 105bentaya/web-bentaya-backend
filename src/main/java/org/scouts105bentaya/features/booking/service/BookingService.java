@@ -6,10 +6,10 @@ import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.booking.converter.BookingConverter;
 import org.scouts105bentaya.features.booking.converter.BookingFormConverter;
-import org.scouts105bentaya.features.booking.dto.BookingCalendarInfoDto;
-import org.scouts105bentaya.features.booking.dto.BookingDateAndStatusDto;
+import org.scouts105bentaya.features.booking.dto.data.BookingCalendarInfoDto;
+import org.scouts105bentaya.features.booking.dto.data.BookingDateAndStatusDto;
 import org.scouts105bentaya.features.booking.dto.BookingDto;
-import org.scouts105bentaya.features.booking.dto.PendingBookingsDto;
+import org.scouts105bentaya.features.booking.dto.data.PendingBookingsDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingDateFormDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingFormDto;
 import org.scouts105bentaya.features.booking.dto.in.OwnBookingFormDto;
@@ -184,17 +184,17 @@ public class BookingService {
     }
 
     public void saveBookingDocument(Integer bookingId, MultipartFile file) {
-        Booking booking = this.bookingRepository.get(bookingId);
-        if (!booking.getStatus().reservedOrOccupied()) {
-            log.warn("saveBookingDocument - booking status {} is not valid for uploading documents", booking.getStatus());
-            throw new WebBentayaBadRequestException("No se añadir documentos en este paso de la reserva");
-        }
-        BookingDocument document = new BookingDocument();
-        document.setBooking(booking);
-        document.setFileName(file.getOriginalFilename());
-        document.setStatus(BookingDocumentStatus.PENDING);
-        document.setFileUuid(blobService.createBlob(file));
-        bookingDocumentRepository.save(document);
+//        Booking booking = this.bookingRepository.get(bookingId);
+//        if (!booking.getStatus().reservedOrOccupied()) {
+//            log.warn("saveBookingDocument - booking status {} is not valid for uploading documents", booking.getStatus());
+//            throw new WebBentayaBadRequestException("No se añadir documentos en este paso de la reserva");
+//        }
+//        BookingDocument document = new BookingDocument();
+//        document.setBooking(booking);
+//        document.setFileName(file.getOriginalFilename());
+//        document.setStatus(BookingDocumentStatus.PENDING);
+//        document.setFileUuid(blobService.createBlob(file));
+//        bookingDocumentRepository.save(document);
     }
 
     private BookingDocument findBookingDocumentById(Integer documentId) {
@@ -208,18 +208,19 @@ public class BookingService {
     }
 
     public void deleteDocument(Integer id) {
-        BookingDocument bookingDocument = this.findBookingDocumentById(id);
-        this.blobService.deleteBlob(bookingDocument.getFileUuid());
-        this.bookingDocumentRepository.delete(bookingDocument);
+//        BookingDocument bookingDocument = this.findBookingDocumentById(id);
+//        this.blobService.deleteBlob(bookingDocument.getFileUuid());
+//        this.bookingDocumentRepository.delete(bookingDocument);
     }
 
     public ResponseEntity<byte[]> getBookingDocument(Integer id) {
-        BookingDocument bookingDocument = this.findBookingDocumentById(id);
-        return new FileTransferDto(
-            blobService.getBlob(bookingDocument.getFileUuid()),
-            bookingDocument.getFileName(),
-            MediaType.APPLICATION_PDF
-        ).asResponseEntity();
+//        BookingDocument bookingDocument = this.findBookingDocumentById(id);
+//        return new FileTransferDto(
+//            blobService.getBlob(bookingDocument.getFileUuid()),
+//            bookingDocument.getFileName(),
+//            MediaType.APPLICATION_PDF
+//        ).asResponseEntity();
+        return null;
     }
 
     public PendingBookingsDto findAllPending(BookingSpecificationFilter filter) {

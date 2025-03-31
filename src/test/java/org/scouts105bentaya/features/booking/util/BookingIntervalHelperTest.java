@@ -4,7 +4,7 @@ import org.assertj.core.api.Assertions;
 import org.assertj.core.api.ThrowableAssert;
 import org.joda.time.Interval;
 import org.junit.jupiter.api.Test;
-import org.scouts105bentaya.features.booking.dto.BookingDateAndStatusDto;
+import org.scouts105bentaya.features.booking.dto.data.BookingDateAndStatusDto;
 import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.booking.enums.BookingStatus;
 import org.scouts105bentaya.features.scout_center.entity.ScoutCenter;

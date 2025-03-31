@@ -19,7 +19,7 @@ public class BookingDocumentConverter extends GenericConverter<BookingDocument, 
         return new BookingDocumentDto(
             entity.getId(),
             entity.getBooking().getId(),
-            entity.getFileName(),
+            entity.getFile().getFileName(),
             entity.getStatus()
         );
     }

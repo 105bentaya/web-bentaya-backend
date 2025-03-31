@@ -1,4 +1,6 @@
-package org.scouts105bentaya.features.booking.dto;
+package org.scouts105bentaya.features.booking.dto.data;
+
+import org.scouts105bentaya.features.booking.dto.BookingDto;
 
 import java.util.List;
 

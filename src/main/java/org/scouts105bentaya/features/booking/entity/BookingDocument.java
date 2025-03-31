@@ -11,7 +11,10 @@ import jakarta.persistence.ManyToOne;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.scouts105bentaya.features.booking.enums.BookingDocumentDuration;
 import org.scouts105bentaya.features.booking.enums.BookingDocumentStatus;
+
+import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -21,11 +24,21 @@ public class BookingDocument {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+
     @ManyToOne
     private Booking booking;
-    @Column(nullable = false)
-    private String fileUuid;
-    private String fileName;
+
+    @ManyToOne(optional = false)
+    private BookingDocumentType type;
+
+    @ManyToOne(optional = false)
+    private BookingDocumentFile file;
+
+    @Enumerated(EnumType.STRING)
+    private BookingDocumentDuration duration;
+
+    private LocalDate expirationDate;
+
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "varchar")
     private BookingDocumentStatus status;

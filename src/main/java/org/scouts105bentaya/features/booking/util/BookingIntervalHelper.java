@@ -2,7 +2,7 @@ package org.scouts105bentaya.features.booking.util;
 
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.Interval;
-import org.scouts105bentaya.features.booking.dto.BookingDateAndStatusDto;
+import org.scouts105bentaya.features.booking.dto.data.BookingDateAndStatusDto;
 import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.booking.enums.BookingStatus;
 

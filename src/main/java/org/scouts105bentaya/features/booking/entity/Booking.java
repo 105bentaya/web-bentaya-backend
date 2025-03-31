@@ -41,6 +41,7 @@ public class Booking {
     private ScoutCenter scoutCenter;
     private String organizationName;
     private String cif;
+    @Column(length = 511)
     private String facilityUse;
     private int packs;
     private String contactName;
@@ -50,7 +51,9 @@ public class Booking {
     private LocalDateTime startDate;
     private LocalDateTime endDate;
     @Nullable
+    @Column(length = 1023)
     private String observations;
+    @Column(length = 2047)
     private String statusObservations;
     private Float price;
     private boolean exclusiveReservation;
@@ -58,6 +61,7 @@ public class Booking {
     private boolean ownBooking;
     private boolean finished;
     private ZonedDateTime creationDate;
+
     @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY)
     private List<BookingDocument> bookingDocumentList;
 }
