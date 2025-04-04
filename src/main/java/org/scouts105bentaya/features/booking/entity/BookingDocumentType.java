@@ -21,4 +21,6 @@ public class BookingDocumentType {
 
     @Column(nullable = false, length = 500)
     private String description;
+
+    private boolean active;
 }

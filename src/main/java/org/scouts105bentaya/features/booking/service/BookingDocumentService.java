@@ -1,40 +1,23 @@
 package org.scouts105bentaya.features.booking.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.joda.time.Interval;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
-import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
-import org.scouts105bentaya.features.booking.converter.BookingConverter;
-import org.scouts105bentaya.features.booking.converter.BookingFormConverter;
 import org.scouts105bentaya.features.booking.dto.BookingDocumentDto;
-import org.scouts105bentaya.features.booking.dto.BookingDto;
-import org.scouts105bentaya.features.booking.dto.data.BookingCalendarInfoDto;
-import org.scouts105bentaya.features.booking.dto.data.BookingDateAndStatusDto;
-import org.scouts105bentaya.features.booking.dto.data.PendingBookingsDto;
-import org.scouts105bentaya.features.booking.dto.in.BookingDateFormDto;
-import org.scouts105bentaya.features.booking.dto.in.BookingFormDto;
 import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.booking.entity.BookingDocument;
+import org.scouts105bentaya.features.booking.entity.BookingDocumentFile;
 import org.scouts105bentaya.features.booking.enums.BookingDocumentStatus;
-import org.scouts105bentaya.features.booking.enums.BookingStatus;
+import org.scouts105bentaya.features.booking.repository.BookingDocumentFileRepository;
 import org.scouts105bentaya.features.booking.repository.BookingDocumentRepository;
+import org.scouts105bentaya.features.booking.repository.BookingDocumentTypeRepository;
 import org.scouts105bentaya.features.booking.repository.BookingRepository;
-import org.scouts105bentaya.features.booking.specification.BookingSpecification;
-import org.scouts105bentaya.features.booking.specification.BookingSpecificationFilter;
-import org.scouts105bentaya.features.booking.util.BookingIntervalHelper;
-import org.scouts105bentaya.features.booking.util.IntervalUtils;
-import org.scouts105bentaya.features.scout_center.repository.ScoutCenterRepository;
-import org.scouts105bentaya.features.setting.SettingService;
-import org.scouts105bentaya.features.setting.enums.SettingEnum;
-import org.scouts105bentaya.shared.service.AuthService;
 import org.scouts105bentaya.shared.service.BlobService;
-import org.springframework.data.domain.Page;
+import org.scouts105bentaya.shared.util.FileUtils;
+import org.scouts105bentaya.shared.util.dto.FileTransferDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
 import java.util.List;
 
 @Slf4j
@@ -42,31 +25,44 @@ import java.util.List;
 public class BookingDocumentService {
 
     private final BookingDocumentRepository bookingDocumentRepository;
+    private final BookingRepository bookingRepository;
+    private final BlobService blobService;
+    private final BookingDocumentTypeRepository bookingDocumentTypeRepository;
+    private final BookingDocumentFileRepository bookingDocumentFileRepository;
 
-    public BookingDocumentService(BookingDocumentRepository bookingDocumentRepository) {
+    public BookingDocumentService(BookingDocumentRepository bookingDocumentRepository, BookingRepository bookingRepository, BlobService blobService, BookingDocumentTypeRepository bookingDocumentTypeRepository, BookingDocumentFileRepository bookingDocumentFileRepository) {
         this.bookingDocumentRepository = bookingDocumentRepository;
-    }
-
-    public void uploadBookingDocument() {
-
+        this.bookingRepository = bookingRepository;
+        this.blobService = blobService;
+        this.bookingDocumentTypeRepository = bookingDocumentTypeRepository;
+        this.bookingDocumentFileRepository = bookingDocumentFileRepository;
     }
 
     public List<BookingDocumentDto> findDocumentsByBookingId(Integer id) {
-        return bookingDocumentRepository.findByBookingId(id).stream().map(BookingDocumentDto::fromBooking);
+        return bookingDocumentRepository.findByBookingId(id).stream().map(BookingDocumentDto::fromBooking).toList();
     }
 
-    public void saveBookingDocument(Integer bookingId, MultipartFile file) {
-//        Booking booking = this.bookingRepository.get(bookingId);
-//        if (!booking.getStatus().reservedOrOccupied()) {
-//            log.warn("saveBookingDocument - booking status {} is not valid for uploading documents", booking.getStatus());
-//            throw new WebBentayaBadRequestException("No se añadir documentos en este paso de la reserva");
-//        }
-//        BookingDocument document = new BookingDocument();
-//        document.setBooking(booking);
-//        document.setFileName(file.getOriginalFilename());
-//        document.setStatus(BookingDocumentStatus.PENDING);
-//        document.setFileUuid(blobService.createBlob(file));
-//        bookingDocumentRepository.save(document);
+    public void saveBookingDocument(Integer bookingId, MultipartFile file, Integer typeId) {
+        FileUtils.validateFileIsPdf(file);
+
+        Booking booking = bookingRepository.get(bookingId);
+
+        if (!booking.getStatus().reservedOrOccupied()) {
+            log.warn("saveBookingDocument - booking status {} is not valid for uploading documents", booking.getStatus());
+            throw new WebBentayaBadRequestException("No se pueden añadir documentos en este paso de la reserva");
+        }
+
+        BookingDocument document = new BookingDocument();
+        document.setBooking(booking);
+        document.setType(bookingDocumentTypeRepository.get(typeId));
+        document.setStatus(BookingDocumentStatus.PENDING);
+
+        BookingDocumentFile bookingDocumentFile = new BookingDocumentFile();
+        bookingDocumentFile.setName(file.getOriginalFilename());
+        bookingDocumentFile.setMimeType(file.getContentType());
+        bookingDocumentFile.setUuid(blobService.createBlob(file));
+        document.setFile(bookingDocumentFile);
+        bookingDocumentRepository.save(document);
     }
 
     private BookingDocument findBookingDocumentById(Integer documentId) {
@@ -80,18 +76,21 @@ public class BookingDocumentService {
     }
 
     public void deleteDocument(Integer id) {
-//        BookingDocument bookingDocument = this.findBookingDocumentById(id);
-//        this.blobService.deleteBlob(bookingDocument.getFileUuid());
-//        this.bookingDocumentRepository.delete(bookingDocument);
+        BookingDocument bookingDocument = this.findBookingDocumentById(id);
+        BookingDocumentFile file = bookingDocument.getFile();
+        this.bookingDocumentRepository.delete(bookingDocument);
+        if (file.getBookingDocuments().isEmpty()) {
+            this.blobService.deleteBlob(file.getUuid());
+            bookingDocumentFileRepository.delete(file);
+        }
     }
 
     public ResponseEntity<byte[]> getBookingDocument(Integer id) {
-//        BookingDocument bookingDocument = this.findBookingDocumentById(id);
-//        return new FileTransferDto(
-//            blobService.getBlob(bookingDocument.getFileUuid()),
-//            bookingDocument.getFileName(),
-//            MediaType.APPLICATION_PDF
-//        ).asResponseEntity();
-        return null;
+        BookingDocumentFile file = this.findBookingDocumentById(id).getFile();
+        return new FileTransferDto(
+            blobService.getBlob(file.getUuid()),
+            file.getName(),
+            file.getMimeType()
+        ).asResponseEntity();
     }
 }

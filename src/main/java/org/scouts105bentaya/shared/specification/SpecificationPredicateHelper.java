@@ -19,7 +19,7 @@ public class SpecificationPredicateHelper {
         this.predicates = new ArrayList<>();
     }
 
-    public void same(Expression<String> root, Object filter) {
+    public void isEqual(Expression<String> root, Object filter) {
         if (filter != null) {
             predicates.add(cb.equal(root, filter));
         }

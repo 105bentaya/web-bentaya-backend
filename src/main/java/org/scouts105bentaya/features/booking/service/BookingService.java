@@ -131,7 +131,7 @@ public class BookingService {
 
         filter.setStatuses(List.of(BookingStatus.OCCUPIED));
         filter.setEndDate(null);
-        filter.setFilterDates(new String[]{LocalDateTime.now().minusDays(3).toString(), LocalDateTime.now().toString()});
+        filter.setFilterDates(new String[]{LocalDateTime.now().minusDays(7).toString(), LocalDateTime.now().toString()});
         List<BookingDto> finishedBookings = getBookingDtoList(filter);
 
         return new PendingBookingsDto(newBookings, acceptedBookings, confirmedBookings, finishedBookings);

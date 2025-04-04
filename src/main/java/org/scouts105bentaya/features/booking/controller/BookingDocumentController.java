@@ -1,0 +1,85 @@
+package org.scouts105bentaya.features.booking.controller;
+
+import lombok.extern.slf4j.Slf4j;
+import org.scouts105bentaya.features.booking.dto.BookingDocumentDto;
+import org.scouts105bentaya.features.booking.entity.BookingDocumentType;
+import org.scouts105bentaya.features.booking.enums.BookingDocumentStatus;
+import org.scouts105bentaya.features.booking.repository.BookingDocumentTypeRepository;
+import org.scouts105bentaya.features.booking.service.BookingDocumentService;
+import org.scouts105bentaya.shared.util.SecurityUtils;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
+
+@Slf4j
+@RestController
+@RequestMapping("api/booking/document")
+public class BookingDocumentController {
+
+    private final BookingDocumentService bookingDocumentService;
+    private final BookingDocumentTypeRepository bookingDocumentTypeRepository;
+
+    public BookingDocumentController(
+        BookingDocumentService bookingDocumentService,
+        BookingDocumentTypeRepository bookingDocumentTypeRepository
+    ) {
+        this.bookingDocumentService = bookingDocumentService;
+        this.bookingDocumentTypeRepository = bookingDocumentTypeRepository;
+    }
+
+    @PreAuthorize("hasAnyRole('SCOUT_CENTER_MANAGER', 'SCOUT_CENTER_REQUESTER')")
+    @GetMapping("/types")
+    public List<BookingDocumentType> getActiveBookingDocumentTypes() {
+        log.info("METHOD BookingController.getActiveBookingDocumentTypes{}", SecurityUtils.getLoggedUserUsernameForLog());
+        return bookingDocumentTypeRepository.findAllByActiveIsTrue();
+    }
+
+    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userOwnsBooking(#id)")
+    @GetMapping("/{id}")
+    public List<BookingDocumentDto> getBookingDocuments(@PathVariable Integer id) {
+        log.info("METHOD BookingController.getBookingDocuments --- PARAMS id: {}{}", id, SecurityUtils.getLoggedUserUsernameForLog());
+        return bookingDocumentService.findDocumentsByBookingId(id);
+    }
+
+    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userOwnsBookingDocument(#documentId)")
+    @GetMapping("/pdf/{documentId}")
+    public ResponseEntity<byte[]> getBookingDocument(@PathVariable Integer documentId) {
+        log.info("METHOD BookingController.getBookingDocument --- PARAMS id: {}{}", documentId, SecurityUtils.getLoggedUserUsernameForLog());
+        return bookingDocumentService.getBookingDocument(documentId);
+    }
+
+    @PreAuthorize("hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userOwnsBooking(#bookingId)")
+    @PostMapping(value = "/{bookingId}", consumes = "multipart/form-data")
+    public void uploadBookingDocument(
+        @PathVariable Integer bookingId,
+        @RequestParam("file") MultipartFile file,
+        @RequestParam("typeId") Integer typeId
+    ) {
+        log.info("METHOD BookingController.uploadBookingDocument --- PARAMS bookingId: {}{}", bookingId, SecurityUtils.getLoggedUserUsernameForLog());
+        bookingDocumentService.saveBookingDocument(bookingId, file, typeId);
+    }
+
+    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
+    @PutMapping("/{id}")
+    public void updateBookingDocumentStatus(@PathVariable Integer id, @RequestParam BookingDocumentStatus status) {
+        log.info("METHOD BookingController.updateBookingDocumentStatus{}", SecurityUtils.getLoggedUserUsernameForLog());
+        bookingDocumentService.updateBookingDocument(id, status);
+    }
+
+    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userCanEditBookingDocument(#documentId)")
+    @DeleteMapping("/{documentId}")
+    public void deleteDocument(@PathVariable Integer documentId) {
+        log.info("METHOD BookingController.deleteDocument --- PARAMS id: {}{}", documentId, SecurityUtils.getLoggedUserUsernameForLog());
+        bookingDocumentService.deleteDocument(documentId);
+    }
+}

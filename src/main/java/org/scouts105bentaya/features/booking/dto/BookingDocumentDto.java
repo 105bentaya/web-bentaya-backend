@@ -7,14 +7,16 @@ public record BookingDocumentDto(
     Integer id,
     Integer bookingId,
     String fileName,
-    BookingDocumentStatus status
+    BookingDocumentStatus status,
+    Integer typeId
 ) {
     public static BookingDocumentDto fromBooking(BookingDocument bookingDocument) {
         return new BookingDocumentDto(
             bookingDocument.getId(),
             bookingDocument.getBooking().getId(),
             bookingDocument.getFile().getName(),
-            bookingDocument.getStatus()
+            bookingDocument.getStatus(),
+            bookingDocument.getType().getId()
         );
     }
 }

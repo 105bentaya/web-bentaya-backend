@@ -1,5 +1,6 @@
 package org.scouts105bentaya.features.booking.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -31,13 +32,16 @@ public class BookingDocument {
     @ManyToOne(optional = false)
     private BookingDocumentType type;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, cascade = CascadeType.PERSIST)
     private BookingDocumentFile file;
 
     @Enumerated(EnumType.STRING)
     private BookingDocumentDuration duration;
 
     private LocalDate expirationDate;
+
+    @Column(length = 511)
+    private String observations;
 
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "varchar")
