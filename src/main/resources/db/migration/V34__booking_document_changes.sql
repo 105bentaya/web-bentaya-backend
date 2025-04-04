@@ -102,7 +102,8 @@ ALTER TABLE booking_document
     ADD duration VARCHAR(255) NULL;
 
 UPDATE booking_document bd
-SET bd.duration = 'SINGLE_USE';
+SET bd.duration = 'SINGLE_USE'
+WHERE bd.status = 'ACCEPTED';
 
 ALTER TABLE booking_document
     ADD expiration_date DATE NULL;

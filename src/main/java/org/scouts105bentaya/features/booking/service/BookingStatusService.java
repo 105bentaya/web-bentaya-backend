@@ -10,7 +10,9 @@ import org.scouts105bentaya.features.booking.dto.in.BookingConfirmedDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingStatusUpdateDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingWarningDto;
 import org.scouts105bentaya.features.booking.entity.Booking;
+import org.scouts105bentaya.features.booking.entity.BookingDocument;
 import org.scouts105bentaya.features.booking.enums.BookingStatus;
+import org.scouts105bentaya.features.booking.repository.BookingDocumentRepository;
 import org.scouts105bentaya.features.booking.repository.BookingRepository;
 import org.scouts105bentaya.features.scout_center.ScoutCenterService;
 import org.scouts105bentaya.features.setting.enums.SettingEnum;
@@ -21,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -38,6 +41,7 @@ public class BookingStatusService {
     private final EmailService emailService;
     private final UserService userService;
     private final ScoutCenterService scoutCenterService;
+    private final BookingDocumentRepository bookingDocumentRepository;
     @Value("${bentaya.web.url}") private String url;
 
     public BookingStatusService(
@@ -45,27 +49,48 @@ public class BookingStatusService {
         TemplateEngine htmlTemplateEngine,
         EmailService emailService,
         UserService userService,
-        ScoutCenterService scoutCenterService
+        ScoutCenterService scoutCenterService,
+        BookingDocumentRepository bookingDocumentRepository
     ) {
         this.bookingRepository = bookingRepository;
         this.htmlTemplateEngine = htmlTemplateEngine;
         this.emailService = emailService;
         this.userService = userService;
         this.scoutCenterService = scoutCenterService;
+        this.bookingDocumentRepository = bookingDocumentRepository;
     }
 
     public void saveFromForm(Booking booking) {
         booking.setStatus(BookingStatus.NEW);
         booking.setCreationDate(ZonedDateTime.now());
         booking.setExclusiveReservation(booking.isExclusiveReservation() || booking.getScoutCenter().isAlwaysExclusive());
+
         String password = this.userService.addNewScoutCenterUser(booking.getContactMail());
         booking.setUser(userService.findByUsername(booking.getContactMail()));
+
         Booking savedBooking = bookingRepository.save(booking);
+
+        this.setBookingDocuments(savedBooking);
         try {
             this.sendNewBookingMails(savedBooking, password);
         } catch (Exception e) {
             log.error("Error trying to send booking email: {}", e.getMessage());
         }
+    }
+
+    private void setBookingDocuments(Booking booking) {
+        LocalDate maxExpirationDate = booking.getEndDate().plusDays(1).toLocalDate();
+        List<BookingDocument> documents = bookingDocumentRepository.findUserBookingValidDocuments(booking.getUser().getId(), maxExpirationDate).stream()
+            .map(document -> new BookingDocument()
+                .setBooking(booking)
+                .setType(document.getType())
+                .setFile(document.getFile())
+                .setStatus(document.getStatus())
+                .setDuration(document.getDuration())
+                .setExpirationDate(maxExpirationDate)
+            ).toList();
+
+        bookingDocumentRepository.saveAll(documents);
     }
 
     private void sendNewBookingMails(Booking booking, String newUserPassword) {

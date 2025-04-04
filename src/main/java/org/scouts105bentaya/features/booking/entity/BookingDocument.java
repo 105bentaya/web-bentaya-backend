@@ -40,9 +40,6 @@ public class BookingDocument {
 
     private LocalDate expirationDate;
 
-    @Column(length = 511)
-    private String observations;
-
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "varchar")
     private BookingDocumentStatus status;
