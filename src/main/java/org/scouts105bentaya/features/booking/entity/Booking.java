@@ -1,6 +1,7 @@
 package org.scouts105bentaya.features.booking.entity;
 
 import jakarta.annotation.Nullable;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -66,6 +67,6 @@ public class Booking {
     @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY)
     private List<BookingDocument> bookingDocumentList;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.PERSIST)
     private BookingDocumentFile incidencesFile;
 }

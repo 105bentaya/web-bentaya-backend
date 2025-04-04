@@ -28,6 +28,7 @@ public record BookingDto(
     boolean ownBooking,
     Float price,
     int minutes,
-    int billableDays
+    int billableDays,
+    boolean hasIncidencesFile
 ) {
 }

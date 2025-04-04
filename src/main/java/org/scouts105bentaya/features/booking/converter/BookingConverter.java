@@ -76,7 +76,8 @@ public class BookingConverter extends GenericConverter<Booking, BookingDto> {
             entity.isOwnBooking(),
             entity.getPrice(),
             bookingMinutes(entity),
-            bookingBillableDays(entity)
+            bookingBillableDays(entity),
+            entity.getIncidencesFile() != null
         );
     }
 

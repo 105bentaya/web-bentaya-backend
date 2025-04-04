@@ -39,7 +39,7 @@ public class BookingDocumentService {
     }
 
     public List<BookingDocumentDto> findDocumentsByBookingId(Integer id) {
-        return bookingDocumentRepository.findByBookingId(id).stream().map(BookingDocumentDto::fromBooking).toList();
+        return bookingDocumentRepository.findAllByBookingId(id).stream().map(BookingDocumentDto::fromBooking).toList();
     }
 
     public void saveBookingDocument(Integer bookingId, MultipartFile file, Integer typeId) {
@@ -92,5 +92,27 @@ public class BookingDocumentService {
             file.getName(),
             file.getMimeType()
         ).asResponseEntity();
+    }
+
+    public void saveBookingIncidencesFile(Integer bookingId, MultipartFile file) {
+        FileUtils.validateFileIsDocOrPdf(file);
+        Booking booking = bookingRepository.get(bookingId);
+
+        if (!booking.getStatus().reservedOrOccupied()) {
+            log.warn("saveBookingIncidencesFile - booking status {} is not valid for uploading documents", booking.getStatus());
+            throw new WebBentayaBadRequestException("No se puede añadir el registro de incidencias y estados en este paso de la reserva");
+        }
+        if (booking.getIncidencesFile() != null) {
+            log.warn("saveBookingIncidencesFile - booking {} has already an incidence file", booking.getId());
+            throw new WebBentayaBadRequestException("No se puede volver a añadir el registro de incidencias y estados");
+        }
+
+        BookingDocumentFile bookingDocumentFile = new BookingDocumentFile();
+        bookingDocumentFile.setName(file.getOriginalFilename());
+        bookingDocumentFile.setMimeType(file.getContentType());
+        bookingDocumentFile.setUuid(blobService.createBlob(file));
+
+        booking.setIncidencesFile(bookingDocumentFile);
+        bookingRepository.save(booking);
     }
 }

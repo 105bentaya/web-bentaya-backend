@@ -69,6 +69,16 @@ public class BookingDocumentController {
         bookingDocumentService.saveBookingDocument(bookingId, file, typeId);
     }
 
+    @PreAuthorize("hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userOwnsBooking(#bookingId)")
+    @PostMapping(value = "/incidences/{bookingId}", consumes = "multipart/form-data")
+    public void uploadIncidencesDocument(
+        @PathVariable Integer bookingId,
+        @RequestParam("file") MultipartFile file
+    ) {
+        log.info("METHOD BookingController.uploadIncidencesDocument --- PARAMS bookingId: {}{}", bookingId, SecurityUtils.getLoggedUserUsernameForLog());
+        bookingDocumentService.saveBookingIncidencesFile(bookingId, file);
+    }
+
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
     @PutMapping("/{id}")
     public void updateBookingDocumentStatus(@PathVariable Integer id, @RequestParam BookingDocumentStatus status) {
