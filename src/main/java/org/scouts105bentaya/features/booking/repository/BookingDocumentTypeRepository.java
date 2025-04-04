@@ -15,4 +15,6 @@ public interface BookingDocumentTypeRepository extends JpaRepository<BookingDocu
     }
 
     List<BookingDocumentType> findAllByActiveIsTrue();
+
+    List<BookingDocumentType> findAllByOrderByActiveDesc();
 }

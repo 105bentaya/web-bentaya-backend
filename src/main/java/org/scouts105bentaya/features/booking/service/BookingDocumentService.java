@@ -3,9 +3,11 @@ package org.scouts105bentaya.features.booking.service;
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
 import org.scouts105bentaya.features.booking.dto.BookingDocumentDto;
+import org.scouts105bentaya.features.booking.dto.in.BookingDocumentStatusFormDto;
 import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.booking.entity.BookingDocument;
 import org.scouts105bentaya.features.booking.entity.BookingDocumentFile;
+import org.scouts105bentaya.features.booking.enums.BookingDocumentDuration;
 import org.scouts105bentaya.features.booking.enums.BookingDocumentStatus;
 import org.scouts105bentaya.features.booking.repository.BookingDocumentFileRepository;
 import org.scouts105bentaya.features.booking.repository.BookingDocumentRepository;
@@ -39,7 +41,7 @@ public class BookingDocumentService {
     }
 
     public List<BookingDocumentDto> findDocumentsByBookingId(Integer id) {
-        return bookingDocumentRepository.findAllByBookingId(id).stream().map(BookingDocumentDto::fromBooking).toList();
+        return bookingDocumentRepository.findAllByBookingId(id).stream().map(BookingDocumentDto::fromBookingDocument).toList();
     }
 
     public void saveBookingDocument(Integer bookingId, MultipartFile file, Integer typeId) {
@@ -69,10 +71,26 @@ public class BookingDocumentService {
         return this.bookingDocumentRepository.findById(documentId).orElseThrow(() -> new WebBentayaBadRequestException("Booking Document not found"));
     }
 
-    public void updateBookingDocument(Integer id, BookingDocumentStatus status) {
+    public BookingDocument updateBookingDocumentStatus(Integer id, BookingDocumentStatusFormDto statusForm) {
+        this.validateStatusForm(statusForm);
         BookingDocument bookingDocument = this.findBookingDocumentById(id);
-        bookingDocument.setStatus(status);
-        this.bookingDocumentRepository.save(bookingDocument);
+
+        bookingDocument.setStatus(statusForm.status());
+        bookingDocument.setDuration(statusForm.status() == BookingDocumentStatus.ACCEPTED ? statusForm.duration() : null);
+        bookingDocument.setExpirationDate(statusForm.duration() == BookingDocumentDuration.EXPIRABLE ? statusForm.expirationDate() : null);
+
+        return this.bookingDocumentRepository.save(bookingDocument);
+    }
+
+    private void validateStatusForm(BookingDocumentStatusFormDto statusForm) {
+        if (statusForm.status() == BookingDocumentStatus.ACCEPTED) {
+            if (statusForm.duration() == null) {
+                throw new WebBentayaBadRequestException("Se debe indicar el tipo de validez del documento");
+            }
+            if (statusForm.duration() == BookingDocumentDuration.EXPIRABLE && statusForm.expirationDate() == null) {
+                throw new WebBentayaBadRequestException("Se debe indicar la fecha caducidad del documento");
+            }
+        }
     }
 
     public void deleteDocument(Integer id) {

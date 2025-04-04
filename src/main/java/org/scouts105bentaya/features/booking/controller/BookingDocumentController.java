@@ -1,9 +1,10 @@
 package org.scouts105bentaya.features.booking.controller;
 
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.features.booking.dto.BookingDocumentDto;
+import org.scouts105bentaya.features.booking.dto.in.BookingDocumentStatusFormDto;
 import org.scouts105bentaya.features.booking.entity.BookingDocumentType;
-import org.scouts105bentaya.features.booking.enums.BookingDocumentStatus;
 import org.scouts105bentaya.features.booking.repository.BookingDocumentTypeRepository;
 import org.scouts105bentaya.features.booking.service.BookingDocumentService;
 import org.scouts105bentaya.shared.util.SecurityUtils;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,11 +39,18 @@ public class BookingDocumentController {
         this.bookingDocumentTypeRepository = bookingDocumentTypeRepository;
     }
 
-    @PreAuthorize("hasAnyRole('SCOUT_CENTER_MANAGER', 'SCOUT_CENTER_REQUESTER')")
-    @GetMapping("/types")
+    @PreAuthorize("hasRole('SCOUT_CENTER_REQUESTER')")
+    @GetMapping("/active-types")
     public List<BookingDocumentType> getActiveBookingDocumentTypes() {
         log.info("METHOD BookingController.getActiveBookingDocumentTypes{}", SecurityUtils.getLoggedUserUsernameForLog());
         return bookingDocumentTypeRepository.findAllByActiveIsTrue();
+    }
+
+    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
+    @GetMapping("/types")
+    public List<BookingDocumentType> getAllBookingDocumentTypes() {
+        log.info("METHOD BookingController.getAllBookingDocumentTypes{}", SecurityUtils.getLoggedUserUsernameForLog());
+        return bookingDocumentTypeRepository.findAllByOrderByActiveDesc();
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userOwnsBooking(#id)")
@@ -81,9 +90,9 @@ public class BookingDocumentController {
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
     @PutMapping("/{id}")
-    public void updateBookingDocumentStatus(@PathVariable Integer id, @RequestParam BookingDocumentStatus status) {
+    public BookingDocumentDto updateBookingDocumentStatus(@PathVariable Integer id, @Valid @RequestBody BookingDocumentStatusFormDto form) {
         log.info("METHOD BookingController.updateBookingDocumentStatus{}", SecurityUtils.getLoggedUserUsernameForLog());
-        bookingDocumentService.updateBookingDocument(id, status);
+        return BookingDocumentDto.fromBookingDocument(bookingDocumentService.updateBookingDocumentStatus(id, form));
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userCanEditBookingDocument(#documentId)")
