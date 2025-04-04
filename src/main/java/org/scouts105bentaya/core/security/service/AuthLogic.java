@@ -3,6 +3,8 @@ package org.scouts105bentaya.core.security.service;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.booking.entity.BookingDocument;
+import org.scouts105bentaya.features.booking.enums.BookingDocumentStatus;
+import org.scouts105bentaya.features.booking.enums.BookingStatus;
 import org.scouts105bentaya.features.event.Event;
 import org.scouts105bentaya.features.event.dto.EventFormDto;
 import org.scouts105bentaya.features.event.service.EventService;
@@ -16,8 +18,6 @@ import org.springframework.stereotype.Service;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
-
-import static org.scouts105bentaya.features.booking.enums.BookingStatus.RESERVED;
 
 @Service
 public class AuthLogic {
@@ -113,10 +113,11 @@ public class AuthLogic {
             .filter(bookingDocument -> bookingDocument.getId().equals(documentId))
             .findFirst();
 
-        if (userBookingDocument.isPresent()) {
-            Booking booking = userBookingDocument.get().getBooking();
-            return booking.getStatus().equals(RESERVED) && !booking.isUserConfirmedDocuments();
-        }
-        return false;
+        return userBookingDocument.map(AuthLogic::bookingDocumentIsEditable).orElse(false);
+    }
+
+    private static Boolean bookingDocumentIsEditable(BookingDocument bookingDocument) {
+        return bookingDocument.getBooking().getStatus().equals(BookingStatus.RESERVED) &&
+               !bookingDocument.getStatus().equals(BookingDocumentStatus.ACCEPTED);
     }
 }
