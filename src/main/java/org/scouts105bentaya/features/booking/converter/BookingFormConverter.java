@@ -22,7 +22,7 @@ public class BookingFormConverter extends GenericConverter<Booking, BookingFormD
     public Booking convertFromDto(BookingFormDto dto) {
         Booking entity = new Booking();
         entity.setOrganizationName(dto.groupName());
-        entity.setCif(dto.cif());
+        entity.setCif(dto.cif().toUpperCase());
         entity.setFacilityUse(dto.workDescription());
         entity.setContactName(dto.contactName());
         entity.setContactRelationship(dto.relationship());

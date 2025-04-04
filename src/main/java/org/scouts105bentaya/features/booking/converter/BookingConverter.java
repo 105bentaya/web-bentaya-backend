@@ -3,7 +3,6 @@ package org.scouts105bentaya.features.booking.converter;
 import org.scouts105bentaya.features.booking.dto.BookingDto;
 import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.scout_center.dto.BasicScoutCenterDto;
-import org.scouts105bentaya.features.scout_center.repository.ScoutCenterRepository;
 import org.scouts105bentaya.features.setting.SettingService;
 import org.scouts105bentaya.features.setting.enums.SettingEnum;
 import org.scouts105bentaya.shared.GenericConstants;
@@ -17,39 +16,16 @@ import java.time.temporal.ChronoUnit;
 @Component
 public class BookingConverter extends GenericConverter<Booking, BookingDto> {
 
-    private final ScoutCenterRepository scoutCenterRepository;
     private final SettingService settingService;
 
-    public BookingConverter(ScoutCenterRepository scoutCenterRepository, SettingService settingService) {
+    public BookingConverter(SettingService settingService) {
         super();
-        this.scoutCenterRepository = scoutCenterRepository;
         this.settingService = settingService;
     }
 
     @Override
     public Booking convertFromDto(BookingDto dto) {
-        Booking entity = new Booking();
-        entity.setId(dto.id());
-        entity.setStatus(dto.status());
-        entity.setScoutCenter(scoutCenterRepository.get(dto.id()));
-        entity.setOrganizationName(dto.organizationName());
-        entity.setCif(dto.cif());
-        entity.setFacilityUse(dto.facilityUse());
-        entity.setPacks(dto.packs());
-        entity.setContactName(dto.contactName());
-        entity.setContactRelationship(dto.contactRelationship());
-        entity.setContactMail(dto.contactMail());
-        entity.setContactPhone(dto.contactPhone());
-        entity.setStartDate(dto.startDate());
-        entity.setEndDate(dto.endDate());
-        entity.setCreationDate(dto.creationDate());
-        entity.setObservations(dto.observations());
-        entity.setExclusiveReservation(dto.exclusiveReservation());
-        entity.setStatusObservations(dto.statusObservations());
-        entity.setUserConfirmedDocuments(dto.userConfirmedDocuments());
-        entity.setPrice(dto.price());
-        entity.setOwnBooking(dto.ownBooking());
-        return entity;
+        throw new UnsupportedOperationException(GenericConstants.NOT_IMPLEMENTED);
     }
 
     @Override
