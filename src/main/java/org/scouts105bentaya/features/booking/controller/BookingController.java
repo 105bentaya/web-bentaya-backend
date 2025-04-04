@@ -74,7 +74,7 @@ public class BookingController {
         return bookingService.getBookingDates(filterDto);
     }
 
-    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userOwnsBooking(#id)")
+    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
     @GetMapping("/{id}")
     public BookingDto getById(@PathVariable Integer id) {
         log.info("METHOD BookingController.getById{}", SecurityUtils.getLoggedUserUsernameForLog());

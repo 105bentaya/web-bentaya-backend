@@ -5,6 +5,7 @@ import org.scouts105bentaya.features.booking.converter.BookingConverter;
 import org.scouts105bentaya.features.booking.dto.BookingDto;
 import org.scouts105bentaya.features.booking.dto.data.BookingCalendarInfoDto;
 import org.scouts105bentaya.features.booking.dto.data.PendingBookingsDto;
+import org.scouts105bentaya.features.booking.repository.BookingRepository;
 import org.scouts105bentaya.features.booking.service.BookingService;
 import org.scouts105bentaya.features.booking.specification.BookingSpecificationFilter;
 import org.scouts105bentaya.shared.service.AuthService;
@@ -12,6 +13,7 @@ import org.scouts105bentaya.shared.specification.PageDto;
 import org.scouts105bentaya.shared.util.SecurityUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,15 +28,18 @@ public class BookingRequesterController {
     private final BookingService bookingService;
     private final BookingConverter bookingConverter;
     private final AuthService authService;
+    private final BookingRepository bookingRepository;
 
     public BookingRequesterController(
         BookingService bookingService,
         BookingConverter bookingConverter,
-        AuthService authService
+        AuthService authService,
+        BookingRepository bookingRepository
     ) {
         this.bookingService = bookingService;
         this.bookingConverter = bookingConverter;
         this.authService = authService;
+        this.bookingRepository = bookingRepository;
     }
 
     @GetMapping
@@ -59,8 +64,15 @@ public class BookingRequesterController {
     }
 
     @GetMapping("/latest")
-    public BookingDto getLatestUserBookings() {
+    public BookingDto getLatestUserBookings() { //todo redo
         log.info("METHOD BookingRequesterController.getLatestUserBookings{}", SecurityUtils.getLoggedUserUsernameForLog());
         return bookingConverter.convertFromEntity(bookingService.findLatestByCurrentUser());
+    }
+
+    @PreAuthorize("@authLogic.userOwnsBooking(#id)")
+    @GetMapping("/{id}")
+    public BookingDto getById(@PathVariable Integer id) {
+        log.info("METHOD BookingRequesterController.getById{}", SecurityUtils.getLoggedUserUsernameForLog());
+        return bookingConverter.convertFromEntity(bookingRepository.get(id));
     }
 }
