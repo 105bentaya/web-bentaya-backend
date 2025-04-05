@@ -78,6 +78,13 @@ public class BookingDocumentController {
         bookingDocumentService.saveBookingDocument(bookingId, file, typeId);
     }
 
+    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
+    @GetMapping(value = "/incidences/{bookingId}")
+    public ResponseEntity<byte[]> getIncidencesDocument(@PathVariable Integer bookingId) {
+        log.info("METHOD BookingController.getIncidencesDocument --- PARAMS bookingId: {}{}", bookingId, SecurityUtils.getLoggedUserUsernameForLog());
+        return bookingDocumentService.getBookingIncidenceFile(bookingId);
+    }
+
     @PreAuthorize("hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userOwnsBooking(#bookingId)")
     @PostMapping(value = "/incidences/{bookingId}", consumes = "multipart/form-data")
     public void uploadIncidencesDocument(

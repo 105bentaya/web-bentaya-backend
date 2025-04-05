@@ -2,6 +2,7 @@ package org.scouts105bentaya.features.booking.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
+import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.booking.dto.BookingDocumentDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingDocumentStatusFormDto;
 import org.scouts105bentaya.features.booking.entity.Booking;
@@ -35,6 +36,7 @@ public class BookingDocumentService {
     private final BookingDocumentTypeRepository bookingDocumentTypeRepository;
     private final BookingDocumentFileRepository bookingDocumentFileRepository;
     private final AuthService authService;
+    private final BookingStatusService bookingStatusService;
 
     public BookingDocumentService(
         BookingDocumentRepository bookingDocumentRepository,
@@ -42,7 +44,8 @@ public class BookingDocumentService {
         BlobService blobService,
         BookingDocumentTypeRepository bookingDocumentTypeRepository,
         BookingDocumentFileRepository bookingDocumentFileRepository,
-        AuthService authService
+        AuthService authService,
+        BookingStatusService bookingStatusService
     ) {
         this.bookingDocumentRepository = bookingDocumentRepository;
         this.bookingRepository = bookingRepository;
@@ -50,6 +53,7 @@ public class BookingDocumentService {
         this.bookingDocumentTypeRepository = bookingDocumentTypeRepository;
         this.bookingDocumentFileRepository = bookingDocumentFileRepository;
         this.authService = authService;
+        this.bookingStatusService = bookingStatusService;
     }
 
     public List<BookingDocumentDto> findDocumentsByBookingId(Integer id) {
@@ -127,6 +131,19 @@ public class BookingDocumentService {
         ).asResponseEntity();
     }
 
+    public ResponseEntity<byte[]> getBookingIncidenceFile(Integer id) {
+        Booking booking = this.bookingRepository.get(id);
+        if (booking.getIncidencesFile() == null) {
+            throw new WebBentayaNotFoundException("La reserva no tiene registro de incidencias asociado");
+        }
+        BookingDocumentFile file = booking.getIncidencesFile();
+        return new FileTransferDto(
+            blobService.getBlob(file.getUuid()),
+            file.getName(),
+            file.getMimeType()
+        ).asResponseEntity();
+    }
+
     public void saveBookingIncidencesFile(Integer bookingId, MultipartFile file) {
         FileUtils.validateFileIsDocOrPdf(file);
         Booking booking = bookingRepository.get(bookingId);
@@ -144,8 +161,9 @@ public class BookingDocumentService {
         bookingDocumentFile.setName(file.getOriginalFilename());
         bookingDocumentFile.setMimeType(file.getContentType());
         bookingDocumentFile.setUuid(blobService.createBlob(file));
+        bookingDocumentFile.setUser(authService.getLoggedUser());
 
         booking.setIncidencesFile(bookingDocumentFile);
-        bookingRepository.save(booking);
+        bookingStatusService.sendIncidenceFileEmail(bookingRepository.save(booking));
     }
 }

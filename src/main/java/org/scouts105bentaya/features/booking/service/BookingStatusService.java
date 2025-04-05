@@ -284,6 +284,13 @@ public class BookingStatusService {
         }
     }
 
+    public void sendIncidenceFileEmail(Booking booking) {
+        String subject = "%s - %d - Registro de Incidencias Y Estados".formatted(booking.getScoutCenter().getName(), booking.getId());
+        Context context = this.getBookingBasicContext(booking, subject);
+        final String infoHtmlContent = this.htmlTemplateEngine.process("booking/management/incidences.html", context);
+        this.emailService.sendSimpleEmailWithHtml(subject, infoHtmlContent, getBookingEmails());
+    }
+
     private String[] getBookingEmails() {
         return this.emailService.getSettingEmails(SettingEnum.BOOKING_MAIL);
     }
