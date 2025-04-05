@@ -9,7 +9,10 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.booking.entity.BookingDocument;
+import org.scouts105bentaya.features.booking.entity.BookingDocumentFile;
+import org.scouts105bentaya.features.booking.enums.BookingDocumentStatus;
 import org.scouts105bentaya.features.booking.enums.BookingStatus;
+import org.scouts105bentaya.features.booking.repository.BookingDocumentRepository;
 import org.scouts105bentaya.features.event.Event;
 import org.scouts105bentaya.features.event.dto.EventFormDto;
 import org.scouts105bentaya.features.event.service.EventService;
@@ -37,13 +40,15 @@ class AuthLogicTest {
     EventService eventService;
     @Mock
     PreScoutService preScoutService;
+    @Mock
+    BookingDocumentRepository bookingDocumentRepository;
 
 
     private AuthLogic authLogic;
 
     @BeforeEach
     void setUp() {
-        authLogic = new AuthLogic(authService, scoutService, eventService, preScoutService);
+        authLogic = new AuthLogic(authService, scoutService, eventService, preScoutService, bookingDocumentRepository);
     }
 
     @Test
@@ -79,7 +84,6 @@ class AuthLogicTest {
     @Test
     void userHasNoGroupIdShouldReturnFalse() {
         //given
-        var scout = new Scout().setId(1).setGroup(GroupUtils.groupOfId(2));
         var loggedUser = new User().setId(1);
 
         //when
@@ -210,7 +214,6 @@ class AuthLogicTest {
     @Test
     void scouterHasAccessToEvent() {
         //given
-        var loggedUser = new User().setId(1);
         var eventDB = new Event().setId(1).setForEveryone(true);
 
         //when
@@ -447,12 +450,12 @@ class AuthLogicTest {
     void userOwnsBookingDocument() {
         //given
         var loggedUser = new User().setId(1);
-        var booking = new Booking().setId(1).setUser(loggedUser).setBookingDocumentList(List.of(new BookingDocument().setId(1)));
-        loggedUser.setBookingList(List.of(booking));
+        var doc = new BookingDocument().setId(1).setFile(new BookingDocumentFile().setUser(loggedUser));
 
         //when
         Mockito.when(authService.getLoggedUser()).thenReturn(loggedUser);
-        var result = authLogic.userOwnsBookingDocument(1);
+        Mockito.when(bookingDocumentRepository.get(1)).thenReturn(doc);
+        var result = authLogic.userOwnsBookingDocumentFile(1);
 
         //then
         Assertions.assertThat(result).isTrue();
@@ -462,12 +465,14 @@ class AuthLogicTest {
     void userOwnsBookingDocument2() {
         //given
         var loggedUser = new User().setId(1);
-        var booking = new Booking().setId(1).setUser(loggedUser).setBookingDocumentList(List.of(new BookingDocument().setId(2)));
+        var doc = new BookingDocument().setId(1).setFile(new BookingDocumentFile().setUser(new User().setId(2)));
+        var booking = new Booking().setId(1).setUser(loggedUser).setBookingDocumentList(List.of(doc));
         loggedUser.setBookingList(List.of(booking));
 
         //when
         Mockito.when(authService.getLoggedUser()).thenReturn(loggedUser);
-        var result = authLogic.userOwnsBookingDocument(1);
+        Mockito.when(bookingDocumentRepository.get(1)).thenReturn(doc);
+        var result = authLogic.userOwnsBookingDocumentFile(1);
 
         //then
         Assertions.assertThat(result).isFalse();
@@ -476,11 +481,30 @@ class AuthLogicTest {
     @Test
     void userOwnsBookingDocument3() {
         //given
+        var loggedUser = new User().setId(1);
+        var doc = new BookingDocument().setId(2);
+        var booking = new Booking().setId(1).setUser(loggedUser).setBookingDocumentList(List.of(doc));
+        loggedUser.setBookingList(List.of(booking));
+        doc.setFile(new BookingDocumentFile().setUser(loggedUser));
+
+        //when
+        Mockito.when(authService.getLoggedUser()).thenReturn(loggedUser);
+        Mockito.when(bookingDocumentRepository.get(1)).thenReturn(new BookingDocument().setId(1).setFile(new BookingDocumentFile().setUser(new User().setId(3))));
+        var result = authLogic.userOwnsBookingDocumentFile(1);
+
+        //then
+        Assertions.assertThat(result).isFalse();
+    }
+
+    @Test
+    void userOwnsBookingDocument4() {
+        //given
         var loggedUser = new User().setId(1).setBookingList(Collections.emptyList());
 
         //when
         Mockito.when(authService.getLoggedUser()).thenReturn(loggedUser);
-        var result = authLogic.userOwnsBookingDocument(1);
+        Mockito.when(bookingDocumentRepository.get(1)).thenReturn(new BookingDocument().setId(1).setFile(new BookingDocumentFile().setUser(new User().setId(4))));
+        var result = authLogic.userOwnsBookingDocumentFile(1);
 
         //then
         Assertions.assertThat(result).isFalse();
@@ -490,15 +514,17 @@ class AuthLogicTest {
     void userCanEditBookingDocument() {
         //given
         var loggedUser = new User().setId(1);
-        var bookingDocument = new BookingDocument().setId(1);
+        var bookingDocument = new BookingDocument().setId(1).setStatus(BookingDocumentStatus.REJECTED);
         var booking = new Booking().setId(1).setUser(loggedUser).setStatus(BookingStatus.RESERVED)
             .setBookingDocumentList(List.of(bookingDocument));
         bookingDocument.setBooking(booking);
         loggedUser.setBookingList(List.of(booking));
+        bookingDocument.setFile(new BookingDocumentFile().setUser(loggedUser));
 
         //when
         Mockito.when(authService.getLoggedUser()).thenReturn(loggedUser);
-        var result = authLogic.userCanEditBookingDocument(1);
+        Mockito.when(bookingDocumentRepository.get(1)).thenReturn(bookingDocument);
+        var result = authLogic.userCanEditBookingDocumentFile(1);
 
         //then
         Assertions.assertThat(result).isTrue();
@@ -508,21 +534,43 @@ class AuthLogicTest {
     void userCanEditBookingDocument2() {
         //given
         var loggedUser = new User().setId(1);
+        var bookingDocument = new BookingDocument().setId(1).setStatus(BookingDocumentStatus.ACCEPTED);
+        var booking = new Booking().setId(1).setUser(loggedUser).setStatus(BookingStatus.RESERVED)
+            .setBookingDocumentList(List.of(bookingDocument));
+        bookingDocument.setBooking(booking);
+        loggedUser.setBookingList(List.of(booking));
+        bookingDocument.setFile(new BookingDocumentFile().setUser(loggedUser));
+
+        //when
+        Mockito.when(authService.getLoggedUser()).thenReturn(loggedUser);
+        Mockito.when(bookingDocumentRepository.get(1)).thenReturn(bookingDocument);
+        var result = authLogic.userCanEditBookingDocumentFile(1);
+
+        //then
+        Assertions.assertThat(result).isFalse();
+    }
+
+    @Test
+    void userCanEditBookingDocument3() {
+        //given
+        var loggedUser = new User().setId(1);
         var bookingDocument = new BookingDocument().setId(1);
         var booking = new Booking().setId(1).setUser(loggedUser).setStatus(BookingStatus.OCCUPIED)
             .setBookingDocumentList(List.of(bookingDocument));
         bookingDocument.setBooking(booking);
         loggedUser.setBookingList(List.of(booking));
+        bookingDocument.setFile(new BookingDocumentFile().setUser(loggedUser));
 
         //when
         Mockito.when(authService.getLoggedUser()).thenReturn(loggedUser);
-        var result = authLogic.userCanEditBookingDocument(1);
+        Mockito.when(bookingDocumentRepository.get(1)).thenReturn(bookingDocument);
+        var result = authLogic.userCanEditBookingDocumentFile(1);
 
         //then
         Assertions.assertThat(result).isFalse();
     }
     @Test
-    void userCanEditBookingDocument3() {
+    void userCanEditBookingDocument4() {
         //given
         var loggedUser = new User().setId(1);
         var booking = new Booking().setId(1).setUser(loggedUser).setStatus(BookingStatus.RESERVED)
@@ -531,10 +579,10 @@ class AuthLogicTest {
 
         //when
         Mockito.when(authService.getLoggedUser()).thenReturn(loggedUser);
-        var result = authLogic.userCanEditBookingDocument(1);
+        Mockito.when(bookingDocumentRepository.get(1)).thenReturn(new BookingDocument().setFile(new BookingDocumentFile().setUser(new User().setId(3))));
+        var result = authLogic.userCanEditBookingDocumentFile(1);
 
         //then
         Assertions.assertThat(result).isFalse();
     }
-
 }

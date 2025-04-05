@@ -80,14 +80,14 @@ public class BookingStatusService {
 
     private void setBookingDocuments(Booking booking) {
         LocalDate maxExpirationDate = booking.getEndDate().plusDays(1).toLocalDate();
-        List<BookingDocument> documents = bookingDocumentRepository.findUserBookingValidDocuments(booking.getUser().getId(), maxExpirationDate).stream()
+        List<BookingDocument> documents = bookingDocumentRepository.findUserBookingValidDocuments(booking.getCif(), maxExpirationDate).stream()
             .map(document -> new BookingDocument()
                 .setBooking(booking)
                 .setType(document.getType())
                 .setFile(document.getFile())
                 .setStatus(document.getStatus())
                 .setDuration(document.getDuration())
-                .setExpirationDate(maxExpirationDate)
+                .setExpirationDate(document.getExpirationDate())
             ).toList();
 
         bookingDocumentRepository.saveAll(documents);

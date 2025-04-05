@@ -53,14 +53,14 @@ public class BookingDocumentController {
         return bookingDocumentTypeRepository.findAllByOrderByActiveDesc();
     }
 
-    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userOwnsBooking(#id)")
-    @GetMapping("/{id}")
-    public List<BookingDocumentDto> getBookingDocuments(@PathVariable Integer id) {
-        log.info("METHOD BookingController.getBookingDocuments --- PARAMS id: {}{}", id, SecurityUtils.getLoggedUserUsernameForLog());
-        return bookingDocumentService.findDocumentsByBookingId(id);
+    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userOwnsBooking(#bookingId)")
+    @GetMapping("/{bookingId}")
+    public List<BookingDocumentDto> getBookingDocuments(@PathVariable Integer bookingId) {
+        log.info("METHOD BookingController.getBookingDocuments --- PARAMS bookingId: {}{}", bookingId, SecurityUtils.getLoggedUserUsernameForLog());
+        return bookingDocumentService.findDocumentsByBookingId(bookingId);
     }
 
-    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userOwnsBookingDocument(#documentId)")
+    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userOwnsBookingDocumentFile(#documentId)")
     @GetMapping("/pdf/{documentId}")
     public ResponseEntity<byte[]> getBookingDocument(@PathVariable Integer documentId) {
         log.info("METHOD BookingController.getBookingDocument --- PARAMS id: {}{}", documentId, SecurityUtils.getLoggedUserUsernameForLog());
@@ -95,7 +95,7 @@ public class BookingDocumentController {
         return BookingDocumentDto.fromBookingDocument(bookingDocumentService.updateBookingDocumentStatus(id, form));
     }
 
-    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userCanEditBookingDocument(#documentId)")
+    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userCanEditBookingDocumentFile(#documentId)")
     @DeleteMapping("/{documentId}")
     public void deleteDocument(@PathVariable Integer documentId) {
         log.info("METHOD BookingController.deleteDocument --- PARAMS id: {}{}", documentId, SecurityUtils.getLoggedUserUsernameForLog());

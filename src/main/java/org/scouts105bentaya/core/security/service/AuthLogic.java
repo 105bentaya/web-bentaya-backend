@@ -1,10 +1,10 @@
 package org.scouts105bentaya.core.security.service;
 
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
-import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.booking.entity.BookingDocument;
 import org.scouts105bentaya.features.booking.enums.BookingDocumentStatus;
 import org.scouts105bentaya.features.booking.enums.BookingStatus;
+import org.scouts105bentaya.features.booking.repository.BookingDocumentRepository;
 import org.scouts105bentaya.features.event.Event;
 import org.scouts105bentaya.features.event.dto.EventFormDto;
 import org.scouts105bentaya.features.event.service.EventService;
@@ -15,9 +15,8 @@ import org.scouts105bentaya.features.scout.ScoutService;
 import org.scouts105bentaya.shared.service.AuthService;
 import org.springframework.stereotype.Service;
 
-import java.util.Collection;
+import java.time.LocalDateTime;
 import java.util.Objects;
-import java.util.Optional;
 
 @Service
 public class AuthLogic {
@@ -26,17 +25,20 @@ public class AuthLogic {
     private final ScoutService scoutService;
     private final EventService eventService;
     private final PreScoutService preScoutService;
+    private final BookingDocumentRepository bookingDocumentRepository;
 
     public AuthLogic(
         AuthService authService,
         ScoutService scoutService,
         EventService eventService,
-        PreScoutService preScoutService
+        PreScoutService preScoutService,
+        BookingDocumentRepository bookingDocumentRepository
     ) {
         this.authService = authService;
         this.scoutService = scoutService;
         this.eventService = eventService;
         this.preScoutService = preScoutService;
+        this.bookingDocumentRepository = bookingDocumentRepository;
     }
 
     public boolean userHasSameGroupIdAsScout(int scoutId) {
@@ -94,26 +96,26 @@ public class AuthLogic {
             .anyMatch(booking -> booking.getId().equals(bookingId));
     }
 
-    public boolean userHasAccessToScoutCenter(int scoutCenterId) { //todo change so he only can access bookings that have not finalized, TFG-17
+    public boolean userHasAccessToScoutCenter(int scoutCenterId) {
+        LocalDateTime maxIncidenceTime = LocalDateTime.now().minusDays(7);
         return authService.getLoggedUser().getBookingList().stream()
-            .anyMatch(booking -> booking.getScoutCenter().getId().equals(scoutCenterId));
+            .anyMatch(booking -> booking.getScoutCenter().getId().equals(scoutCenterId) &&
+                                 booking.getStatus().reservedOrOccupied() &&
+                                 booking.getEndDate().isAfter(maxIncidenceTime)
+            );
     }
 
-    public boolean userOwnsBookingDocument(int documentId) {
-        return authService.getLoggedUser().getBookingList().stream()
-            .map(Booking::getBookingDocumentList)
-            .flatMap(Collection::stream)
-            .anyMatch(bookingDocument -> bookingDocument.getId().equals(documentId));
+    public boolean userOwnsBookingDocumentFile(int documentId) {
+        return userOwnsBookingDocumentFile(bookingDocumentRepository.get(documentId));
     }
 
-    public boolean userCanEditBookingDocument(int documentId) {
-        Optional<BookingDocument> userBookingDocument = authService.getLoggedUser().getBookingList().stream()
-            .map(Booking::getBookingDocumentList)
-            .flatMap(Collection::stream)
-            .filter(bookingDocument -> bookingDocument.getId().equals(documentId))
-            .findFirst();
+    public boolean userCanEditBookingDocumentFile(int documentId) {
+        BookingDocument bookingDocument = bookingDocumentRepository.get(documentId);
+        return userOwnsBookingDocumentFile(bookingDocument) && bookingDocumentIsEditable(bookingDocument);
+    }
 
-        return userBookingDocument.map(AuthLogic::bookingDocumentIsEditable).orElse(false);
+    private boolean userOwnsBookingDocumentFile(BookingDocument bookingDocument) {
+        return bookingDocument.getFile().getUser().getId().equals(authService.getLoggedUser().getId());
     }
 
     private static Boolean bookingDocumentIsEditable(BookingDocument bookingDocument) {

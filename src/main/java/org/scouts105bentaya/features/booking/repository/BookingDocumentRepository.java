@@ -1,6 +1,7 @@
 package org.scouts105bentaya.features.booking.repository;
 
 
+import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
 import org.scouts105bentaya.features.booking.entity.BookingDocument;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -11,13 +12,17 @@ import java.util.List;
 
 @Repository
 public interface BookingDocumentRepository extends JpaRepository<BookingDocument, Integer> {
+    default BookingDocument get(Integer id) {
+        return this.findById(id).orElseThrow(() -> new WebBentayaBadRequestException("Booking Document not found"));
+    }
+
     List<BookingDocument> findAllByBookingId(Integer bookingId);
 
     @Query("""
         SELECT b FROM BookingDocument b
         WHERE b.id IN (
             SELECT MAX(bd.id) FROM BookingDocument bd
-            WHERE bd.booking.user.id = :userId
+            WHERE bd.booking.cif = :cif
               AND bd.status = 'ACCEPTED'
               AND (
                 bd.duration = 'PERMANENT'
@@ -26,5 +31,5 @@ public interface BookingDocumentRepository extends JpaRepository<BookingDocument
             GROUP BY bd.file.id
         )
         """)
-    List<BookingDocument> findUserBookingValidDocuments(Integer userId, LocalDate bookingEndDate);
+    List<BookingDocument> findUserBookingValidDocuments(String cif, LocalDate bookingEndDate);
 }

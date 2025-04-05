@@ -13,6 +13,9 @@ import org.scouts105bentaya.features.booking.repository.BookingDocumentFileRepos
 import org.scouts105bentaya.features.booking.repository.BookingDocumentRepository;
 import org.scouts105bentaya.features.booking.repository.BookingDocumentTypeRepository;
 import org.scouts105bentaya.features.booking.repository.BookingRepository;
+import org.scouts105bentaya.features.user.User;
+import org.scouts105bentaya.features.user.role.RoleEnum;
+import org.scouts105bentaya.shared.service.AuthService;
 import org.scouts105bentaya.shared.service.BlobService;
 import org.scouts105bentaya.shared.util.FileUtils;
 import org.scouts105bentaya.shared.util.dto.FileTransferDto;
@@ -31,17 +34,31 @@ public class BookingDocumentService {
     private final BlobService blobService;
     private final BookingDocumentTypeRepository bookingDocumentTypeRepository;
     private final BookingDocumentFileRepository bookingDocumentFileRepository;
+    private final AuthService authService;
 
-    public BookingDocumentService(BookingDocumentRepository bookingDocumentRepository, BookingRepository bookingRepository, BlobService blobService, BookingDocumentTypeRepository bookingDocumentTypeRepository, BookingDocumentFileRepository bookingDocumentFileRepository) {
+    public BookingDocumentService(
+        BookingDocumentRepository bookingDocumentRepository,
+        BookingRepository bookingRepository,
+        BlobService blobService,
+        BookingDocumentTypeRepository bookingDocumentTypeRepository,
+        BookingDocumentFileRepository bookingDocumentFileRepository,
+        AuthService authService
+    ) {
         this.bookingDocumentRepository = bookingDocumentRepository;
         this.bookingRepository = bookingRepository;
         this.blobService = blobService;
         this.bookingDocumentTypeRepository = bookingDocumentTypeRepository;
         this.bookingDocumentFileRepository = bookingDocumentFileRepository;
+        this.authService = authService;
     }
 
     public List<BookingDocumentDto> findDocumentsByBookingId(Integer id) {
-        return bookingDocumentRepository.findAllByBookingId(id).stream().map(BookingDocumentDto::fromBookingDocument).toList();
+        User loggedUser = authService.getLoggedUser();
+        return loggedUser.hasRole(RoleEnum.ROLE_SCOUT_CENTER_MANAGER) ?
+            bookingDocumentRepository.findAllByBookingId(id).stream().map(BookingDocumentDto::fromBookingDocument).toList() :
+            bookingDocumentRepository.findAllByBookingId(id).stream()
+                .map(doc -> BookingDocumentDto.fromBookingDocumentAndUser(doc, loggedUser))
+                .toList();
     }
 
     public void saveBookingDocument(Integer bookingId, MultipartFile file, Integer typeId) {
@@ -63,17 +80,15 @@ public class BookingDocumentService {
         bookingDocumentFile.setName(file.getOriginalFilename());
         bookingDocumentFile.setMimeType(file.getContentType());
         bookingDocumentFile.setUuid(blobService.createBlob(file));
+        bookingDocumentFile.setUser(authService.getLoggedUser());
+
         document.setFile(bookingDocumentFile);
         bookingDocumentRepository.save(document);
     }
 
-    private BookingDocument findBookingDocumentById(Integer documentId) {
-        return this.bookingDocumentRepository.findById(documentId).orElseThrow(() -> new WebBentayaBadRequestException("Booking Document not found"));
-    }
-
     public BookingDocument updateBookingDocumentStatus(Integer id, BookingDocumentStatusFormDto statusForm) {
         this.validateStatusForm(statusForm);
-        BookingDocument bookingDocument = this.findBookingDocumentById(id);
+        BookingDocument bookingDocument = this.bookingDocumentRepository.get(id);
 
         bookingDocument.setStatus(statusForm.status());
         bookingDocument.setDuration(statusForm.status() == BookingDocumentStatus.ACCEPTED ? statusForm.duration() : null);
@@ -94,7 +109,7 @@ public class BookingDocumentService {
     }
 
     public void deleteDocument(Integer id) {
-        BookingDocument bookingDocument = this.findBookingDocumentById(id);
+        BookingDocument bookingDocument = this.bookingDocumentRepository.get(id);
         BookingDocumentFile file = bookingDocument.getFile();
         this.bookingDocumentRepository.delete(bookingDocument);
         if (file.getBookingDocuments().isEmpty()) {
@@ -104,7 +119,7 @@ public class BookingDocumentService {
     }
 
     public ResponseEntity<byte[]> getBookingDocument(Integer id) {
-        BookingDocumentFile file = this.findBookingDocumentById(id).getFile();
+        BookingDocumentFile file = this.bookingDocumentRepository.get(id).getFile();
         return new FileTransferDto(
             blobService.getBlob(file.getUuid()),
             file.getName(),
