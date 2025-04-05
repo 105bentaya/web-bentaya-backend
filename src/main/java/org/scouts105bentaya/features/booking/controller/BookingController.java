@@ -56,28 +56,28 @@ public class BookingController {
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
     @GetMapping
     public PageDto<BookingDto> getAll(BookingSpecificationFilter filterDto) {
-        log.info("METHOD BookingController.getAll --- {}{}", filterDto, SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("getAll - {}{}", filterDto, SecurityUtils.getLoggedUserUsernameForLog());
         return bookingConverter.convertEntityPageToPageDto(bookingService.findAll(filterDto));
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
     @GetMapping("/pending")
     public PendingBookingsDto getAllPending(BookingSpecificationFilter filterDto) {
-        log.info("METHOD BookingController.getAllPending --- {}{}", filterDto, SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("getAllPending - {}{}", filterDto, SecurityUtils.getLoggedUserUsernameForLog());
         return bookingService.findAllPending(filterDto);
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
     @GetMapping("/dates")
     public List<BookingCalendarInfoDto> getBookingForCalendar(BookingSpecificationFilter filterDto) {
-        log.info("METHOD BookingController.getBookingForCalendar{}", SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("getBookingForCalendar{}", SecurityUtils.getLoggedUserUsernameForLog());
         return bookingService.getBookingDates(filterDto);
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
     @GetMapping("/{id}")
     public BookingDto getById(@PathVariable Integer id) {
-        log.info("METHOD BookingController.getById{}", SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("getById{}", SecurityUtils.getLoggedUserUsernameForLog());
         return bookingConverter.convertFromEntity(bookingRepository.get(id));
     }
 
@@ -86,21 +86,21 @@ public class BookingController {
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
     @PostMapping("/own/new")
     public void addOwnBooking(@RequestBody @Valid OwnBookingFormDto formDto) {
-        log.info("METHOD BookingController.addOwnBooking{}", SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("addOwnBooking{}", SecurityUtils.getLoggedUserUsernameForLog());
         ownBookingService.addOwnBooking(formDto);
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
     @PutMapping("/own/update/{id}")
     public void updateOwnBooking(@RequestBody @Valid OwnBookingFormDto formDto, @PathVariable Integer id) {
-        log.info("METHOD BookingController.updatedOwnBooking --- PARAMS: id{}{}", id, SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("updatedOwnBooking - id:{}{}", id, SecurityUtils.getLoggedUserUsernameForLog());
         ownBookingService.updateOwnBooking(formDto, id);
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
     @DeleteMapping("/own/cancel/{id}")
     public BookingDto cancelOwnBooking(@PathVariable Integer id, @RequestParam String reason) {
-        log.info("METHOD BookingController.cancelOwnBooking --- PARAMS: id{}{}", id, SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("cancelOwnBooking - id:{}{}", id, SecurityUtils.getLoggedUserUsernameForLog());
         return bookingConverter.convertFromEntity(ownBookingService.cancelOwnBooking(id, reason));
     }
 
@@ -118,7 +118,7 @@ public class BookingController {
 
     @PostMapping("/public/form")
     public void saveBookingForm(@RequestBody @Valid BookingFormDto bookingFormDto) {
-        log.info("METHOD BookingController.saveBookingForm");
+        log.info("saveBookingForm");
         this.bookingService.saveFromForm(bookingFormDto);
     }
 }

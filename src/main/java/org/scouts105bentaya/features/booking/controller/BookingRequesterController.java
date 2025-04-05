@@ -44,35 +44,35 @@ public class BookingRequesterController {
 
     @GetMapping
     public PageDto<BookingDto> getAll(BookingSpecificationFilter filterDto) {
-        log.info("METHOD BookingRequesterController.getAll --- {}{}", filterDto, SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("getAll - {}{}", filterDto, SecurityUtils.getLoggedUserUsernameForLog());
         filterDto.setUserId(authService.getLoggedUser().getId());
         return bookingConverter.convertEntityPageToPageDto(bookingService.findAll(filterDto));
     }
 
     @GetMapping("/pending")
     public PendingBookingsDto getAllPending(BookingSpecificationFilter filterDto) {
-        log.info("METHOD BookingRequesterController.getAllPending --- {}{}", filterDto, SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("getAllPending - {}{}", filterDto, SecurityUtils.getLoggedUserUsernameForLog());
         filterDto.setUserId(authService.getLoggedUser().getId());
         return bookingService.findAllPending(filterDto);
     }
 
     @GetMapping("/dates")
     public List<BookingCalendarInfoDto> getBookingForCalendar(BookingSpecificationFilter filterDto) {
-        log.info("METHOD BookingRequesterController.getBookingForCalendar{}", SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("getBookingForCalendar{}", SecurityUtils.getLoggedUserUsernameForLog());
         filterDto.setUserId(authService.getLoggedUser().getId());
         return bookingService.getBookingDates(filterDto);
     }
 
     @GetMapping("/latest")
     public BookingDto getLatestUserBookings() { //todo redo
-        log.info("METHOD BookingRequesterController.getLatestUserBookings{}", SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("getLatestUserBookings{}", SecurityUtils.getLoggedUserUsernameForLog());
         return bookingConverter.convertFromEntity(bookingService.findLatestByCurrentUser());
     }
 
     @PreAuthorize("@authLogic.userOwnsBooking(#id)")
     @GetMapping("/{id}")
     public BookingDto getById(@PathVariable Integer id) {
-        log.info("METHOD BookingRequesterController.getById{}", SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("getById - id:{}{}", id, SecurityUtils.getLoggedUserUsernameForLog());
         return bookingConverter.convertFromEntity(bookingRepository.get(id));
     }
 }

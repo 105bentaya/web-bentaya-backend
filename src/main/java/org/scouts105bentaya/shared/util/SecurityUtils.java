@@ -12,6 +12,6 @@ public class SecurityUtils {
     }
 
     public static String getLoggedUserUsernameForLog() {
-        return " --- by " + getLoggedUserUsername();
+        return " - by " + getLoggedUserUsername();
     }
 }

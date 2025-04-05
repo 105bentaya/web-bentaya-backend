@@ -42,28 +42,28 @@ public class BookingDocumentController {
     @PreAuthorize("hasRole('SCOUT_CENTER_REQUESTER')")
     @GetMapping("/active-types")
     public List<BookingDocumentType> getActiveBookingDocumentTypes() {
-        log.info("METHOD BookingController.getActiveBookingDocumentTypes{}", SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("getActiveBookingDocumentTypes{}", SecurityUtils.getLoggedUserUsernameForLog());
         return bookingDocumentTypeRepository.findAllByActiveIsTrue();
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
     @GetMapping("/types")
     public List<BookingDocumentType> getAllBookingDocumentTypes() {
-        log.info("METHOD BookingController.getAllBookingDocumentTypes{}", SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("getAllBookingDocumentTypes{}", SecurityUtils.getLoggedUserUsernameForLog());
         return bookingDocumentTypeRepository.findAllByOrderByActiveDesc();
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userOwnsBooking(#bookingId)")
     @GetMapping("/{bookingId}")
     public List<BookingDocumentDto> getBookingDocuments(@PathVariable Integer bookingId) {
-        log.info("METHOD BookingController.getBookingDocuments --- PARAMS bookingId: {}{}", bookingId, SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("getBookingDocuments - bookingId: {}{}", bookingId, SecurityUtils.getLoggedUserUsernameForLog());
         return bookingDocumentService.findDocumentsByBookingId(bookingId);
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userOwnsBookingDocumentFile(#documentId)")
     @GetMapping("/pdf/{documentId}")
     public ResponseEntity<byte[]> getBookingDocument(@PathVariable Integer documentId) {
-        log.info("METHOD BookingController.getBookingDocument --- PARAMS id: {}{}", documentId, SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("getBookingDocument - documentId: {}{}", documentId, SecurityUtils.getLoggedUserUsernameForLog());
         return bookingDocumentService.getBookingDocument(documentId);
     }
 
@@ -74,14 +74,14 @@ public class BookingDocumentController {
         @RequestParam("file") MultipartFile file,
         @RequestParam("typeId") Integer typeId
     ) {
-        log.info("METHOD BookingController.uploadBookingDocument --- PARAMS bookingId: {}{}", bookingId, SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("uploadBookingDocument - bookingId: {}{}", bookingId, SecurityUtils.getLoggedUserUsernameForLog());
         bookingDocumentService.saveBookingDocument(bookingId, file, typeId);
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
     @GetMapping(value = "/incidences/{bookingId}")
     public ResponseEntity<byte[]> getIncidencesDocument(@PathVariable Integer bookingId) {
-        log.info("METHOD BookingController.getIncidencesDocument --- PARAMS bookingId: {}{}", bookingId, SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("getIncidencesDocument - bookingId: {}{}", bookingId, SecurityUtils.getLoggedUserUsernameForLog());
         return bookingDocumentService.getBookingIncidenceFile(bookingId);
     }
 
@@ -91,21 +91,21 @@ public class BookingDocumentController {
         @PathVariable Integer bookingId,
         @RequestParam("file") MultipartFile file
     ) {
-        log.info("METHOD BookingController.uploadIncidencesDocument --- PARAMS bookingId: {}{}", bookingId, SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("uploadIncidencesDocument - bookingId: {}{}", bookingId, SecurityUtils.getLoggedUserUsernameForLog());
         bookingDocumentService.saveBookingIncidencesFile(bookingId, file);
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
     @PutMapping("/{id}")
     public BookingDocumentDto updateBookingDocumentStatus(@PathVariable Integer id, @Valid @RequestBody BookingDocumentStatusFormDto form) {
-        log.info("METHOD BookingController.updateBookingDocumentStatus{}", SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("updateBookingDocumentStatus{}", SecurityUtils.getLoggedUserUsernameForLog());
         return BookingDocumentDto.fromBookingDocument(bookingDocumentService.updateBookingDocumentStatus(id, form));
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userCanEditBookingDocumentFile(#documentId)")
     @DeleteMapping("/{documentId}")
     public void deleteDocument(@PathVariable Integer documentId) {
-        log.info("METHOD BookingController.deleteDocument --- PARAMS id: {}{}", documentId, SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("deleteDocument - documentId: {}{}", documentId, SecurityUtils.getLoggedUserUsernameForLog());
         bookingDocumentService.deleteDocument(documentId);
     }
 }
