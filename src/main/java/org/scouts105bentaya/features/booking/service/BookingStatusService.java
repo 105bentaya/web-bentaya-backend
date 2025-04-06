@@ -11,15 +11,21 @@ import org.scouts105bentaya.features.booking.dto.in.BookingStatusUpdateDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingWarningDto;
 import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.booking.entity.BookingDocument;
+import org.scouts105bentaya.features.booking.entity.BookingDocumentFile;
+import org.scouts105bentaya.features.booking.enums.BookingDocumentStatus;
 import org.scouts105bentaya.features.booking.enums.BookingStatus;
 import org.scouts105bentaya.features.booking.repository.BookingDocumentRepository;
 import org.scouts105bentaya.features.booking.repository.BookingRepository;
 import org.scouts105bentaya.features.scout_center.ScoutCenterService;
 import org.scouts105bentaya.features.setting.enums.SettingEnum;
 import org.scouts105bentaya.features.user.UserService;
+import org.scouts105bentaya.shared.service.AuthService;
+import org.scouts105bentaya.shared.service.BlobService;
 import org.scouts105bentaya.shared.service.EmailService;
+import org.scouts105bentaya.shared.util.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
@@ -42,6 +48,9 @@ public class BookingStatusService {
     private final UserService userService;
     private final ScoutCenterService scoutCenterService;
     private final BookingDocumentRepository bookingDocumentRepository;
+    private final BookingDocumentService bookingDocumentService;
+    private final BlobService blobService;
+    private final AuthService authService;
     @Value("${bentaya.web.url}") private String url;
 
     public BookingStatusService(
@@ -50,14 +59,17 @@ public class BookingStatusService {
         EmailService emailService,
         UserService userService,
         ScoutCenterService scoutCenterService,
-        BookingDocumentRepository bookingDocumentRepository
-    ) {
+        BookingDocumentRepository bookingDocumentRepository,
+        BookingDocumentService bookingDocumentService, BlobService blobService, AuthService authService) {
         this.bookingRepository = bookingRepository;
         this.htmlTemplateEngine = htmlTemplateEngine;
         this.emailService = emailService;
         this.userService = userService;
         this.scoutCenterService = scoutCenterService;
         this.bookingDocumentRepository = bookingDocumentRepository;
+        this.bookingDocumentService = bookingDocumentService;
+        this.blobService = blobService;
+        this.authService = authService;
     }
 
     public void saveFromForm(Booking booking) {
@@ -145,8 +157,15 @@ public class BookingStatusService {
         currentBooking.setStatus(BookingStatus.RESERVED);
         currentBooking.setStatusObservations(dto.getObservations());
         currentBooking.setPrice(dto.getPrice());
+
+        List<BookingDocument> documentsToDelete = currentBooking.getBookingDocumentList().stream()
+            .filter(b -> b.getStatus() != BookingDocumentStatus.ACCEPTED).toList();
+
+        documentsToDelete.forEach(bookingDocumentService::deleteDocument);
+        currentBooking.getBookingDocumentList().removeAll(documentsToDelete);
+
         Booking savedBooking = bookingRepository.save(currentBooking);
-        this.sendReservedMail(currentBooking);
+        this.sendReservedMail(savedBooking);
         return savedBooking;
     }
 
@@ -284,7 +303,30 @@ public class BookingStatusService {
         }
     }
 
-    public void sendIncidenceFileEmail(Booking booking) {
+    public void saveBookingIncidencesFile(Integer bookingId, MultipartFile file) {
+        FileUtils.validateFileIsDocOrPdf(file);
+        Booking booking = bookingRepository.get(bookingId);
+
+        if (!booking.getStatus().reservedOrOccupied()) {
+            log.warn("saveBookingIncidencesFile - booking status {} is not valid for uploading documents", booking.getStatus());
+            throw new WebBentayaBadRequestException("No se puede añadir el registro de incidencias y estados en este paso de la reserva");
+        }
+        if (booking.getIncidencesFile() != null) {
+            log.warn("saveBookingIncidencesFile - booking {} has already an incidence file", booking.getId());
+            throw new WebBentayaBadRequestException("No se puede volver a añadir el registro de incidencias y estados");
+        }
+
+        BookingDocumentFile bookingDocumentFile = new BookingDocumentFile();
+        bookingDocumentFile.setName(file.getOriginalFilename());
+        bookingDocumentFile.setMimeType(file.getContentType());
+        bookingDocumentFile.setUuid(blobService.createBlob(file));
+        bookingDocumentFile.setUser(authService.getLoggedUser());
+
+        booking.setIncidencesFile(bookingDocumentFile);
+        sendIncidenceFileEmail(bookingRepository.save(booking));
+    }
+
+    private void sendIncidenceFileEmail(Booking booking) {
         String subject = "%s - %d - Registro de Incidencias Y Estados".formatted(booking.getScoutCenter().getName(), booking.getId());
         Context context = this.getBookingBasicContext(booking, subject);
         final String infoHtmlContent = this.htmlTemplateEngine.process("booking/management/incidences.html", context);

@@ -7,6 +7,7 @@ import org.scouts105bentaya.features.booking.dto.in.BookingDocumentStatusFormDto
 import org.scouts105bentaya.features.booking.entity.BookingDocumentType;
 import org.scouts105bentaya.features.booking.repository.BookingDocumentTypeRepository;
 import org.scouts105bentaya.features.booking.service.BookingDocumentService;
+import org.scouts105bentaya.features.booking.service.BookingStatusService;
 import org.scouts105bentaya.shared.util.SecurityUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,13 +31,16 @@ public class BookingDocumentController {
 
     private final BookingDocumentService bookingDocumentService;
     private final BookingDocumentTypeRepository bookingDocumentTypeRepository;
+    private final BookingStatusService bookingStatusService;
 
     public BookingDocumentController(
         BookingDocumentService bookingDocumentService,
-        BookingDocumentTypeRepository bookingDocumentTypeRepository
+        BookingDocumentTypeRepository bookingDocumentTypeRepository,
+        BookingStatusService bookingStatusService
     ) {
         this.bookingDocumentService = bookingDocumentService;
         this.bookingDocumentTypeRepository = bookingDocumentTypeRepository;
+        this.bookingStatusService = bookingStatusService;
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_REQUESTER')")
@@ -92,7 +96,7 @@ public class BookingDocumentController {
         @RequestParam("file") MultipartFile file
     ) {
         log.info("uploadIncidencesDocument - bookingId: {}{}", bookingId, SecurityUtils.getLoggedUserUsernameForLog());
-        bookingDocumentService.saveBookingIncidencesFile(bookingId, file);
+        bookingStatusService.saveBookingIncidencesFile(bookingId, file);
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")

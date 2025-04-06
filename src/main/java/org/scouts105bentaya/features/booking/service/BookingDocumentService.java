@@ -36,7 +36,6 @@ public class BookingDocumentService {
     private final BookingDocumentTypeRepository bookingDocumentTypeRepository;
     private final BookingDocumentFileRepository bookingDocumentFileRepository;
     private final AuthService authService;
-    private final BookingStatusService bookingStatusService;
 
     public BookingDocumentService(
         BookingDocumentRepository bookingDocumentRepository,
@@ -44,8 +43,7 @@ public class BookingDocumentService {
         BlobService blobService,
         BookingDocumentTypeRepository bookingDocumentTypeRepository,
         BookingDocumentFileRepository bookingDocumentFileRepository,
-        AuthService authService,
-        BookingStatusService bookingStatusService
+        AuthService authService
     ) {
         this.bookingDocumentRepository = bookingDocumentRepository;
         this.bookingRepository = bookingRepository;
@@ -53,7 +51,6 @@ public class BookingDocumentService {
         this.bookingDocumentTypeRepository = bookingDocumentTypeRepository;
         this.bookingDocumentFileRepository = bookingDocumentFileRepository;
         this.authService = authService;
-        this.bookingStatusService = bookingStatusService;
     }
 
     public List<BookingDocumentDto> findDocumentsByBookingId(Integer id) {
@@ -113,7 +110,10 @@ public class BookingDocumentService {
     }
 
     public void deleteDocument(Integer id) {
-        BookingDocument bookingDocument = this.bookingDocumentRepository.get(id);
+        this.deleteDocument(this.bookingDocumentRepository.get(id));
+    }
+
+    public void deleteDocument(BookingDocument bookingDocument) {
         BookingDocumentFile file = bookingDocument.getFile();
         this.bookingDocumentRepository.delete(bookingDocument);
         if (file.getBookingDocuments().isEmpty()) {
@@ -142,28 +142,5 @@ public class BookingDocumentService {
             file.getName(),
             file.getMimeType()
         ).asResponseEntity();
-    }
-
-    public void saveBookingIncidencesFile(Integer bookingId, MultipartFile file) {
-        FileUtils.validateFileIsDocOrPdf(file);
-        Booking booking = bookingRepository.get(bookingId);
-
-        if (!booking.getStatus().reservedOrOccupied()) {
-            log.warn("saveBookingIncidencesFile - booking status {} is not valid for uploading documents", booking.getStatus());
-            throw new WebBentayaBadRequestException("No se puede añadir el registro de incidencias y estados en este paso de la reserva");
-        }
-        if (booking.getIncidencesFile() != null) {
-            log.warn("saveBookingIncidencesFile - booking {} has already an incidence file", booking.getId());
-            throw new WebBentayaBadRequestException("No se puede volver a añadir el registro de incidencias y estados");
-        }
-
-        BookingDocumentFile bookingDocumentFile = new BookingDocumentFile();
-        bookingDocumentFile.setName(file.getOriginalFilename());
-        bookingDocumentFile.setMimeType(file.getContentType());
-        bookingDocumentFile.setUuid(blobService.createBlob(file));
-        bookingDocumentFile.setUser(authService.getLoggedUser());
-
-        booking.setIncidencesFile(bookingDocumentFile);
-        bookingStatusService.sendIncidenceFileEmail(bookingRepository.save(booking));
     }
 }

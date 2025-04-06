@@ -18,17 +18,24 @@ public interface BookingDocumentRepository extends JpaRepository<BookingDocument
 
     List<BookingDocument> findAllByBookingId(Integer bookingId);
 
-    @Query("""
-        SELECT b FROM BookingDocument b
-        WHERE b.id IN (
-            SELECT MAX(bd.id) FROM BookingDocument bd
-            WHERE bd.booking.cif = :cif
-              AND bd.status = 'ACCEPTED'
-              AND bd.type.active = true
-              AND bd.duration <> 'SINGLE_USE'
-            GROUP BY bd.file.id
-        ) AND b.duration = 'PERMANENT'
-          OR (b.duration = 'EXPIRABLE' AND b.expirationDate > :bookingEndDate)
-        """)
+    @Query(value = """
+        SELECT *
+          FROM booking_document b
+          WHERE b.id IN (
+              SELECT MAX(bd.id)
+              FROM booking_document bd
+               JOIN booking bk ON bd.booking_id = bk.id
+               JOIN booking_document_file f ON bd.file_id = f.id
+               JOIN booking_document_type dt ON bd.type_id = dt.id
+              WHERE bk.cif = :cif
+                AND dt.active = TRUE
+              GROUP BY bd.file_id
+          )
+            AND (
+              b.duration = 'PERMANENT'
+              OR (b.duration = 'EXPIRABLE' AND b.expiration_date > :bookingEndDate)
+              )
+            AND b.status = 'ACCEPTED'
+        """, nativeQuery = true)
     List<BookingDocument> findUserBookingValidDocuments(String cif, LocalDate bookingEndDate);
 }
