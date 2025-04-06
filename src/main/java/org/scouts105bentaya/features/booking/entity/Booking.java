@@ -43,8 +43,10 @@ public class Booking {
     private ScoutCenter scoutCenter;
     private String organizationName;
     private String cif;
-    @Column(length = 511)
+    @Column(length = 2000)
     private String facilityUse;
+    @Column(length = 511)
+    private String groupDescription;
     private int packs;
     private String contactName;
     private String contactRelationship;

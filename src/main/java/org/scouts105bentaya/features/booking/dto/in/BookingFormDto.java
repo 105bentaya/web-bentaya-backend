@@ -12,7 +12,8 @@ import java.time.LocalDateTime;
 public record BookingFormDto(
     @Length(max = 255) @NotBlank String groupName,
     @Length(max = 255) @NotBlank @Pattern(regexp = "[A-Z0-9]+") String cif,
-    @Length(max = 511) @NotBlank String workDescription,
+    @Length(max = 511) @NotBlank String groupDescription,
+    @Length(max = 2000) @NotBlank String facilityUse,
     @Length(max = 255) @NotBlank String contactName,
     @Length(max = 255) @NotBlank String relationship,
     @Length(max = 255) @NotBlank @Email String email,

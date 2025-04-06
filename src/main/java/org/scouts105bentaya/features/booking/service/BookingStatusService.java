@@ -114,6 +114,7 @@ public class BookingStatusService {
         context.setVariable("organization", booking.getOrganizationName());
         context.setVariable("cif", booking.getCif());
         context.setVariable("use", booking.getFacilityUse());
+        context.setVariable("groupDescription", booking.getGroupDescription());
         context.setVariable("contactName", booking.getContactName());
         context.setVariable("contactRelationship", booking.getContactRelationship());
         context.setVariable("contactPhone", booking.getContactPhone());
