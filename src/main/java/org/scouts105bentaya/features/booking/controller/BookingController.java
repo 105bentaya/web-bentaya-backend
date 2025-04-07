@@ -6,25 +6,25 @@ import org.scouts105bentaya.features.booking.converter.BookingConverter;
 import org.scouts105bentaya.features.booking.dto.BookingDto;
 import org.scouts105bentaya.features.booking.dto.data.BookingCalendarInfoDto;
 import org.scouts105bentaya.features.booking.dto.data.BookingDateAndStatusDto;
+import org.scouts105bentaya.features.booking.dto.data.BookingInfoDto;
 import org.scouts105bentaya.features.booking.dto.data.PendingBookingsDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingDateFormDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingFormDto;
 import org.scouts105bentaya.features.booking.dto.in.OwnBookingFormDto;
+import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.booking.repository.BookingRepository;
 import org.scouts105bentaya.features.booking.service.BookingService;
 import org.scouts105bentaya.features.booking.service.OwnBookingService;
 import org.scouts105bentaya.features.booking.specification.BookingSpecificationFilter;
 import org.scouts105bentaya.shared.specification.PageDto;
 import org.scouts105bentaya.shared.util.SecurityUtils;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -36,28 +36,29 @@ public class BookingController {
 
     private final BookingService bookingService;
     private final BookingConverter bookingConverter;
-    private final BookingRepository bookingRepository;
     private final OwnBookingService ownBookingService;
+    private final BookingRepository bookingRepository;
 
     public BookingController(
         BookingService bookingService,
         BookingConverter bookingConverter,
-        BookingRepository bookingRepository,
-        OwnBookingService ownBookingService
+        OwnBookingService ownBookingService,
+        BookingRepository bookingRepository
     ) {
         this.bookingService = bookingService;
         this.bookingConverter = bookingConverter;
-        this.bookingRepository = bookingRepository;
         this.ownBookingService = ownBookingService;
+        this.bookingRepository = bookingRepository;
     }
 
     //MANAGER
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
     @GetMapping
-    public PageDto<BookingDto> getAll(BookingSpecificationFilter filterDto) {
+    public PageDto<BookingInfoDto> getAll(BookingSpecificationFilter filterDto) {
         log.info("getAll - {}{}", filterDto, SecurityUtils.getLoggedUserUsernameForLog());
-        return bookingConverter.convertEntityPageToPageDto(bookingService.findAll(filterDto));
+        Page<Booking> page = bookingService.findAll(filterDto);
+        return new PageDto<>(page.getTotalElements(), page.stream().map(BookingInfoDto::fromEntity).toList());
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
@@ -88,20 +89,6 @@ public class BookingController {
     public void addOwnBooking(@RequestBody @Valid OwnBookingFormDto formDto) {
         log.info("addOwnBooking{}", SecurityUtils.getLoggedUserUsernameForLog());
         ownBookingService.addOwnBooking(formDto);
-    }
-
-    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
-    @PutMapping("/own/update/{id}")
-    public void updateOwnBooking(@RequestBody @Valid OwnBookingFormDto formDto, @PathVariable Integer id) {
-        log.info("updatedOwnBooking - id:{}{}", id, SecurityUtils.getLoggedUserUsernameForLog());
-        ownBookingService.updateOwnBooking(formDto, id);
-    }
-
-    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
-    @DeleteMapping("/own/cancel/{id}")
-    public BookingDto cancelOwnBooking(@PathVariable Integer id, @RequestParam String reason) {
-        log.info("cancelOwnBooking - id:{}{}", id, SecurityUtils.getLoggedUserUsernameForLog());
-        return bookingConverter.convertFromEntity(ownBookingService.cancelOwnBooking(id, reason));
     }
 
     //PUBLIC

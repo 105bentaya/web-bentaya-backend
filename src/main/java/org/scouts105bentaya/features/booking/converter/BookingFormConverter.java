@@ -1,7 +1,7 @@
 package org.scouts105bentaya.features.booking.converter;
 
 import org.scouts105bentaya.features.booking.dto.in.BookingFormDto;
-import org.scouts105bentaya.features.booking.entity.Booking;
+import org.scouts105bentaya.features.booking.entity.GeneralBooking;
 import org.scouts105bentaya.features.scout_center.repository.ScoutCenterRepository;
 import org.scouts105bentaya.shared.GenericConstants;
 import org.scouts105bentaya.shared.GenericConverter;
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import static java.time.temporal.ChronoUnit.MINUTES;
 
 @Component
-public class BookingFormConverter extends GenericConverter<Booking, BookingFormDto> {
+public class BookingFormConverter extends GenericConverter<GeneralBooking, BookingFormDto> {
     private final ScoutCenterRepository scoutCenterRepository;
 
     public BookingFormConverter(ScoutCenterRepository scoutCenterRepository) {
@@ -19,8 +19,8 @@ public class BookingFormConverter extends GenericConverter<Booking, BookingFormD
     }
 
     @Override
-    public Booking convertFromDto(BookingFormDto dto) {
-        Booking entity = new Booking();
+    public GeneralBooking convertFromDto(BookingFormDto dto) {
+        GeneralBooking entity = new GeneralBooking();
         entity.setOrganizationName(dto.groupName());
         entity.setCif(dto.cif().toUpperCase());
         entity.setFacilityUse(dto.facilityUse());
@@ -39,7 +39,7 @@ public class BookingFormConverter extends GenericConverter<Booking, BookingFormD
     }
 
     @Override
-    public BookingFormDto convertFromEntity(Booking entity) {
+    public BookingFormDto convertFromEntity(GeneralBooking entity) {
         throw new UnsupportedOperationException(GenericConstants.NOT_IMPLEMENTED);
     }
 }

@@ -5,15 +5,15 @@ import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.booking.dto.BookingDocumentDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingDocumentStatusFormDto;
-import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.booking.entity.BookingDocument;
 import org.scouts105bentaya.features.booking.entity.BookingDocumentFile;
+import org.scouts105bentaya.features.booking.entity.GeneralBooking;
 import org.scouts105bentaya.features.booking.enums.BookingDocumentDuration;
 import org.scouts105bentaya.features.booking.enums.BookingDocumentStatus;
 import org.scouts105bentaya.features.booking.repository.BookingDocumentFileRepository;
 import org.scouts105bentaya.features.booking.repository.BookingDocumentRepository;
 import org.scouts105bentaya.features.booking.repository.BookingDocumentTypeRepository;
-import org.scouts105bentaya.features.booking.repository.BookingRepository;
+import org.scouts105bentaya.features.booking.repository.GeneralBookingRepository;
 import org.scouts105bentaya.features.user.User;
 import org.scouts105bentaya.features.user.role.RoleEnum;
 import org.scouts105bentaya.shared.service.AuthService;
@@ -31,7 +31,7 @@ import java.util.List;
 public class BookingDocumentService {
 
     private final BookingDocumentRepository bookingDocumentRepository;
-    private final BookingRepository bookingRepository;
+    private final GeneralBookingRepository bookingRepository;
     private final BlobService blobService;
     private final BookingDocumentTypeRepository bookingDocumentTypeRepository;
     private final BookingDocumentFileRepository bookingDocumentFileRepository;
@@ -39,7 +39,7 @@ public class BookingDocumentService {
 
     public BookingDocumentService(
         BookingDocumentRepository bookingDocumentRepository,
-        BookingRepository bookingRepository,
+        GeneralBookingRepository bookingRepository,
         BlobService blobService,
         BookingDocumentTypeRepository bookingDocumentTypeRepository,
         BookingDocumentFileRepository bookingDocumentFileRepository,
@@ -65,7 +65,7 @@ public class BookingDocumentService {
     public void saveBookingDocument(Integer bookingId, MultipartFile file, Integer typeId) {
         FileUtils.validateFileIsPdf(file);
 
-        Booking booking = bookingRepository.get(bookingId);
+        GeneralBooking booking = bookingRepository.get(bookingId);
 
         if (!booking.getStatus().reservedOrOccupied()) {
             log.warn("saveBookingDocument - booking status {} is not valid for uploading documents", booking.getStatus());
@@ -132,7 +132,7 @@ public class BookingDocumentService {
     }
 
     public ResponseEntity<byte[]> getBookingIncidenceFile(Integer id) {
-        Booking booking = this.bookingRepository.get(id);
+        GeneralBooking booking = this.bookingRepository.get(id);
         if (booking.getIncidencesFile() == null) {
             throw new WebBentayaNotFoundException("La reserva no tiene registro de incidencias asociado");
         }

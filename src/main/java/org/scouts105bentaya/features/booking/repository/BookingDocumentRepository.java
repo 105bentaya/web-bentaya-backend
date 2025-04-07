@@ -24,10 +24,10 @@ public interface BookingDocumentRepository extends JpaRepository<BookingDocument
           WHERE b.id IN (
               SELECT MAX(bd.id)
               FROM booking_document bd
-               JOIN booking bk ON bd.booking_id = bk.id
+               JOIN general_booking gb ON bd.booking_id = gb.id
                JOIN booking_document_file f ON bd.file_id = f.id
                JOIN booking_document_type dt ON bd.type_id = dt.id
-              WHERE bk.cif = :cif
+              WHERE gb.cif = :cif
                 AND dt.active = TRUE
               GROUP BY bd.file_id
           )

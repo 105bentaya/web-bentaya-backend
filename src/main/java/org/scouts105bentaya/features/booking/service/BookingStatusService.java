@@ -4,7 +4,6 @@ import jakarta.activation.DataSource;
 import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
-import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.booking.dto.in.BookingAcceptedDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingConfirmedDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingStatusUpdateDto;
@@ -12,10 +11,12 @@ import org.scouts105bentaya.features.booking.dto.in.BookingWarningDto;
 import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.booking.entity.BookingDocument;
 import org.scouts105bentaya.features.booking.entity.BookingDocumentFile;
+import org.scouts105bentaya.features.booking.entity.GeneralBooking;
 import org.scouts105bentaya.features.booking.enums.BookingDocumentStatus;
 import org.scouts105bentaya.features.booking.enums.BookingStatus;
 import org.scouts105bentaya.features.booking.repository.BookingDocumentRepository;
 import org.scouts105bentaya.features.booking.repository.BookingRepository;
+import org.scouts105bentaya.features.booking.repository.GeneralBookingRepository;
 import org.scouts105bentaya.features.scout_center.ScoutCenterService;
 import org.scouts105bentaya.features.setting.enums.SettingEnum;
 import org.scouts105bentaya.features.user.UserService;
@@ -42,6 +43,7 @@ public class BookingStatusService {
     // Diagrama de estados
     // https://drive.google.com/file/d/1UxVY4xrxK12tbuVHWrrCflXzZphYJMRi/view?usp=sharing
 
+    private final GeneralBookingRepository generalBookingRepository;
     private final BookingRepository bookingRepository;
     private final TemplateEngine htmlTemplateEngine;
     private final EmailService emailService;
@@ -54,13 +56,18 @@ public class BookingStatusService {
     @Value("${bentaya.web.url}") private String url;
 
     public BookingStatusService(
+        GeneralBookingRepository generalBookingRepository,
         BookingRepository bookingRepository,
         TemplateEngine htmlTemplateEngine,
         EmailService emailService,
         UserService userService,
         ScoutCenterService scoutCenterService,
         BookingDocumentRepository bookingDocumentRepository,
-        BookingDocumentService bookingDocumentService, BlobService blobService, AuthService authService) {
+        BookingDocumentService bookingDocumentService,
+        BlobService blobService,
+        AuthService authService
+    ) {
+        this.generalBookingRepository = generalBookingRepository;
         this.bookingRepository = bookingRepository;
         this.htmlTemplateEngine = htmlTemplateEngine;
         this.emailService = emailService;
@@ -72,7 +79,7 @@ public class BookingStatusService {
         this.authService = authService;
     }
 
-    public void saveFromForm(Booking booking) {
+    public void saveFromForm(GeneralBooking booking) {
         booking.setStatus(BookingStatus.NEW);
         booking.setCreationDate(ZonedDateTime.now());
         booking.setExclusiveReservation(booking.isExclusiveReservation() || booking.getScoutCenter().isAlwaysExclusive());
@@ -80,7 +87,7 @@ public class BookingStatusService {
         String password = this.userService.addNewScoutCenterUser(booking.getContactMail());
         booking.setUser(userService.findByUsername(booking.getContactMail()));
 
-        Booking savedBooking = bookingRepository.save(booking);
+        GeneralBooking savedBooking = generalBookingRepository.save(booking);
 
         this.setBookingDocuments(savedBooking);
         try {
@@ -90,7 +97,7 @@ public class BookingStatusService {
         }
     }
 
-    private void setBookingDocuments(Booking booking) {
+    private void setBookingDocuments(GeneralBooking booking) {
         LocalDate maxExpirationDate = booking.getEndDate().plusDays(1).toLocalDate();
         List<BookingDocument> documents = bookingDocumentRepository.findUserBookingValidDocuments(booking.getCif(), maxExpirationDate).stream()
             .map(document -> new BookingDocument()
@@ -105,7 +112,7 @@ public class BookingStatusService {
         bookingDocumentRepository.saveAll(documents);
     }
 
-    private void sendNewBookingMails(Booking booking, String newUserPassword) {
+    private void sendNewBookingMails(GeneralBooking booking, String newUserPassword) {
         String userSubject = "Solicitud de Reserva nº %d - %s".formatted(booking.getId(), booking.getScoutCenter().getName());
         String managementSubject = "%s - %d - Nueva Solicitud de Reserva".formatted(booking.getScoutCenter().getName(), booking.getId());
 
@@ -142,19 +149,21 @@ public class BookingStatusService {
         currentBooking.setStatus(BookingStatus.REJECTED);
         currentBooking.setStatusObservations(dto.getObservations());
         Booking savedBooking = bookingRepository.save(currentBooking);
-        this.sendRejectionMail(currentBooking);
+        if (savedBooking instanceof GeneralBooking generalBooking) {
+            this.sendRejectionMail(generalBooking);
+        }
         return savedBooking;
     }
 
-    private void sendRejectionMail(Booking booking) {
+    private void sendRejectionMail(GeneralBooking booking) {
         String subject = "Reserva nº %d Denegada - %s".formatted(booking.getId(), booking.getScoutCenter().getName());
         Context context = this.getBookingBasicContext(booking, subject);
         final String infoHtmlContent = this.htmlTemplateEngine.process("booking/user/rejection.html", context);
         this.emailService.sendSimpleEmailWithHtml(subject, infoHtmlContent, booking.getUser().getUsername());
     }
 
-    public Booking bookingFromNewToReserved(Integer bookingId, BookingAcceptedDto dto) {
-        Booking currentBooking = this.getValidBooking(bookingId, BookingStatus.NEW);
+    public GeneralBooking bookingFromNewToReserved(Integer bookingId, BookingAcceptedDto dto) {
+        GeneralBooking currentBooking = this.getValidGeneralBooking(bookingId, BookingStatus.NEW);
         currentBooking.setStatus(BookingStatus.RESERVED);
         currentBooking.setStatusObservations(dto.getObservations());
         currentBooking.setPrice(dto.getPrice());
@@ -165,12 +174,12 @@ public class BookingStatusService {
         documentsToDelete.forEach(bookingDocumentService::deleteDocument);
         currentBooking.getBookingDocumentList().removeAll(documentsToDelete);
 
-        Booking savedBooking = bookingRepository.save(currentBooking);
+        GeneralBooking savedBooking = generalBookingRepository.save(currentBooking);
         this.sendReservedMail(savedBooking);
         return savedBooking;
     }
 
-    private void sendReservedMail(Booking booking) {
+    private void sendReservedMail(GeneralBooking booking) {
         String subject = "Reserva nº %d Acepada - %s".formatted(booking.getId(), booking.getScoutCenter().getName());
         Context context = this.getBookingBasicContext(booking, subject);
         context.setVariable("price", booking.getPrice());
@@ -187,11 +196,14 @@ public class BookingStatusService {
         currentBooking.setExclusiveReservation(dto.getExclusive() || currentBooking.getScoutCenter().isAlwaysExclusive());
         Booking savedBooking = bookingRepository.save(currentBooking);
 
-        this.sendAcceptedMail(currentBooking, exclusivenessRequested && !currentBooking.isExclusiveReservation());
+        if (savedBooking instanceof GeneralBooking generalBooking) {
+            this.sendAcceptedMail(generalBooking, exclusivenessRequested && !currentBooking.isExclusiveReservation());
+        }
+
         return savedBooking;
     }
 
-    private void sendAcceptedMail(Booking booking, boolean exclusivenessRejected) {
+    private void sendAcceptedMail(GeneralBooking booking, boolean exclusivenessRejected) {
         String subject = "Reserva nº %d Confirmada - %s".formatted(booking.getId(), booking.getScoutCenter().getName());
         Context context = this.getBookingBasicContext(booking, subject);
         context.setVariable("exclusivenessRejected", exclusivenessRejected);
@@ -199,7 +211,7 @@ public class BookingStatusService {
         this.sendMailWithRulePdf(booking, subject, infoHtmlContent);
     }
 
-    private void sendMailWithRulePdf(Booking booking, String subject, String infoHtmlContent) {
+    private void sendMailWithRulePdf(GeneralBooking booking, String subject, String infoHtmlContent) {
         if (booking.getScoutCenter().getRulePdf() != null) {
             DataSource dataSource = scoutCenterService.getRulePDF(booking.getScoutCenter().getId()).asDataSource();
             this.emailService.sendSimpleEmailWithHtmlAndAttachment(subject, infoHtmlContent, dataSource, booking.getUser().getUsername());
@@ -209,8 +221,8 @@ public class BookingStatusService {
         }
     }
 
-    public Booking cancelBooking(Integer bookingId, BookingStatusUpdateDto dto) {
-        Booking currentBooking = this.getValidBooking(bookingId, null);
+    public GeneralBooking cancelBooking(Integer bookingId, BookingStatusUpdateDto dto) {
+        GeneralBooking currentBooking = this.getValidGeneralBooking(bookingId, null);
 
         if (currentBooking.getStartDate().isBefore(LocalDateTime.now())) {
             log.warn("cancelBooking - can not cancel already started booking");
@@ -219,12 +231,12 @@ public class BookingStatusService {
 
         currentBooking.setStatus(BookingStatus.CANCELED);
         currentBooking.setStatusObservations(dto.getObservations());
-        Booking savedBooking = bookingRepository.save(currentBooking);
+        GeneralBooking savedBooking = generalBookingRepository.save(currentBooking);
         this.sendCancellationMail(currentBooking);
         return savedBooking;
     }
 
-    private void sendCancellationMail(Booking booking) {
+    private void sendCancellationMail(GeneralBooking booking) {
         String userSubject = "Reserva nº %d Cancelada - %s".formatted(booking.getId(), booking.getScoutCenter().getName());
         String managementSubject = "%s - %d - Reserva Cancelada".formatted(booking.getScoutCenter().getName(), booking.getId());
 
@@ -237,11 +249,11 @@ public class BookingStatusService {
         this.emailService.sendSimpleEmailWithHtml(managementSubject, managementHtmlContent, getBookingEmails());
     }
 
-    public Booking confirmDocuments(Integer bookingId) {
-        Booking currentBooking = this.getValidBooking(bookingId, BookingStatus.RESERVED);
+    public GeneralBooking confirmDocuments(Integer bookingId) {
+        GeneralBooking currentBooking = this.getValidGeneralBooking(bookingId, BookingStatus.RESERVED);
         if (!currentBooking.isUserConfirmedDocuments()) {
             currentBooking.setUserConfirmedDocuments(true);
-            Booking savedBooking = bookingRepository.save(currentBooking);
+            GeneralBooking savedBooking = generalBookingRepository.save(currentBooking);
             this.sendNotifyDocumentsUploadedMail(savedBooking);
             return savedBooking;
         }
@@ -249,7 +261,7 @@ public class BookingStatusService {
         return currentBooking;
     }
 
-    private void sendNotifyDocumentsUploadedMail(Booking booking) {
+    private void sendNotifyDocumentsUploadedMail(GeneralBooking booking) {
         String subject = "%s - %d - Documentos Disponibles".formatted(booking.getScoutCenter().getName(), booking.getId());
 
         Context context = this.getBookingBasicContext(booking, subject);
@@ -258,16 +270,16 @@ public class BookingStatusService {
         this.emailService.sendSimpleEmailWithHtml(subject, infoHtmlContent, getBookingEmails());
     }
 
-    public Booking sendBookingWarning(Integer bookingId, BookingWarningDto warningDto) {
-        Booking currentBooking = this.getValidBooking(bookingId, BookingStatus.RESERVED);
+    public GeneralBooking sendBookingWarning(Integer bookingId, BookingWarningDto warningDto) {
+        GeneralBooking currentBooking = this.getValidGeneralBooking(bookingId, BookingStatus.RESERVED);
         currentBooking.setUserConfirmedDocuments(false);
         currentBooking.setStatusObservations(warningDto.getObservations());
-        Booking savedBooking = bookingRepository.save(currentBooking);
+        GeneralBooking savedBooking = generalBookingRepository.save(currentBooking);
         this.sendNotifyWrongDocumentsMail(currentBooking, warningDto.getSubject());
         return savedBooking;
     }
 
-    private void sendNotifyWrongDocumentsMail(Booking booking, String subjectContent) {
+    private void sendNotifyWrongDocumentsMail(GeneralBooking booking, String subjectContent) {
         String subject = "Reserva nº %d - %s - %s".formatted(booking.getId(), subjectContent, booking.getScoutCenter().getName());
 
         Context context = this.getBookingBasicContext(booking, subject);
@@ -277,16 +289,16 @@ public class BookingStatusService {
     }
 
     public void checkForFinishedBookings() {
-        List<Booking> bookingsToBeFinished = this.bookingRepository.findBookingsToBeFinished(LocalDateTime.now().minusHours(6));
+        List<GeneralBooking> bookingsToBeFinished = this.generalBookingRepository.findBookingsToBeFinished(LocalDateTime.now().minusHours(6));
         bookingsToBeFinished.forEach(booking -> {
             log.info("Setting booking {} as finished", booking.getId());
             booking.setFinished(true);
-            bookingRepository.save(booking);
+            generalBookingRepository.save(booking);
             this.sendFinishedEmail(booking);
         });
     }
 
-    public void sendFinishedEmail(Booking booking) {
+    public void sendFinishedEmail(GeneralBooking booking) {
         String subject = "Reserva nº %d Finalizada - %s".formatted(booking.getId(), booking.getScoutCenter().getName());
         Context context = this.getBookingBasicContext(booking, subject);
         final String infoHtmlContent = this.htmlTemplateEngine.process("booking/user/finished.html", context);
@@ -306,7 +318,7 @@ public class BookingStatusService {
 
     public void saveBookingIncidencesFile(Integer bookingId, MultipartFile file) {
         FileUtils.validateFileIsDocOrPdf(file);
-        Booking booking = bookingRepository.get(bookingId);
+        GeneralBooking booking = generalBookingRepository.get(bookingId);
 
         if (!booking.getStatus().reservedOrOccupied()) {
             log.warn("saveBookingIncidencesFile - booking status {} is not valid for uploading documents", booking.getStatus());
@@ -324,10 +336,10 @@ public class BookingStatusService {
         bookingDocumentFile.setUser(authService.getLoggedUser());
 
         booking.setIncidencesFile(bookingDocumentFile);
-        sendIncidenceFileEmail(bookingRepository.save(booking));
+        sendIncidenceFileEmail(generalBookingRepository.save(booking));
     }
 
-    private void sendIncidenceFileEmail(Booking booking) {
+    private void sendIncidenceFileEmail(GeneralBooking booking) {
         String subject = "%s - %d - Registro de Incidencias Y Estados".formatted(booking.getScoutCenter().getName(), booking.getId());
         Context context = this.getBookingBasicContext(booking, subject);
         final String infoHtmlContent = this.htmlTemplateEngine.process("booking/management/incidences.html", context);
@@ -338,7 +350,7 @@ public class BookingStatusService {
         return this.emailService.getSettingEmails(SettingEnum.BOOKING_MAIL);
     }
 
-    private Context getBookingBasicContext(Booking booking, String subject) {
+    private Context getBookingBasicContext(GeneralBooking booking, String subject) {
         Context context = new Context();
         context.setVariable("id", booking.getId());
         context.setVariable("center", booking.getScoutCenter().getName());
@@ -353,8 +365,13 @@ public class BookingStatusService {
     }
 
     private Booking getValidBooking(Integer bookingId, @Nullable BookingStatus validStatus) {
-        Booking currentBooking = bookingRepository.findById(bookingId).orElseThrow(WebBentayaNotFoundException::new);
-        this.validateBookingOwnership(currentBooking);
+        Booking booking = bookingRepository.get(bookingId);
+        this.validateStatus(booking, validStatus);
+        return booking;
+    }
+
+    private GeneralBooking getValidGeneralBooking(Integer bookingId, @Nullable BookingStatus validStatus) {
+        GeneralBooking currentBooking = generalBookingRepository.get(bookingId);
         this.validateStatus(currentBooking, validStatus);
         return currentBooking;
     }
@@ -363,13 +380,6 @@ public class BookingStatusService {
         if ((validStatus != null && current.getStatus() != validStatus) || current.getStatus().canceledOrRejected()) {
             log.warn("validateStatus - cannot update status");
             throw new WebBentayaBadRequestException("No se puede actualizar la reserva al estado solicitado");
-        }
-    }
-
-    private void validateBookingOwnership(Booking booking) {
-        if (booking.isOwnBooking()) {
-            log.warn("validateBookingOwnership - booking is own booking");
-            throw new WebBentayaBadRequestException("No se puede actualizar el estado a una reserva de la asociación");
         }
     }
 }

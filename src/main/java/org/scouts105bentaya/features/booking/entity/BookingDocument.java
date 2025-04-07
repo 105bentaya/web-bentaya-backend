@@ -27,7 +27,7 @@ public class BookingDocument {
     private Integer id;
 
     @ManyToOne
-    private Booking booking;
+    private GeneralBooking booking;
 
     @ManyToOne(optional = false)
     private BookingDocumentType type;

@@ -17,7 +17,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import org.scouts105bentaya.features.booking.entity.Booking;
+import org.scouts105bentaya.features.booking.entity.GeneralBooking;
 import org.scouts105bentaya.features.group.Group;
 import org.scouts105bentaya.features.scout.Scout;
 import org.scouts105bentaya.features.user.role.Role;
@@ -58,7 +58,7 @@ public class User {
     )
     private Set<Scout> scoutList;
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-    private List<Booking> bookingList;
+    private List<GeneralBooking> bookingList;
 
     @Transient
     public boolean hasRole(RoleEnum roleEnum) {
