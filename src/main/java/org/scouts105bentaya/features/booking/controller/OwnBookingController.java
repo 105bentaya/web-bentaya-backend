@@ -13,6 +13,7 @@ import org.scouts105bentaya.features.booking.dto.in.BookingDateFormDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingFormDto;
 import org.scouts105bentaya.features.booking.dto.in.OwnBookingFormDto;
 import org.scouts105bentaya.features.booking.entity.Booking;
+import org.scouts105bentaya.features.booking.entity.OwnBooking;
 import org.scouts105bentaya.features.booking.repository.BookingRepository;
 import org.scouts105bentaya.features.booking.repository.OwnBookingRepository;
 import org.scouts105bentaya.features.booking.service.BookingService;
@@ -51,11 +52,13 @@ public class OwnBookingController {
 
     @PreAuthorize("hasAnyRole('SCOUTER', 'GROUP_SCOUTER')")
     @GetMapping()
-    public List<OwnBookingDto> getAll() {
-        return ownBookingRepository.findAll().stream().map(OwnBookingDto::fromEntity).toList();
+    public PageDto<OwnBookingDto> getAll(BookingSpecificationFilter filterDto) {
+        log.info("getAll - {}{}", filterDto, SecurityUtils.getLoggedUserUsernameForLog());
+        Page<OwnBooking> page = ownBookingService.findAll(filterDto);
+        return new PageDto<>(page.getTotalElements(), page.stream().map(OwnBookingDto::fromEntity).toList());
     }
 
-    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
+    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or (hasAnyRole('SCOUTER', 'GROUP_SCOUTER') and (#formDto.groupId == 0 or @authLogic.scouterHasGroupId(#formDto.groupId)))")
     @PostMapping("/new")
     public void addOwnBooking(@RequestBody @Valid OwnBookingFormDto formDto) {
         log.info("addOwnBooking{}", SecurityUtils.getLoggedUserUsernameForLog());

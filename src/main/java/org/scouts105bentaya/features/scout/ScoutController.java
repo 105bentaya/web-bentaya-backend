@@ -99,7 +99,7 @@ public class ScoutController {
         return scoutConverter.convertFromEntity(scoutService.save(scoutDto));
     }
 
-    @PreAuthorize("hasRole('SCOUTER') and @authLogic.userHasGroupId(#scoutDto.group.id) and @authLogic.preScoutHasGroupId(#preScoutId, #scoutDto.group.id)")
+    @PreAuthorize("hasRole('SCOUTER') and @authLogic.scouterHasGroupId(#scoutDto.group.id) and @authLogic.preScoutHasGroupId(#preScoutId, #scoutDto.group.id)")
     @PostMapping("/{preScoutId}")
     public ScoutDto saveFromPreScout(@RequestBody ScoutDto scoutDto, @PathVariable Integer preScoutId) {
         log.info("METHOD ScoutController.saveFromPreScout --- PARAMS preScoutId: {}{}", preScoutId, SecurityUtils.getLoggedUserUsernameForLog());

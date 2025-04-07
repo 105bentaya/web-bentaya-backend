@@ -13,6 +13,7 @@ public record OwnBookingFormDto(
     @NotNull LocalDateTime startDate,
     @NotNull LocalDateTime endDate,
     @Length(max = 1023) @NotBlank String observations,
-    boolean exclusiveReservation
+    boolean exclusiveReservation,
+    @NotNull Integer groupId
 ) {
 }

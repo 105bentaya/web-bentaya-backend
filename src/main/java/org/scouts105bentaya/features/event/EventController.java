@@ -100,7 +100,7 @@ public class EventController {
         return eventFormConverter.convertFromEntity(eventService.findById(id));
     }
 
-    @PreAuthorize("(hasRole('SCOUTER') and (#event.forScouters or @authLogic.userHasGroupId(#event.groupId))) or (hasAnyRole('GROUP_SCOUTER') and #event.forEveryone)")
+    @PreAuthorize("(hasRole('SCOUTER') and (#event.forScouters or @authLogic.scouterHasGroupId(#event.groupId))) or (hasAnyRole('GROUP_SCOUTER') and #event.forEveryone)")
     @PostMapping
     public EventDto save(@RequestBody @Valid EventFormDto event) {
         log.info("METHOD EventController.save{}", SecurityUtils.getLoggedUserUsernameForLog());

@@ -58,7 +58,7 @@ public class PreScoutController {
     }
 
     //todo move status check to own class; userHasGroupId shouldnt only be used with the dto group id, it should also be used with the entity groupId to prevent illegal group changes
-    @PreAuthorize("hasRole('FORM') or hasRole('SCOUTER') and #dto.status >= 0 and #dto.status <= 3 and @authLogic.userHasGroupId(#dto.group.id)")
+    @PreAuthorize("hasRole('FORM') or hasRole('SCOUTER') and #dto.status >= 0 and #dto.status <= 3 and @authLogic.scouterHasGroupId(#dto.group.id)")
     @PutMapping("/assignation")
     public void updateAssignation(@RequestBody PreScoutAssignationDto dto) {
         log.info("METHOD PreScoutController.updateAssignation --- PARAMS id:{}{}", dto.preScoutId(), SecurityUtils.getLoggedUserUsernameForLog());
@@ -71,7 +71,7 @@ public class PreScoutController {
         this.preScoutService.saveAndSendEmail(preScoutDto);
     }
 
-    @PreAuthorize("hasRole('FORM') or hasRole('SCOUTER') and @authLogic.userHasPreScoutGroupId(#id)")
+    @PreAuthorize("hasRole('FORM') or hasRole('SCOUTER') and @authLogic.scouterHasPreScoutGroupId(#id)")
     @GetMapping("/pdf/{id}")
     public ResponseEntity<byte[]> getPDF(@PathVariable Integer id) {
         log.info("METHOD PreScoutController.getPDF --- PARAMS id:{}{}", id, SecurityUtils.getLoggedUserUsernameForLog());

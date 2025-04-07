@@ -270,39 +270,39 @@ class AuthLogicTest {
     }
 
     @Test
-    void userHasGroupId() {
+    void scouterHasGroupId() {
         //given
         var loggedUser = new User().setId(1).setGroup(GroupUtils.basicGroup());
 
         //when
         Mockito.when(authService.getLoggedUser()).thenReturn(loggedUser);
-        var result = authLogic.userHasGroupId(1);
+        var result = authLogic.scouterHasGroupId(1);
 
         //then
         Assertions.assertThat(result).isTrue();
     }
 
     @Test
-    void userHasGroupId2() {
+    void scouterHasGroupId2() {
         //given
         var loggedUser = new User().setId(1).setGroup(GroupUtils.basicGroup());
 
         //when
         Mockito.when(authService.getLoggedUser()).thenReturn(loggedUser);
-        var result = authLogic.userHasGroupId(2);
+        var result = authLogic.scouterHasGroupId(2);
 
         //then
         Assertions.assertThat(result).isFalse();
     }
 
     @Test
-    void userHasGroupId3() {
+    void scouterHasGroupId3() {
         //given
         var loggedUser = new User().setId(1);
 
         //when
         Mockito.when(authService.getLoggedUser()).thenReturn(loggedUser);
-        var result = authLogic.userHasGroupId(2);
+        var result = authLogic.scouterHasGroupId(2);
 
         //then
         Assertions.assertThat(result).isFalse();
@@ -335,7 +335,7 @@ class AuthLogicTest {
     }
 
     @Test
-    void userHasPreScoutGroupId() {
+    void scouterHasPreScoutGroupId() {
         //given
         var loggedUser = new User().setId(1).setGroup(GroupUtils.basicGroup());
         var preScout = new PreScout().setId(1).setPreScoutAssignation(new PreScoutAssignation().setGroup(GroupUtils.basicGroup()));
@@ -343,14 +343,14 @@ class AuthLogicTest {
         //when
         Mockito.when(authService.getLoggedUser()).thenReturn(loggedUser);
         Mockito.when(preScoutService.findById(1)).thenReturn(preScout);
-        var result = authLogic.userHasPreScoutGroupId(1);
+        var result = authLogic.scouterHasPreScoutGroupId(1);
 
         //then
         Assertions.assertThat(result).isTrue();
     }
 
     @Test
-    void userHasPreScoutGroupId2() {
+    void scouterHasPreScoutGroupId2() {
         //given
         var loggedUser = new User().setId(1);
         var preScout = new PreScout().setId(1).setPreScoutAssignation(new PreScoutAssignation().setGroup(GroupUtils.basicGroup()));
@@ -358,14 +358,14 @@ class AuthLogicTest {
         //when
         Mockito.when(authService.getLoggedUser()).thenReturn(loggedUser);
         Mockito.when(preScoutService.findById(1)).thenReturn(preScout);
-        var result = authLogic.userHasPreScoutGroupId(1);
+        var result = authLogic.scouterHasPreScoutGroupId(1);
 
         //then
         Assertions.assertThat(result).isFalse();
     }
 
     @Test
-    void userHasPreScoutGroupId3() {
+    void scouterHasPreScoutGroupId3() {
         //given
         var loggedUser = new User().setId(1).setGroup(GroupUtils.groupOfId(2));
         var preScout = new PreScout().setId(1).setPreScoutAssignation(new PreScoutAssignation().setGroup(GroupUtils.basicGroup()));
@@ -373,7 +373,7 @@ class AuthLogicTest {
         //when
         Mockito.when(authService.getLoggedUser()).thenReturn(loggedUser);
         Mockito.when(preScoutService.findById(1)).thenReturn(preScout);
-        var result = authLogic.userHasPreScoutGroupId(1);
+        var result = authLogic.scouterHasPreScoutGroupId(1);
 
         //then
         Assertions.assertThat(result).isFalse();

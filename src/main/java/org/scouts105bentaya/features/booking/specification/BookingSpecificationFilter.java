@@ -19,4 +19,5 @@ public class BookingSpecificationFilter extends SpecificationFilter {
     private String[] filterDates;
     private String endDate;
     private Integer userId;
+    private Integer groupId;
 }

@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface GeneralBookingRepository extends JpaRepository<GeneralBooking, Integer>, JpaSpecificationExecutor<Booking> {
+public interface GeneralBookingRepository extends JpaRepository<GeneralBooking, Integer> {
     default GeneralBooking get(Integer id) {
         return this.findById(id).orElseThrow(WebBentayaNotFoundException::new);
     }
