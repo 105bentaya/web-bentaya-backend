@@ -62,20 +62,7 @@ public class BookingConverter extends GenericConverter<Booking, BookingDto> {
                 generalBooking.getIncidencesFile() != null
             );
         }
-        OwnBooking ownBooking = (OwnBooking) entity;
-        return new OwnBookingDto(
-            ownBooking.getId(),
-            ownBooking.getStatus(),
-            BasicScoutCenterDto.of(ownBooking.getScoutCenter()),
-            GroupBasicDataDto.fromGroupNullAsGeneral(ownBooking.getGroup()),
-            ownBooking.getPacks(),
-            ownBooking.getStartDate(),
-            ownBooking.getEndDate(),
-            ownBooking.getObservations(),
-            ownBooking.getStatusObservations(),
-            ownBooking.getCreationDate(),
-            true
-        );
+        return OwnBookingDto.fromEntity((OwnBooking) entity);
     }
 
     private int bookingMinutes(GeneralBooking booking) {

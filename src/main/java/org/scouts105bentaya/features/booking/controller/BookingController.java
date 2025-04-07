@@ -10,11 +10,9 @@ import org.scouts105bentaya.features.booking.dto.data.BookingInfoDto;
 import org.scouts105bentaya.features.booking.dto.data.PendingBookingsDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingDateFormDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingFormDto;
-import org.scouts105bentaya.features.booking.dto.in.OwnBookingFormDto;
 import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.booking.repository.BookingRepository;
 import org.scouts105bentaya.features.booking.service.BookingService;
-import org.scouts105bentaya.features.booking.service.OwnBookingService;
 import org.scouts105bentaya.features.booking.specification.BookingSpecificationFilter;
 import org.scouts105bentaya.shared.specification.PageDto;
 import org.scouts105bentaya.shared.util.SecurityUtils;
@@ -36,18 +34,15 @@ public class BookingController {
 
     private final BookingService bookingService;
     private final BookingConverter bookingConverter;
-    private final OwnBookingService ownBookingService;
     private final BookingRepository bookingRepository;
 
     public BookingController(
         BookingService bookingService,
         BookingConverter bookingConverter,
-        OwnBookingService ownBookingService,
         BookingRepository bookingRepository
     ) {
         this.bookingService = bookingService;
         this.bookingConverter = bookingConverter;
-        this.ownBookingService = ownBookingService;
         this.bookingRepository = bookingRepository;
     }
 
@@ -80,15 +75,6 @@ public class BookingController {
     public BookingDto getById(@PathVariable Integer id) {
         log.info("getById{}", SecurityUtils.getLoggedUserUsernameForLog());
         return bookingConverter.convertFromEntity(bookingRepository.get(id));
-    }
-
-    //OWN
-
-    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
-    @PostMapping("/own/new")
-    public void addOwnBooking(@RequestBody @Valid OwnBookingFormDto formDto) {
-        log.info("addOwnBooking{}", SecurityUtils.getLoggedUserUsernameForLog());
-        ownBookingService.addOwnBooking(formDto);
     }
 
     //PUBLIC

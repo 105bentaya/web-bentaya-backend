@@ -1,5 +1,6 @@
 package org.scouts105bentaya.features.booking.dto;
 
+import org.scouts105bentaya.features.booking.entity.OwnBooking;
 import org.scouts105bentaya.features.booking.enums.BookingStatus;
 import org.scouts105bentaya.features.group.GroupBasicDataDto;
 import org.scouts105bentaya.features.scout_center.dto.BasicScoutCenterDto;
@@ -20,4 +21,19 @@ public record OwnBookingDto(
     ZonedDateTime creationDate,
     boolean isOwnBooking
 ) implements BookingDto {
+    public static OwnBookingDto fromEntity(OwnBooking entity) {
+        return new OwnBookingDto(
+            entity.getId(),
+            entity.getStatus(),
+            BasicScoutCenterDto.of(entity.getScoutCenter()),
+            GroupBasicDataDto.fromGroupNullAsGeneral(entity.getGroup()),
+            entity.getPacks(),
+            entity.getStartDate(),
+            entity.getEndDate(),
+            entity.getObservations(),
+            entity.getStatusObservations(),
+            entity.getCreationDate(),
+            true
+        );
+    }
 }
