@@ -13,7 +13,7 @@ import org.scouts105bentaya.features.booking.dto.in.BookingFormDto;
 import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.booking.repository.BookingRepository;
 import org.scouts105bentaya.features.booking.service.BookingService;
-import org.scouts105bentaya.features.booking.service.BookingStatusService;
+import org.scouts105bentaya.features.booking.service.GeneralBookingService;
 import org.scouts105bentaya.features.booking.specification.BookingSpecificationFilter;
 import org.scouts105bentaya.shared.specification.PageDto;
 import org.scouts105bentaya.shared.util.SecurityUtils;
@@ -36,18 +36,18 @@ public class BookingController {
     private final BookingService bookingService;
     private final BookingConverter bookingConverter;
     private final BookingRepository bookingRepository;
-    private final BookingStatusService bookingStatusService;
+    private final GeneralBookingService generalBookingService;
 
     public BookingController(
         BookingService bookingService,
         BookingConverter bookingConverter,
         BookingRepository bookingRepository,
-        BookingStatusService bookingStatusService
+        GeneralBookingService generalBookingService
     ) {
         this.bookingService = bookingService;
         this.bookingConverter = bookingConverter;
         this.bookingRepository = bookingRepository;
-        this.bookingStatusService = bookingStatusService;
+        this.generalBookingService = generalBookingService;
     }
 
     //MANAGER
@@ -96,6 +96,6 @@ public class BookingController {
     @PostMapping("/public/form")
     public void saveBookingForm(@RequestBody @Valid BookingFormDto bookingFormDto) {
         log.info("saveBookingForm");
-        bookingStatusService.saveFromForm(bookingFormDto);
+        generalBookingService.saveFromForm(bookingFormDto);
     }
 }

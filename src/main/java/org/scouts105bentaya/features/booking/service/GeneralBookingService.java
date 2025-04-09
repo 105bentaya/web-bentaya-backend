@@ -37,7 +37,7 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-public class BookingStatusService {
+public class GeneralBookingService {
 
     // Diagrama de estados
     // https://drive.google.com/file/d/1UxVY4xrxK12tbuVHWrrCflXzZphYJMRi/view?usp=sharing
@@ -54,7 +54,7 @@ public class BookingStatusService {
     private final BookingFormConverter bookingFormConverter;
     private final BookingService bookingService;
 
-    public BookingStatusService(
+    public GeneralBookingService(
         GeneralBookingRepository generalBookingRepository,
         TemplateEngine htmlTemplateEngine,
         EmailService emailService,
