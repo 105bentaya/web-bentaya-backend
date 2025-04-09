@@ -21,7 +21,15 @@ public class OwnBookingSpecification implements Specification<OwnBooking> {
     public Predicate toPredicate(Root<OwnBooking> root, CriteriaQuery<?> query, @NonNull CriteriaBuilder criteriaBuilder) {
         SpecificationPredicateHelper predicates = new SpecificationPredicateHelper(criteriaBuilder);
 
-        predicates.isEqual(root.get("group").get("id"), filter.getGroupId());
+        if (filter.getGroupIds() != null) {
+            SpecificationPredicateHelper groupPredicate = new SpecificationPredicateHelper(criteriaBuilder);
+            if (filter.getGroupIds().contains(0)) {
+                groupPredicate.addPredicate(criteriaBuilder.isNull(root.get("group")));
+            }
+            groupPredicate.inList(root.get("group").get("id"), filter.getGroupIds());
+            predicates.addPredicate(groupPredicate.getPredicatesOr());
+        }
+
         predicates.inList(root.get("scoutCenter").get("id"), filter.getScoutCenters());
         predicates.inList(root.get("status"), filter.getStatuses());
         predicates.localDateTimeIsAfterDate(root.get("endDate"), filter.getEndDate());

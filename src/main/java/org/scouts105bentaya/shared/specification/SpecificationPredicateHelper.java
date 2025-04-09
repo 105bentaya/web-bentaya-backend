@@ -96,7 +96,7 @@ public class SpecificationPredicateHelper {
         return cb.and(predicates.toArray(new Predicate[]{}));
     }
 
-    public Predicate getPredicatesOr() { //todo not working >:(
+    public Predicate getPredicatesOr() {
         return (cb.or(predicates.toArray(new Predicate[]{})));
     }
 }

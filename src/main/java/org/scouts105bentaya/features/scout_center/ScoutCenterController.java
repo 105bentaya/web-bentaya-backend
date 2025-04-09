@@ -72,7 +72,7 @@ public class ScoutCenterController {
         return ScoutCenterDto.of(scoutCenterService.updateScoutCenter(centerId, scoutCenterDto));
     }
 
-    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userHasAccessToScoutCenter(#centerId)")
+    @PreAuthorize("hasAnyRole('SCOUT_CENTER_MANAGER', 'SCOUTER', 'GROUP_SCOUTER') or hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userHasAccessToScoutCenter(#centerId)")
     @GetMapping("/rules/{centerId}")
     public ResponseEntity<byte[]> getRuleFile(@PathVariable int centerId) {
         log.info("getRuleFile {}{}", centerId, SecurityUtils.getLoggedUserUsernameForLog());

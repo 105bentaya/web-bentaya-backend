@@ -31,7 +31,7 @@ import java.util.List;
 public class BookingDocumentService {
 
     private final BookingDocumentRepository bookingDocumentRepository;
-    private final GeneralBookingRepository bookingRepository;
+    private final GeneralBookingRepository generalBookingRepository;
     private final BlobService blobService;
     private final BookingDocumentTypeRepository bookingDocumentTypeRepository;
     private final BookingDocumentFileRepository bookingDocumentFileRepository;
@@ -39,14 +39,14 @@ public class BookingDocumentService {
 
     public BookingDocumentService(
         BookingDocumentRepository bookingDocumentRepository,
-        GeneralBookingRepository bookingRepository,
+        GeneralBookingRepository generalBookingRepository,
         BlobService blobService,
         BookingDocumentTypeRepository bookingDocumentTypeRepository,
         BookingDocumentFileRepository bookingDocumentFileRepository,
         AuthService authService
     ) {
         this.bookingDocumentRepository = bookingDocumentRepository;
-        this.bookingRepository = bookingRepository;
+        this.generalBookingRepository = generalBookingRepository;
         this.blobService = blobService;
         this.bookingDocumentTypeRepository = bookingDocumentTypeRepository;
         this.bookingDocumentFileRepository = bookingDocumentFileRepository;
@@ -65,7 +65,7 @@ public class BookingDocumentService {
     public void saveBookingDocument(Integer bookingId, MultipartFile file, Integer typeId) {
         FileUtils.validateFileIsPdf(file);
 
-        GeneralBooking booking = bookingRepository.get(bookingId);
+        GeneralBooking booking = generalBookingRepository.get(bookingId);
 
         if (!booking.getStatus().reservedOrOccupied()) {
             log.warn("saveBookingDocument - booking status {} is not valid for uploading documents", booking.getStatus());
@@ -132,7 +132,7 @@ public class BookingDocumentService {
     }
 
     public ResponseEntity<byte[]> getBookingIncidenceFile(Integer id) {
-        GeneralBooking booking = this.bookingRepository.get(id);
+        GeneralBooking booking = this.generalBookingRepository.get(id);
         if (booking.getIncidencesFile() == null) {
             throw new WebBentayaNotFoundException("La reserva no tiene registro de incidencias asociado");
         }

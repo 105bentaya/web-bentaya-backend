@@ -4,13 +4,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.joda.time.Interval;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
-import org.scouts105bentaya.features.booking.converter.BookingFormConverter;
 import org.scouts105bentaya.features.booking.dto.data.BookingCalendarInfoDto;
 import org.scouts105bentaya.features.booking.dto.data.BookingDateAndStatusDto;
 import org.scouts105bentaya.features.booking.dto.data.BookingInfoDto;
 import org.scouts105bentaya.features.booking.dto.data.PendingBookingsDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingDateFormDto;
-import org.scouts105bentaya.features.booking.dto.in.BookingFormDto;
 import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.booking.entity.GeneralBooking;
 import org.scouts105bentaya.features.booking.enums.BookingStatus;
@@ -23,8 +21,11 @@ import org.scouts105bentaya.features.booking.util.IntervalUtils;
 import org.scouts105bentaya.features.setting.SettingService;
 import org.scouts105bentaya.features.setting.enums.SettingEnum;
 import org.scouts105bentaya.shared.service.AuthService;
+import org.scouts105bentaya.shared.service.EmailService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+import org.thymeleaf.context.Context;
 
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
@@ -34,27 +35,25 @@ import java.util.List;
 @Service
 public class BookingService {
 
-    private final BookingFormConverter bookingFormConverter;
     private final BookingRepository bookingRepository;
     private final GeneralBookingRepository generalBookingRepository;
-    private final BookingStatusService bookingStatusService;
     private final AuthService authService;
     private final SettingService settingService;
+    private final EmailService emailService;
+
+    @Value("${bentaya.web.url}") private String url;
 
     public BookingService(
-        BookingFormConverter bookingFormConverter,
         BookingRepository bookingRepository,
         GeneralBookingRepository generalBookingRepository,
-        BookingStatusService bookingStatusService,
         AuthService authService,
-        SettingService settingService
-    ) {
-        this.bookingFormConverter = bookingFormConverter;
+        SettingService settingService,
+        EmailService emailService) {
         this.bookingRepository = bookingRepository;
         this.generalBookingRepository = generalBookingRepository;
-        this.bookingStatusService = bookingStatusService;
         this.authService = authService;
         this.settingService = settingService;
+        this.emailService = emailService;
     }
 
     public Page<Booking> findAll(BookingSpecificationFilter filter) {
@@ -78,14 +77,7 @@ public class BookingService {
             .map(BookingCalendarInfoDto::fromBooking).toList();
     }
 
-    public void saveFromForm(BookingFormDto dto) {
-        GeneralBooking booking = bookingFormConverter.convertFromDto(dto);
-        this.validateBookingDates(booking);
-        this.validateIfDateIsAllowed(booking);
-        this.bookingStatusService.saveFromForm(booking);
-    }
-
-    private void validateIfDateIsAllowed(Booking booking) {
+    public void validateIfBookingDateIsOpen(Booking booking) {
         String settingDate = settingService.findByName(SettingEnum.BOOKING_DATE).getValue();
         LocalDateTime maxDate = ZonedDateTime.parse(settingDate).toLocalDate().plusDays(1).atStartOfDay();
         if (booking.getStartDate().isAfter(maxDate)) {
@@ -136,5 +128,18 @@ public class BookingService {
 
     private List<BookingInfoDto> getBookingDtoList(BookingSpecificationFilter filter) {
         return bookingRepository.findAll(new BookingSpecification(filter)).stream().map(BookingInfoDto::fromEntity).toList();
+    }
+
+    public Context getBookingBasicContext(Booking booking, String subject) {
+        Context context = new Context();
+        context.setVariable("id", booking.getId());
+        context.setVariable("center", booking.getScoutCenter().getName());
+        context.setVariable("statusObservation", booking.getStatusObservations());
+        context.setVariable("bookingInformationMail", emailService.getSettingEmails(SettingEnum.BOOKING_MAIL)[0]);
+        context.setVariable("webUrl", url);
+        context.setVariable("subject", subject);
+        context.setVariable("color", booking.getScoutCenter().getColor());
+
+        return context;
     }
 }

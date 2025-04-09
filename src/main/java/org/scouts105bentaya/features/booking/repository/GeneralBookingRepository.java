@@ -1,10 +1,8 @@
 package org.scouts105bentaya.features.booking.repository;
 
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
-import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.booking.entity.GeneralBooking;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 

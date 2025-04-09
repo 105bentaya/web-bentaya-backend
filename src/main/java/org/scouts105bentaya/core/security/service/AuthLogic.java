@@ -2,9 +2,11 @@ package org.scouts105bentaya.core.security.service;
 
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.booking.entity.BookingDocument;
+import org.scouts105bentaya.features.booking.entity.OwnBooking;
 import org.scouts105bentaya.features.booking.enums.BookingDocumentStatus;
 import org.scouts105bentaya.features.booking.enums.BookingStatus;
 import org.scouts105bentaya.features.booking.repository.BookingDocumentRepository;
+import org.scouts105bentaya.features.booking.repository.OwnBookingRepository;
 import org.scouts105bentaya.features.event.Event;
 import org.scouts105bentaya.features.event.dto.EventFormDto;
 import org.scouts105bentaya.features.event.service.EventService;
@@ -26,19 +28,22 @@ public class AuthLogic {
     private final EventService eventService;
     private final PreScoutService preScoutService;
     private final BookingDocumentRepository bookingDocumentRepository;
+    private final OwnBookingRepository ownBookingRepository;
 
     public AuthLogic(
         AuthService authService,
         ScoutService scoutService,
         EventService eventService,
         PreScoutService preScoutService,
-        BookingDocumentRepository bookingDocumentRepository
+        BookingDocumentRepository bookingDocumentRepository,
+        OwnBookingRepository ownBookingRepository
     ) {
         this.authService = authService;
         this.scoutService = scoutService;
         this.eventService = eventService;
         this.preScoutService = preScoutService;
         this.bookingDocumentRepository = bookingDocumentRepository;
+        this.ownBookingRepository = ownBookingRepository;
     }
 
     public boolean userHasSameGroupIdAsScout(int scoutId) {
@@ -64,6 +69,14 @@ public class AuthLogic {
         Event event = eventService.findById(eventId);
         if (event.isForEveryone()) return true;
         Group eventGroup = event.getGroup();
+        Group loggedUserGroup = authService.getLoggedUser().getGroup();
+        return loggedUserGroup != null && Objects.equals(Objects.requireNonNull(eventGroup).getId(), loggedUserGroup.getId());
+    }
+
+    public boolean scouterHasAccessToBooking(int bookingId) {
+        OwnBooking booking = ownBookingRepository.get(bookingId);
+        if (booking.getGroup() == null) return true;
+        Group eventGroup = booking.getGroup();
         Group loggedUserGroup = authService.getLoggedUser().getGroup();
         return loggedUserGroup != null && Objects.equals(Objects.requireNonNull(eventGroup).getId(), loggedUserGroup.getId());
     }

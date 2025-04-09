@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${subject}">Nueva Reserva Propia</title>
+
+</head>
+<body style="font-family: Arial, sans-serif;background-color: #f4f4f4;margin: 0;padding: 5px 0;">
+<div th:replace="~{booking/common :: container(~{::#content})}">
+  <div id="content">
+    <div th:replace="~{booking/common :: header}"></div>
+    <div class="content" style="padding: 20px;font-size: 16px;color: #111111;line-height: 1.5;">
+      <p> Se ha realizado una nueva solicitud de reserva del centro scout
+        '<span th:text="${center}">center</span>' por parte de '<span th:text="${groupName}">unidad</span>' con los
+        siguientes datos:
+      </p>
+      <ul style="margin-top: 4px;list-style: none;padding-left: 0;">
+        <li>
+          <b>Fecha de entrada:</b> <span
+          th:text="${#temporals.format(startDate, 'dd/MM/yyyy HH:mm')}">startDate</span>
+        </li>
+        <li>
+          <b>Fecha de salida:</b> <span th:text="${#temporals.format(endDate, 'dd/MM/yyyy HH:mm')}">endDate</span>
+        </li>
+        <li><b>Número de personas:</b> <span th:text="${packs}">packs</span></li>
+        <li><b>Centro en exclusividad:</b>
+          <span th:if="${exclusiveness}">Sí</span>
+          <span th:unless="${exclusiveness}">No</span>
+        </li>
+        <li><b>Detalles:</b> <span th:text="${observations}">observations</span></li>
+      </ul>
+      <p>Entre al panel de gestión para confirmar o denegar la reserva.</p>
+
+      <div th:replace="~{booking/common :: management-access}"></div>
+    </div>
+    <div th:replace="~{booking/common :: management-footer}"></div>
+  </div>
+</div>
+</body>
+</html>

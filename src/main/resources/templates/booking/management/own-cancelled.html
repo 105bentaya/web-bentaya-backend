@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title th:text="${subject}">Nueva Reserva - Management</title>
+  <title th:text="${subject}">Reserva Cancelada</title>
 
 </head>
 <body style="font-family: Arial, sans-serif;background-color: #f4f4f4;margin: 0;padding: 5px 0;">
@@ -11,15 +11,21 @@
   <div id="content">
     <div th:replace="~{booking/common :: header}"></div>
     <div class="content" style="padding: 20px;font-size: 16px;color: #111111;line-height: 1.5;">
-      <p> Se ha realizado una nueva solicitud de reserva del centro scout
-        '<span th:replace="${center}">center</span>'.
-        A continuación, los detalles de la reserva:
+      <p>
+        La unidad
+        '<b th:text="${groupName}">nombre</b>'
+        ha cancelado la reserva nº
+        <b th:text="${id}">0</b>
+        para el centro scout
+        <b th:text="${center}">centro</b>.
       </p>
-
-      <div th:replace="~{booking/common :: booking-info}"></div>
-
-      <div th:replace="~{booking/common :: management-access}"></div>
-
+      <div>
+        <span>El motivo indicado es el siguiente:</span>
+        <p th:replace="~{booking/common :: important-text(${statusObservation})}">
+          statusObservation
+        </p>
+      </div>
+      <div th:replace="~{booking/common :: management-access }"></div>
     </div>
     <div th:replace="~{booking/common :: management-footer}"></div>
   </div>

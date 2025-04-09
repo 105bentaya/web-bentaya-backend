@@ -4,18 +4,18 @@ import jakarta.activation.DataSource;
 import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
+import org.scouts105bentaya.features.booking.converter.BookingFormConverter;
 import org.scouts105bentaya.features.booking.dto.in.BookingAcceptedDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingConfirmedDto;
+import org.scouts105bentaya.features.booking.dto.in.BookingFormDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingStatusUpdateDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingWarningDto;
-import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.booking.entity.BookingDocument;
 import org.scouts105bentaya.features.booking.entity.BookingDocumentFile;
 import org.scouts105bentaya.features.booking.entity.GeneralBooking;
 import org.scouts105bentaya.features.booking.enums.BookingDocumentStatus;
 import org.scouts105bentaya.features.booking.enums.BookingStatus;
 import org.scouts105bentaya.features.booking.repository.BookingDocumentRepository;
-import org.scouts105bentaya.features.booking.repository.BookingRepository;
 import org.scouts105bentaya.features.booking.repository.GeneralBookingRepository;
 import org.scouts105bentaya.features.scout_center.ScoutCenterService;
 import org.scouts105bentaya.features.setting.enums.SettingEnum;
@@ -24,7 +24,6 @@ import org.scouts105bentaya.shared.service.AuthService;
 import org.scouts105bentaya.shared.service.BlobService;
 import org.scouts105bentaya.shared.service.EmailService;
 import org.scouts105bentaya.shared.util.FileUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.thymeleaf.TemplateEngine;
@@ -44,7 +43,6 @@ public class BookingStatusService {
     // https://drive.google.com/file/d/1UxVY4xrxK12tbuVHWrrCflXzZphYJMRi/view?usp=sharing
 
     private final GeneralBookingRepository generalBookingRepository;
-    private final BookingRepository bookingRepository;
     private final TemplateEngine htmlTemplateEngine;
     private final EmailService emailService;
     private final UserService userService;
@@ -53,11 +51,11 @@ public class BookingStatusService {
     private final BookingDocumentService bookingDocumentService;
     private final BlobService blobService;
     private final AuthService authService;
-    @Value("${bentaya.web.url}") private String url;
+    private final BookingFormConverter bookingFormConverter;
+    private final BookingService bookingService;
 
     public BookingStatusService(
         GeneralBookingRepository generalBookingRepository,
-        BookingRepository bookingRepository,
         TemplateEngine htmlTemplateEngine,
         EmailService emailService,
         UserService userService,
@@ -65,10 +63,11 @@ public class BookingStatusService {
         BookingDocumentRepository bookingDocumentRepository,
         BookingDocumentService bookingDocumentService,
         BlobService blobService,
-        AuthService authService
+        AuthService authService,
+        BookingFormConverter bookingFormConverter,
+        BookingService bookingService
     ) {
         this.generalBookingRepository = generalBookingRepository;
-        this.bookingRepository = bookingRepository;
         this.htmlTemplateEngine = htmlTemplateEngine;
         this.emailService = emailService;
         this.userService = userService;
@@ -77,9 +76,16 @@ public class BookingStatusService {
         this.bookingDocumentService = bookingDocumentService;
         this.blobService = blobService;
         this.authService = authService;
+        this.bookingFormConverter = bookingFormConverter;
+        this.bookingService = bookingService;
     }
 
-    public void saveFromForm(GeneralBooking booking) {
+    public void saveFromForm(BookingFormDto dto) {
+        GeneralBooking booking = bookingFormConverter.convertFromDto(dto);
+
+        bookingService.validateBookingDates(booking);
+        bookingService.validateIfBookingDateIsOpen(booking);
+
         booking.setStatus(BookingStatus.NEW);
         booking.setCreationDate(ZonedDateTime.now());
         booking.setExclusiveReservation(booking.isExclusiveReservation() || booking.getScoutCenter().isAlwaysExclusive());
@@ -144,14 +150,12 @@ public class BookingStatusService {
         this.emailService.sendSimpleEmailWithHtml(managementSubject, managementHtmlContent, getBookingEmails());
     }
 
-    public Booking bookingRejected(Integer bookingId, BookingStatusUpdateDto dto) {
-        Booking currentBooking = this.getValidBooking(bookingId, null);
+    public GeneralBooking bookingRejected(Integer bookingId, BookingStatusUpdateDto dto) {
+        GeneralBooking currentBooking = this.getValidGeneralBooking(bookingId, null);
         currentBooking.setStatus(BookingStatus.REJECTED);
         currentBooking.setStatusObservations(dto.getObservations());
-        Booking savedBooking = bookingRepository.save(currentBooking);
-        if (savedBooking instanceof GeneralBooking generalBooking) {
-            this.sendRejectionMail(generalBooking);
-        }
+        GeneralBooking savedBooking = generalBookingRepository.save(currentBooking);
+        this.sendRejectionMail(savedBooking);
         return savedBooking;
     }
 
@@ -187,18 +191,16 @@ public class BookingStatusService {
         this.sendMailWithRulePdf(booking, subject, infoHtmlContent);
     }
 
-    public Booking bookingFromReservedToOccupied(Integer bookingId, BookingConfirmedDto dto) {
-        Booking currentBooking = this.getValidBooking(bookingId, BookingStatus.RESERVED);
+    public GeneralBooking bookingFromReservedToOccupied(Integer bookingId, BookingConfirmedDto dto) {
+        GeneralBooking currentBooking = this.getValidGeneralBooking(bookingId, BookingStatus.RESERVED);
 
         currentBooking.setStatus(BookingStatus.OCCUPIED);
         currentBooking.setStatusObservations(dto.getObservations());
         boolean exclusivenessRequested = currentBooking.isExclusiveReservation();
         currentBooking.setExclusiveReservation(dto.getExclusive() || currentBooking.getScoutCenter().isAlwaysExclusive());
-        Booking savedBooking = bookingRepository.save(currentBooking);
+        GeneralBooking savedBooking = generalBookingRepository.save(currentBooking);
 
-        if (savedBooking instanceof GeneralBooking generalBooking) {
-            this.sendAcceptedMail(generalBooking, exclusivenessRequested && !currentBooking.isExclusiveReservation());
-        }
+        this.sendAcceptedMail(savedBooking, exclusivenessRequested && !currentBooking.isExclusiveReservation());
 
         return savedBooking;
     }
@@ -351,23 +353,9 @@ public class BookingStatusService {
     }
 
     private Context getBookingBasicContext(GeneralBooking booking, String subject) {
-        Context context = new Context();
-        context.setVariable("id", booking.getId());
-        context.setVariable("center", booking.getScoutCenter().getName());
-        context.setVariable("statusObservation", booking.getStatusObservations());
+        Context context = bookingService.getBookingBasicContext(booking, subject);
         context.setVariable("contactMail", booking.getUser().getUsername());
-        context.setVariable("bookingInformationMail", this.getBookingEmails()[0]);
-        context.setVariable("webUrl", url);
-        context.setVariable("subject", subject);
-        context.setVariable("color", booking.getScoutCenter().getColor());
-
         return context;
-    }
-
-    private Booking getValidBooking(Integer bookingId, @Nullable BookingStatus validStatus) {
-        Booking booking = bookingRepository.get(bookingId);
-        this.validateStatus(booking, validStatus);
-        return booking;
     }
 
     private GeneralBooking getValidGeneralBooking(Integer bookingId, @Nullable BookingStatus validStatus) {
@@ -376,7 +364,7 @@ public class BookingStatusService {
         return currentBooking;
     }
 
-    private void validateStatus(Booking current, @Nullable BookingStatus validStatus) {
+    private void validateStatus(GeneralBooking current, @Nullable BookingStatus validStatus) {
         if ((validStatus != null && current.getStatus() != validStatus) || current.getStatus().canceledOrRejected()) {
             log.warn("validateStatus - cannot update status");
             throw new WebBentayaBadRequestException("No se puede actualizar la reserva al estado solicitado");

@@ -11,10 +11,9 @@
   <div id="content">
     <div th:replace="~{booking/common :: header}"></div>
     <div class="content" style="padding: 20px;font-size: 16px;color: #111111;line-height: 1.5;">
-
       <div>
         <p>
-          Su reserva con número
+          La reserva con número
           <b th:text="${id}">id</b>
           para el centro scout
           <b th:text="${center}">center</b>
@@ -33,17 +32,16 @@
           </p>
         </div>
         <p>
-          Para retirar las llaves del lugar, pónganse en contacto con la persona responsable del centro scout la semana
-          anterior a su reserva y con al menos dos días de antelación respecto al inicio de la misma. La información de
-          contacto la puede consultar en el documento de las normas adjunto.
+          No la líes ni te olvides de las llaves, que nos conocemos. Te adjuntamos las normas en el correo, aunque ya
+          deberías conocerlas.
         </p>
 
         <div th:replace="~{booking/common :: hr}"></div>
 
-        <div th:replace="~{booking/common :: user-access }"></div>
+        <div th:replace="~{booking/common :: group-access }"></div>
       </div>
     </div>
-    <div th:replace="~{booking/common :: user-footer}"></div>
+    <div th:replace="~{booking/common :: group-footer}"></div>
   </div>
 </div>
 </body>
