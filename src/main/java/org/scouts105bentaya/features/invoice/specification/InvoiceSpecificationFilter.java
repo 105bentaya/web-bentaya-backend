@@ -15,4 +15,5 @@ public class InvoiceSpecificationFilter extends SpecificationFilter {
     private List<Integer> expenseTypes;
     private List<Integer> grants;
     private List<Integer> payers;
+    private String[] filterDates;
 }

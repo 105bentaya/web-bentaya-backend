@@ -31,6 +31,7 @@ public class InvoiceSpecification implements Specification<Invoice> {
         predicates.inList(root.get("expenseType").get("id"), filter.getExpenseTypes());
         predicates.inList(root.get("grant").get("id"), filter.getGrants());
         predicates.inList(root.get("payer").get("id"), filter.getPayers());
+        predicates.localDateBetweenFilterRange(root.get("invoiceDate"), filter.getFilterDates());
 
         return predicates.getPredicatesAnd();
     }
