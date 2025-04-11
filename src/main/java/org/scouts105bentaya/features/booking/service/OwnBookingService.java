@@ -2,10 +2,12 @@ package org.scouts105bentaya.features.booking.service;
 
 import jakarta.activation.DataSource;
 import jakarta.annotation.Nullable;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
 import org.scouts105bentaya.features.booking.dto.in.BookingConfirmedDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingStatusUpdateDto;
+import org.scouts105bentaya.features.booking.dto.in.BookingUpdateDto;
 import org.scouts105bentaya.features.booking.dto.in.OwnBookingFormDto;
 import org.scouts105bentaya.features.booking.entity.OwnBooking;
 import org.scouts105bentaya.features.booking.enums.BookingStatus;
@@ -25,6 +27,7 @@ import org.thymeleaf.context.Context;
 
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -195,4 +198,25 @@ public class OwnBookingService {
     private String[] getBookingEmails() {
         return emailService.getSettingEmails(SettingEnum.BOOKING_MAIL);
     }
+
+    public void updateBooking(Integer id, @Valid BookingUpdateDto dto) {
+        OwnBooking booking = this.getValidGeneralBooking(id, null);
+        Map<String, Object> differences = bookingService.getBookingUpdateBasicDifferences(booking, dto);
+        if (!differences.isEmpty()) {
+            this.bookingService.validateBookingDates(booking);
+            OwnBooking savedBooking = ownBookingRepository.save(booking);
+            if (savedBooking.getGroup() != null) {
+                this.sendUpdatedBookingMail(savedBooking, differences);
+            }
+        }
+    }
+
+    private void sendUpdatedBookingMail(OwnBooking booking, Map<String, Object> differences) {
+        String userSubject = "Cambio en Reserva nº %d - %s".formatted(booking.getId(), booking.getScoutCenter().getName());
+        Context context = this.getBookingBasicContext(booking, userSubject);
+        differences.forEach(context::setVariable);
+        final String userHtmlContent = this.htmlTemplateEngine.process("booking/group/updated.html", context);
+        this.emailService.sendSimpleEmailWithHtml(userSubject, userHtmlContent, booking.getGroup().getEmail());
+    }
+
 }

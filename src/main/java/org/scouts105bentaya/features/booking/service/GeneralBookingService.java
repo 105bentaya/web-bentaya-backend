@@ -9,6 +9,7 @@ import org.scouts105bentaya.features.booking.dto.in.BookingAcceptedDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingConfirmedDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingFormDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingStatusUpdateDto;
+import org.scouts105bentaya.features.booking.dto.in.BookingUpdateDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingWarningDto;
 import org.scouts105bentaya.features.booking.entity.BookingDocument;
 import org.scouts105bentaya.features.booking.entity.BookingDocumentFile;
@@ -33,6 +34,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
@@ -369,5 +372,36 @@ public class GeneralBookingService {
             log.warn("validateStatus - cannot update status");
             throw new WebBentayaBadRequestException("No se puede actualizar la reserva al estado solicitado");
         }
+    }
+
+    public void updateBooking(Integer id, BookingUpdateDto dto) {
+        GeneralBooking booking = this.getValidGeneralBooking(id, null);
+        Map<String, Object> differences = bookingService.getBookingUpdateBasicDifferences(booking, dto);
+        if (!Objects.equals(dto.groupName(), booking.getOrganizationName())) {
+            booking.setOrganizationName(dto.groupName());
+            differences.put("organization", booking.getOrganizationName());
+        }
+        if (!Objects.equals(dto.cif(), booking.getCif())) {
+            booking.setCif(dto.cif());
+            differences.put("cif", booking.getCif());
+        }
+        if (!Objects.equals(dto.price(), booking.getPrice())) {
+            booking.setPrice(dto.price());
+            differences.put("price", booking.getPrice());
+        }
+
+        if (!differences.isEmpty()) {
+            this.bookingService.validateBookingDates(booking);
+            GeneralBooking savedBooking = generalBookingRepository.save(booking);
+            this.sendUpdatedBookingMail(savedBooking, differences);
+        }
+    }
+
+    private void sendUpdatedBookingMail(GeneralBooking booking, Map<String, Object> differences) {
+        String userSubject = "Cambio en Reserva nº %d - %s".formatted(booking.getId(), booking.getScoutCenter().getName());
+        Context context = this.getBookingBasicContext(booking, userSubject);
+        differences.forEach(context::setVariable);
+        final String userHtmlContent = this.htmlTemplateEngine.process("booking/user/updated.html", context);
+        this.emailService.sendSimpleEmailWithHtml(userSubject, userHtmlContent, booking.getContactMail());
     }
 }

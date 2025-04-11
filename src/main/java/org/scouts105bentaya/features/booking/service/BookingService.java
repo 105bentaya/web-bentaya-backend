@@ -9,6 +9,7 @@ import org.scouts105bentaya.features.booking.dto.data.BookingDateAndStatusDto;
 import org.scouts105bentaya.features.booking.dto.data.BookingInfoDto;
 import org.scouts105bentaya.features.booking.dto.data.PendingBookingsDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingDateFormDto;
+import org.scouts105bentaya.features.booking.dto.in.BookingUpdateDto;
 import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.booking.entity.GeneralBooking;
 import org.scouts105bentaya.features.booking.enums.BookingStatus;
@@ -18,6 +19,7 @@ import org.scouts105bentaya.features.booking.specification.BookingSpecification;
 import org.scouts105bentaya.features.booking.specification.BookingSpecificationFilter;
 import org.scouts105bentaya.features.booking.util.BookingIntervalHelper;
 import org.scouts105bentaya.features.booking.util.IntervalUtils;
+import org.scouts105bentaya.features.scout_center.repository.ScoutCenterRepository;
 import org.scouts105bentaya.features.setting.SettingService;
 import org.scouts105bentaya.features.setting.enums.SettingEnum;
 import org.scouts105bentaya.shared.service.AuthService;
@@ -29,7 +31,10 @@ import org.thymeleaf.context.Context;
 
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -40,6 +45,7 @@ public class BookingService {
     private final AuthService authService;
     private final SettingService settingService;
     private final EmailService emailService;
+    private final ScoutCenterRepository scoutCenterRepository;
 
     @Value("${bentaya.web.url}") private String url;
 
@@ -48,12 +54,15 @@ public class BookingService {
         GeneralBookingRepository generalBookingRepository,
         AuthService authService,
         SettingService settingService,
-        EmailService emailService) {
+        EmailService emailService,
+        ScoutCenterRepository scoutCenterRepository
+    ) {
         this.bookingRepository = bookingRepository;
         this.generalBookingRepository = generalBookingRepository;
         this.authService = authService;
         this.settingService = settingService;
         this.emailService = emailService;
+        this.scoutCenterRepository = scoutCenterRepository;
     }
 
     public Page<Booking> findAll(BookingSpecificationFilter filter) {
@@ -141,5 +150,32 @@ public class BookingService {
         context.setVariable("color", booking.getScoutCenter().getColor());
 
         return context;
+    }
+
+    public Map<String, Object> getBookingUpdateBasicDifferences(Booking booking, BookingUpdateDto dto) {
+        Map<String, Object> differences = new HashMap<>();
+        if (!Objects.equals(dto.startDate(), booking.getStartDate())) {
+            booking.setStartDate(dto.startDate());
+            differences.put("startDate", booking.getStartDate());
+        }
+        if (!Objects.equals(dto.endDate(), booking.getEndDate())) {
+            booking.setEndDate(dto.endDate());
+            differences.put("endDate", booking.getEndDate());
+        }
+        if (!Objects.equals(dto.packs(), booking.getPacks())) {
+            booking.setPacks(dto.packs());
+            differences.put("packs", booking.getPacks());
+        }
+        if (!Objects.equals(dto.scoutCenterId(), booking.getScoutCenter().getId())) {
+            booking.setScoutCenter(scoutCenterRepository.get(dto.scoutCenterId()));
+            differences.put("centerChanged", booking.getScoutCenter().getName());
+        }
+
+        boolean exclusiveness = booking.getScoutCenter().isAlwaysExclusive() || dto.exclusiveReservation();
+        if (!Objects.equals(exclusiveness, booking.isExclusiveReservation())) {
+            booking.setExclusiveReservation(exclusiveness);
+            differences.put("exclusiveness", booking.isExclusiveReservation());
+        }
+        return differences;
     }
 }

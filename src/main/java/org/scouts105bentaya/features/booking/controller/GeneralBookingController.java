@@ -7,6 +7,7 @@ import org.scouts105bentaya.features.booking.dto.BookingDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingAcceptedDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingConfirmedDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingStatusUpdateDto;
+import org.scouts105bentaya.features.booking.dto.in.BookingUpdateDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingWarningDto;
 import org.scouts105bentaya.features.booking.service.GeneralBookingService;
 import org.scouts105bentaya.shared.util.SecurityUtils;
@@ -61,6 +62,13 @@ public class GeneralBookingController {
     public BookingDto sendBookingWarning(@PathVariable Integer bookingId, @RequestBody @Valid BookingWarningDto dto) {
         log.info("sendBookingWarning - id:{}{}", bookingId, SecurityUtils.getLoggedUserUsernameForLog());
         return bookingConverter.convertFromEntity(generalBookingService.sendBookingWarning(bookingId, dto));
+    }
+
+    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
+    @PatchMapping("update/{bookingId}")
+    public void updateBooking(@PathVariable Integer bookingId, @RequestBody @Valid BookingUpdateDto dto) {
+        log.info("updateBooking - bookingId:{}{}", bookingId, SecurityUtils.getLoggedUserUsernameForLog());
+        generalBookingService.updateBooking(bookingId, dto);
     }
 
     //USER

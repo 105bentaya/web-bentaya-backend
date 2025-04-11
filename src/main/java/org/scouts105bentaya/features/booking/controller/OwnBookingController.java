@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.features.booking.dto.OwnBookingDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingConfirmedDto;
 import org.scouts105bentaya.features.booking.dto.in.BookingStatusUpdateDto;
+import org.scouts105bentaya.features.booking.dto.in.BookingUpdateDto;
 import org.scouts105bentaya.features.booking.dto.in.OwnBookingFormDto;
 import org.scouts105bentaya.features.booking.entity.OwnBooking;
 import org.scouts105bentaya.features.booking.repository.OwnBookingRepository;
@@ -79,6 +80,13 @@ public class OwnBookingController {
     public OwnBookingDto rejectOwnBooking(@PathVariable Integer bookingId, @RequestBody @Valid BookingStatusUpdateDto dto) {
         log.info("rejectOwnBooking - bookingId:{}{}", bookingId, SecurityUtils.getLoggedUserUsernameForLog());
         return OwnBookingDto.fromEntity(ownBookingService.rejectOwnBooking(bookingId, dto));
+    }
+
+    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
+    @PatchMapping("update/{bookingId}")
+    public void updateBooking(@PathVariable Integer bookingId, @RequestBody @Valid BookingUpdateDto dto) {
+        log.info("updateBooking - bookingId:{}{}", bookingId, SecurityUtils.getLoggedUserUsernameForLog());
+        ownBookingService.updateBooking(bookingId, dto);
     }
 
 }

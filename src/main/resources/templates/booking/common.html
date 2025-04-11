@@ -249,6 +249,44 @@
     </ul>
   </div>
 
+  <div th:fragment="booking-updated">
+    <div class="section-title" style="font-size: 18px;font-weight: bold;margin-top: 18px;">
+      Datos modificados:
+    </div>
+    <ul class="section-content" style="margin-top: 4px;list-style: none;padding-left: 0;">
+      <li th:if="${price != null}">
+        <b>Aportación de mantenimiento:</b>
+        <span th:text="${#numbers.formatDecimal(price, 0, 'POINT', 2, 'COMMA')}">price</span>€
+      </li>
+      <li th:if="${organization != null}">
+        <b>Nombre:</b>
+        <span th:text="${organization}">organization</span>
+      </li>
+      <li th:if="${cif != null}">
+        <b>CIF:</b>
+        <span th:text="${cif}">cif</span>
+      </li>
+      <li th:if="${centerChanged != null}">
+        <b>Centro scout:</b>
+        <span th:text="${centerChanged}">center</span>
+      </li>
+      <li th:if="${packs != null}"><b>Número de personas:</b> <span th:text="${packs}">packs</span></li>
+      <li th:if="${startDate != null}">
+        <b>Fecha de entrada:</b>
+        <span th:text="${#temporals.format(startDate, 'dd/MM/yyyy HH:mm')}">startDate</span>
+      </li>
+      <li th:if="${endDate != null}">
+        <b>Fecha de salida:</b>
+        <span th:text="${#temporals.format(endDate, 'dd/MM/yyyy HH:mm')}">endDate</span>
+      </li>
+      <li th:if="${exclusiveness != null}">
+        <b>Centro en exclusividad:</b>
+        <span th:if="${exclusiveness}">Sí</span>
+        <span th:unless="${exclusiveness}">No</span>
+      </li>
+    </ul>
+  </div>
+
 </div>
 </body>
 </html>
