@@ -20,6 +20,7 @@ import org.scouts105bentaya.features.scout_center.ScoutCenterService;
 import org.scouts105bentaya.features.scout_center.repository.ScoutCenterRepository;
 import org.scouts105bentaya.features.setting.enums.SettingEnum;
 import org.scouts105bentaya.shared.service.EmailService;
+import org.scouts105bentaya.shared.util.EmailUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
@@ -212,11 +213,11 @@ public class OwnBookingService {
     }
 
     private void sendUpdatedBookingMail(OwnBooking booking, Map<String, Object> differences) {
-        String userSubject = "Cambio en Reserva nº %d - %s".formatted(booking.getId(), booking.getScoutCenter().getName());
-        Context context = this.getBookingBasicContext(booking, userSubject);
+        String subject = "Cambio en Reserva nº %d - %s".formatted(booking.getId(), booking.getScoutCenter().getName());
+        Context context = this.getBookingBasicContext(booking, subject);
         differences.forEach(context::setVariable);
         final String userHtmlContent = this.htmlTemplateEngine.process("booking/group/updated.html", context);
-        this.emailService.sendSimpleEmailWithHtml(userSubject, userHtmlContent, booking.getGroup().getEmail());
+        this.emailService.sendSimpleEmailWithHtml(EmailUtils.subjectWithDateTime(subject), userHtmlContent, booking.getGroup().getEmail());
     }
 
 }

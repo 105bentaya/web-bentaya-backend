@@ -25,6 +25,7 @@ import org.scouts105bentaya.features.user.UserService;
 import org.scouts105bentaya.shared.service.AuthService;
 import org.scouts105bentaya.shared.service.BlobService;
 import org.scouts105bentaya.shared.service.EmailService;
+import org.scouts105bentaya.shared.util.EmailUtils;
 import org.scouts105bentaya.shared.util.FileUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -270,7 +271,7 @@ public class GeneralBookingService {
         Context context = this.getBookingBasicContext(booking, subject);
 
         final String infoHtmlContent = this.htmlTemplateEngine.process("booking/management/notify-documents.html", context);
-        this.emailService.sendSimpleEmailWithHtml(subject, infoHtmlContent, getBookingEmails());
+        this.emailService.sendSimpleEmailWithHtml(EmailUtils.subjectWithDateTime(subject), infoHtmlContent, getBookingEmails());
     }
 
     public GeneralBooking sendBookingWarning(Integer bookingId, BookingWarningDto warningDto) {
@@ -294,7 +295,7 @@ public class GeneralBookingService {
     public void checkForFinishedBookings() {
         List<GeneralBooking> bookingsToBeFinished = this.generalBookingRepository.findBookingsToBeFinished(LocalDateTime.now().minusHours(6));
         bookingsToBeFinished.forEach(booking -> {
-            log.info("Setting booking {} as finished", booking.getId());
+            log.info("Marking booking {} as finished", booking.getId());
             booking.setFinished(true);
             generalBookingRepository.save(booking);
             this.sendFinishedEmail(booking);
@@ -396,10 +397,10 @@ public class GeneralBookingService {
     }
 
     private void sendUpdatedBookingMail(GeneralBooking booking, Map<String, Object> differences) {
-        String userSubject = "Cambio en Reserva nº %d - %s".formatted(booking.getId(), booking.getScoutCenter().getName());
-        Context context = this.getBookingBasicContext(booking, userSubject);
+        String subject = "Cambio en Reserva nº %d - %s".formatted(booking.getId(), booking.getScoutCenter().getName());
+        Context context = this.getBookingBasicContext(booking, subject);
         differences.forEach(context::setVariable);
         final String userHtmlContent = this.htmlTemplateEngine.process("booking/user/updated.html", context);
-        this.emailService.sendSimpleEmailWithHtml(userSubject, userHtmlContent, booking.getContactMail());
+        this.emailService.sendSimpleEmailWithHtml(EmailUtils.subjectWithDateTime(subject), userHtmlContent, booking.getContactMail());
     }
 }

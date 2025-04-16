@@ -25,7 +25,6 @@ public interface BookingDocumentRepository extends JpaRepository<BookingDocument
               SELECT MAX(bd.id)
               FROM booking_document bd
                JOIN general_booking gb ON bd.booking_id = gb.id
-               JOIN booking_document_file f ON bd.file_id = f.id
                JOIN booking_document_type dt ON bd.type_id = dt.id
               WHERE gb.cif = :cif
                 AND dt.active = TRUE
