@@ -3,7 +3,6 @@ package org.scouts105bentaya.features.booking.service;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.Interval;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
-import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.booking.dto.data.BookingCalendarInfoDto;
 import org.scouts105bentaya.features.booking.dto.data.BookingDateAndStatusDto;
 import org.scouts105bentaya.features.booking.dto.data.BookingInfoDto;
@@ -69,8 +68,8 @@ public class BookingService {
         return bookingRepository.findAll(new BookingSpecification(filter), filter.getPageable());
     }
 
-    public GeneralBooking findLatestByCurrentUser() {
-        return generalBookingRepository.findFirstByUserIdOrderByCreationDateDesc(authService.getLoggedUser().getId()).orElseThrow(() -> new WebBentayaNotFoundException("No se han encontrado reservas asociadas a este usuario"));
+    public List<GeneralBooking> findLatestByCurrentUser() {
+        return generalBookingRepository.findLatestUserBookings(authService.getLoggedUser().getId());
     }
 
     public List<BookingDateAndStatusDto> getReservationDates(Integer scoutCenterId) {

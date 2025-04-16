@@ -2,6 +2,7 @@ package org.scouts105bentaya.features.booking.service;
 
 import jakarta.activation.DataSource;
 import jakarta.annotation.Nullable;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
 import org.scouts105bentaya.features.booking.converter.BookingFormConverter;
@@ -83,6 +84,7 @@ public class GeneralBookingService {
         this.bookingService = bookingService;
     }
 
+    @Transactional
     public void saveFromForm(BookingFormDto dto) {
         GeneralBooking booking = bookingFormConverter.convertFromDto(dto);
 
@@ -99,11 +101,7 @@ public class GeneralBookingService {
         GeneralBooking savedBooking = generalBookingRepository.save(booking);
 
         this.setBookingDocuments(savedBooking);
-        try {
-            this.sendNewBookingMails(savedBooking, password);
-        } catch (Exception e) {
-            log.error("Error trying to send booking email: {}", e.getMessage());
-        }
+        this.sendNewBookingMails(savedBooking, password);
     }
 
     private void setBookingDocuments(GeneralBooking booking) {

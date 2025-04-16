@@ -12,7 +12,7 @@
     <div th:replace="~{booking/common :: header}"></div>
     <div class="content" style="padding: 20px;font-size: 16px;color: #111111;line-height: 1.5;">
       <p> Se ha realizado una nueva solicitud de reserva del centro scout
-        '<span th:replace="${center}">center</span>'.
+        '<span th:text="${center}">center</span>'.
         A continuación, los detalles de la reserva:
       </p>
 

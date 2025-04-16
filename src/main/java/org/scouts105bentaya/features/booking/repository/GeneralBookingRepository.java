@@ -8,7 +8,6 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface GeneralBookingRepository extends JpaRepository<GeneralBooking, Integer> {
@@ -16,7 +15,8 @@ public interface GeneralBookingRepository extends JpaRepository<GeneralBooking, 
         return this.findById(id).orElseThrow(WebBentayaNotFoundException::new);
     }
 
-    Optional<GeneralBooking> findFirstByUserIdOrderByCreationDateDesc(Integer userId);
+    @Query("SELECT b FROM GeneralBooking b WHERE b.id IN (SELECT MAX(gb.id) FROM GeneralBooking gb WHERE gb.user.id = :userId GROUP BY gb.cif) ORDER BY b.id DESC")
+    List<GeneralBooking> findLatestUserBookings(Integer userId);
 
     @Query("SELECT b FROM GeneralBooking b WHERE b.finished = false AND b.status = 'OCCUPIED' AND b.endDate < :date")
     List<GeneralBooking> findBookingsToBeFinished(LocalDateTime date);

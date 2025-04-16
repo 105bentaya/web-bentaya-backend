@@ -68,9 +68,9 @@ public class BookingRequesterController {
     }
 
     @GetMapping("/latest")
-    public BookingDto getLatestUserBookings() { //todo redo
+    public List<BookingDto> getLatestUserBookings() {
         log.info("getLatestUserBookings{}", SecurityUtils.getLoggedUserUsernameForLog());
-        return bookingConverter.convertFromEntity(bookingService.findLatestByCurrentUser());
+        return bookingService.findLatestByCurrentUser().stream().map(bookingConverter::convertFromEntity).toList();
     }
 
     @PreAuthorize("@authLogic.userOwnsBooking(#id)")
