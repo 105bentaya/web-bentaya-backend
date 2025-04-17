@@ -14,12 +14,12 @@ final class SecurityConstant {
         "/api/settings/get/**",
         "/api/tpv/notification/**",
         "/api/user/password/**",
-        // "/api/poll/public/**",
         "/api/donation/public/**",
         "/api/booking/public/**",
         "/api/senior/form",
         "/api/event/public/**",
         "/api/scout-center/public/**",
+        "/api/jamboree/public/**",
     };
 
     static final String API_URL = "/api/**";
