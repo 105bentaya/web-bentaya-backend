@@ -77,7 +77,7 @@ public class BookingController {
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
     @GetMapping("/{id}")
     public BookingDto getById(@PathVariable Integer id) {
-        log.info("getById{}", SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("getById - id:{}{}", id, SecurityUtils.getLoggedUserUsernameForLog());
         return bookingConverter.convertFromEntity(bookingRepository.get(id));
     }
 

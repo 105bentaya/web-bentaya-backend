@@ -11,7 +11,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.scouts105bentaya.features.setting.enums.SettingEnum;
-import org.scouts105bentaya.features.setting.enums.SettingType;
 
 @Getter
 @Setter

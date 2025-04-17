@@ -60,14 +60,14 @@ public class BookingDocumentController {
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userOwnsBooking(#bookingId)")
     @GetMapping("/{bookingId}")
     public List<BookingDocumentDto> getBookingDocuments(@PathVariable Integer bookingId) {
-        log.info("getBookingDocuments - bookingId: {}{}", bookingId, SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("getBookingDocuments - bookingId:{}{}", bookingId, SecurityUtils.getLoggedUserUsernameForLog());
         return bookingDocumentService.findDocumentsByBookingId(bookingId);
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userOwnsBookingDocumentFile(#documentId)")
     @GetMapping("/pdf/{documentId}")
     public ResponseEntity<byte[]> getBookingDocument(@PathVariable Integer documentId) {
-        log.info("getBookingDocument - documentId: {}{}", documentId, SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("getBookingDocument - documentId:{}{}", documentId, SecurityUtils.getLoggedUserUsernameForLog());
         return bookingDocumentService.getBookingDocument(documentId);
     }
 
@@ -78,14 +78,14 @@ public class BookingDocumentController {
         @RequestParam("file") MultipartFile file,
         @RequestParam("typeId") Integer typeId
     ) {
-        log.info("uploadBookingDocument - bookingId: {}{}", bookingId, SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("uploadBookingDocument - bookingId:{}{}", bookingId, SecurityUtils.getLoggedUserUsernameForLog());
         bookingDocumentService.saveBookingDocument(bookingId, file, typeId);
     }
 
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER')")
     @GetMapping(value = "/incidences/{bookingId}")
     public ResponseEntity<byte[]> getIncidencesDocument(@PathVariable Integer bookingId) {
-        log.info("getIncidencesDocument - bookingId: {}{}", bookingId, SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("getIncidencesDocument - bookingId:{}{}", bookingId, SecurityUtils.getLoggedUserUsernameForLog());
         return bookingDocumentService.getBookingIncidenceFile(bookingId);
     }
 
@@ -95,7 +95,7 @@ public class BookingDocumentController {
         @PathVariable Integer bookingId,
         @RequestParam("file") MultipartFile file
     ) {
-        log.info("uploadIncidencesDocument - bookingId: {}{}", bookingId, SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("uploadIncidencesDocument - bookingId:{}{}", bookingId, SecurityUtils.getLoggedUserUsernameForLog());
         generalBookingService.saveBookingIncidencesFile(bookingId, file);
     }
 
@@ -109,7 +109,7 @@ public class BookingDocumentController {
     @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or hasRole('SCOUT_CENTER_REQUESTER') and @authLogic.userCanEditBookingDocumentFile(#documentId)")
     @DeleteMapping("/{documentId}")
     public void deleteDocument(@PathVariable Integer documentId) {
-        log.info("deleteDocument - documentId: {}{}", documentId, SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("deleteDocument - documentId:{}{}", documentId, SecurityUtils.getLoggedUserUsernameForLog());
         bookingDocumentService.deleteDocument(documentId);
     }
 }

@@ -6,7 +6,6 @@ import org.scouts105bentaya.features.booking.dto.OwnBookingDto;
 import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.booking.entity.GeneralBooking;
 import org.scouts105bentaya.features.booking.entity.OwnBooking;
-import org.scouts105bentaya.features.group.GroupBasicDataDto;
 import org.scouts105bentaya.features.scout_center.dto.BasicScoutCenterDto;
 import org.scouts105bentaya.features.setting.SettingService;
 import org.scouts105bentaya.features.setting.enums.SettingEnum;
