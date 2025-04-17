@@ -81,6 +81,8 @@ public class InvoiceService {
     }
 
     public void delete(Integer id) {
+        Invoice invoice = this.findById(id);
+        invoice.getFiles().forEach(this::deleteFile);
         invoiceRepository.deleteById(id);
     }
 
@@ -99,9 +101,11 @@ public class InvoiceService {
         invoiceFileRepository.save(invoiceFile);
     }
 
-    @Transactional
     public void deleteFile(Integer fileId) {
-        InvoiceFile invoiceFile = getInvoiceFile(fileId);
+        this.deleteFile(getInvoiceFile(fileId));
+    }
+
+    private void deleteFile(InvoiceFile invoiceFile) {
         blobService.deleteBlob(invoiceFile.getUuid());
         invoiceFileRepository.delete(invoiceFile);
     }
