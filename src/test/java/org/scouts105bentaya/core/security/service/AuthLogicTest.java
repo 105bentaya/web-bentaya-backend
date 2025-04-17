@@ -7,12 +7,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.scouts105bentaya.features.booking.entity.Booking;
 import org.scouts105bentaya.features.booking.entity.BookingDocument;
 import org.scouts105bentaya.features.booking.entity.BookingDocumentFile;
+import org.scouts105bentaya.features.booking.entity.GeneralBooking;
 import org.scouts105bentaya.features.booking.enums.BookingDocumentStatus;
 import org.scouts105bentaya.features.booking.enums.BookingStatus;
 import org.scouts105bentaya.features.booking.repository.BookingDocumentRepository;
+import org.scouts105bentaya.features.booking.repository.OwnBookingRepository;
 import org.scouts105bentaya.features.event.Event;
 import org.scouts105bentaya.features.event.dto.EventFormDto;
 import org.scouts105bentaya.features.event.service.EventService;
@@ -42,13 +43,15 @@ class AuthLogicTest {
     PreScoutService preScoutService;
     @Mock
     BookingDocumentRepository bookingDocumentRepository;
+    @Mock
+    OwnBookingRepository ownBookingRepository;
 
 
     private AuthLogic authLogic;
 
     @BeforeEach
     void setUp() {
-        authLogic = new AuthLogic(authService, scoutService, eventService, preScoutService, bookingDocumentRepository);
+        authLogic = new AuthLogic(authService, scoutService, eventService, preScoutService, bookingDocumentRepository, ownBookingRepository);
     }
 
     @Test
@@ -422,8 +425,8 @@ class AuthLogicTest {
     void userOwnsBooking() {
         //given
         var loggedUser = new User().setId(1);
-        var booking = new Booking().setId(1).setUser(loggedUser);
-        loggedUser.setBookingList(List.of(booking));
+        var booking = new GeneralBooking().setUser(loggedUser).setId(1);
+        loggedUser.setBookingList(List.of((GeneralBooking) booking));
 
         //when
         Mockito.when(authService.getLoggedUser()).thenReturn(loggedUser);
@@ -466,8 +469,8 @@ class AuthLogicTest {
         //given
         var loggedUser = new User().setId(1);
         var doc = new BookingDocument().setId(1).setFile(new BookingDocumentFile().setUser(new User().setId(2)));
-        var booking = new Booking().setId(1).setUser(loggedUser).setBookingDocumentList(List.of(doc));
-        loggedUser.setBookingList(List.of(booking));
+        var booking = new GeneralBooking().setUser(loggedUser).setBookingDocumentList(List.of(doc)).setId(1);
+        loggedUser.setBookingList(List.of((GeneralBooking) booking));
 
         //when
         Mockito.when(authService.getLoggedUser()).thenReturn(loggedUser);
@@ -483,8 +486,8 @@ class AuthLogicTest {
         //given
         var loggedUser = new User().setId(1);
         var doc = new BookingDocument().setId(2);
-        var booking = new Booking().setId(1).setUser(loggedUser).setBookingDocumentList(List.of(doc));
-        loggedUser.setBookingList(List.of(booking));
+        var booking = new GeneralBooking().setUser(loggedUser).setBookingDocumentList(List.of(doc)).setId(1);
+        loggedUser.setBookingList(List.of((GeneralBooking) booking));
         doc.setFile(new BookingDocumentFile().setUser(loggedUser));
 
         //when
@@ -515,10 +518,9 @@ class AuthLogicTest {
         //given
         var loggedUser = new User().setId(1);
         var bookingDocument = new BookingDocument().setId(1).setStatus(BookingDocumentStatus.REJECTED);
-        var booking = new Booking().setId(1).setUser(loggedUser).setStatus(BookingStatus.RESERVED)
-            .setBookingDocumentList(List.of(bookingDocument));
-        bookingDocument.setBooking(booking);
-        loggedUser.setBookingList(List.of(booking));
+        var booking = new GeneralBooking().setUser(loggedUser).setBookingDocumentList(List.of(bookingDocument)).setId(1).setStatus(BookingStatus.RESERVED);
+        bookingDocument.setBooking((GeneralBooking) booking);
+        loggedUser.setBookingList(List.of((GeneralBooking) booking));
         bookingDocument.setFile(new BookingDocumentFile().setUser(loggedUser));
 
         //when
@@ -535,10 +537,10 @@ class AuthLogicTest {
         //given
         var loggedUser = new User().setId(1);
         var bookingDocument = new BookingDocument().setId(1).setStatus(BookingDocumentStatus.ACCEPTED);
-        var booking = new Booking().setId(1).setUser(loggedUser).setStatus(BookingStatus.RESERVED)
-            .setBookingDocumentList(List.of(bookingDocument));
-        bookingDocument.setBooking(booking);
-        loggedUser.setBookingList(List.of(booking));
+        var booking = new GeneralBooking().setUser(loggedUser).setBookingDocumentList(List.of(bookingDocument))
+            .setId(1).setStatus(BookingStatus.RESERVED);
+        bookingDocument.setBooking((GeneralBooking) booking);
+        loggedUser.setBookingList(List.of((GeneralBooking) booking));
         bookingDocument.setFile(new BookingDocumentFile().setUser(loggedUser));
 
         //when
@@ -555,10 +557,10 @@ class AuthLogicTest {
         //given
         var loggedUser = new User().setId(1);
         var bookingDocument = new BookingDocument().setId(1);
-        var booking = new Booking().setId(1).setUser(loggedUser).setStatus(BookingStatus.OCCUPIED)
-            .setBookingDocumentList(List.of(bookingDocument));
-        bookingDocument.setBooking(booking);
-        loggedUser.setBookingList(List.of(booking));
+        var booking = new GeneralBooking().setUser(loggedUser).setBookingDocumentList(List.of(bookingDocument))
+            .setStatus(BookingStatus.OCCUPIED).setId(1);
+        bookingDocument.setBooking((GeneralBooking) booking);
+        loggedUser.setBookingList(List.of((GeneralBooking) booking));
         bookingDocument.setFile(new BookingDocumentFile().setUser(loggedUser));
 
         //when
@@ -573,9 +575,9 @@ class AuthLogicTest {
     void userCanEditBookingDocument4() {
         //given
         var loggedUser = new User().setId(1);
-        var booking = new Booking().setId(1).setUser(loggedUser).setStatus(BookingStatus.RESERVED)
-            .setBookingDocumentList(List.of(new BookingDocument().setId(2)));
-        loggedUser.setBookingList(List.of(booking));
+        var booking = new GeneralBooking().setUser(loggedUser).setBookingDocumentList(List.of(new BookingDocument().setId(2)))
+            .setStatus(BookingStatus.RESERVED).setId(1);
+        loggedUser.setBookingList(List.of((GeneralBooking) booking));
 
         //when
         Mockito.when(authService.getLoggedUser()).thenReturn(loggedUser);

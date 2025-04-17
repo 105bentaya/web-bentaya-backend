@@ -5,7 +5,8 @@ import org.assertj.core.api.ThrowableAssert;
 import org.joda.time.Interval;
 import org.junit.jupiter.api.Test;
 import org.scouts105bentaya.features.booking.dto.data.BookingDateAndStatusDto;
-import org.scouts105bentaya.features.booking.entity.Booking;
+import org.scouts105bentaya.features.booking.entity.GeneralBooking;
+import org.scouts105bentaya.features.booking.entity.OwnBooking;
 import org.scouts105bentaya.features.booking.enums.BookingStatus;
 import org.scouts105bentaya.features.scout_center.entity.ScoutCenter;
 
@@ -22,8 +23,8 @@ class BookingIntervalHelperTest {
     void overlapsWithFullyOccupiedBookingAndBookingsAreFromDifferentCentersThrowsError() {
         //given
         var bookingList = List.of(
-            new Booking().setScoutCenter(newCenter(1)),
-            new Booking().setScoutCenter(newCenter(2))
+            new GeneralBooking().setScoutCenter(newCenter(1)),
+            new OwnBooking().setScoutCenter(newCenter(2))
         );
         var interval = new Interval(100, 200);
 
@@ -40,7 +41,7 @@ class BookingIntervalHelperTest {
     void overlapsWithFullyOccupiedBookingReturnsTrue() {
         //given
         var scoutCenter = newCenter(1);
-        var booking1 = new Booking().setScoutCenter(scoutCenter)
+        var booking1 = new GeneralBooking().setScoutCenter(scoutCenter)
             .setStatus(BookingStatus.OCCUPIED)
             .setExclusiveReservation(true)
             .setStartDate(LocalDateTime.parse("2025-03-12T10:00:00"))
@@ -63,12 +64,12 @@ class BookingIntervalHelperTest {
     void overlapsWithFullyOccupiedBookingReturnsFalseWhenBookingsNotFullyOccupied() {
         //given
         var scoutCenter = newCenter(1);
-        var booking1 = new Booking().setScoutCenter(scoutCenter)
+        var booking1 = new GeneralBooking().setScoutCenter(scoutCenter)
             .setStatus(BookingStatus.OCCUPIED)
             .setExclusiveReservation(false)
             .setStartDate(LocalDateTime.parse("2025-03-12T10:00:00"))
             .setEndDate(LocalDateTime.parse("2025-03-12T11:00:00"));
-        var booking2 = new Booking().setScoutCenter(scoutCenter)
+        var booking2 = new OwnBooking().setScoutCenter(scoutCenter)
             .setStatus(BookingStatus.RESERVED)
             .setStartDate(LocalDateTime.parse("2025-03-12T10:00:00"))
             .setEndDate(LocalDateTime.parse("2025-03-12T11:00:00"));
@@ -92,7 +93,7 @@ class BookingIntervalHelperTest {
     void overlapsWithFullyOccupiedBookingReturnsFalseWhenOverlap() {
         //given
         var scoutCenter = newCenter(1);
-        var booking1 = new Booking().setScoutCenter(scoutCenter)
+        var booking1 = new GeneralBooking().setScoutCenter(scoutCenter)
             .setStatus(BookingStatus.OCCUPIED)
             .setExclusiveReservation(true)
             .setStartDate(LocalDateTime.parse("2025-03-12T10:00:00"))
@@ -115,7 +116,7 @@ class BookingIntervalHelperTest {
     void overlapsWithFullyOccupiedBookingReturnsFalseOnAbut() {
         //given
         var scoutCenter = newCenter(1);
-        var booking1 = new Booking().setScoutCenter(scoutCenter)
+        var booking1 = new OwnBooking().setScoutCenter(scoutCenter)
             .setStatus(BookingStatus.OCCUPIED)
             .setExclusiveReservation(true)
             .setStartDate(LocalDateTime.parse("2025-03-12T10:00:00"))
@@ -138,8 +139,8 @@ class BookingIntervalHelperTest {
     void getOverlappingBookingIntervalsAndBookingsAreFromDifferentCentersThrowsError() {
         //given
         var bookingList = List.of(
-            new Booking().setScoutCenter(newCenter(1)),
-            new Booking().setScoutCenter(newCenter(2))
+            new OwnBooking().setScoutCenter(newCenter(1)),
+            new GeneralBooking().setScoutCenter(newCenter(2))
         );
         var interval = new Interval(100, 200);
 
@@ -157,12 +158,12 @@ class BookingIntervalHelperTest {
         //given
         var scoutCenter = newCenter(1);
         var bookingList = List.of(
-            new Booking().setScoutCenter(scoutCenter)
+            new OwnBooking().setScoutCenter(scoutCenter)
                 .setStatus(BookingStatus.OCCUPIED)
                 .setExclusiveReservation(false)
                 .setStartDate(LocalDateTime.parse("2025-03-12T10:00:00"))
                 .setEndDate(LocalDateTime.parse("2025-03-12T11:00:00")),
-            new Booking().setScoutCenter(scoutCenter)
+            new OwnBooking().setScoutCenter(scoutCenter)
                 .setStatus(BookingStatus.OCCUPIED)
                 .setExclusiveReservation(true)
                 .setStartDate(LocalDateTime.parse("2025-03-12T10:00:00"))
@@ -187,12 +188,12 @@ class BookingIntervalHelperTest {
         //given
         var scoutCenter = newCenter(1);
         var bookingList = List.of(
-            new Booking().setScoutCenter(scoutCenter)
+            new GeneralBooking().setScoutCenter(scoutCenter)
                 .setStatus(BookingStatus.OCCUPIED)
                 .setExclusiveReservation(false)
                 .setStartDate(LocalDateTime.parse("2025-03-12T10:00:00"))
                 .setEndDate(LocalDateTime.parse("2025-03-12T11:00:00")),
-            new Booking().setScoutCenter(scoutCenter)
+            new OwnBooking().setScoutCenter(scoutCenter)
                 .setStatus(BookingStatus.OCCUPIED)
                 .setExclusiveReservation(true)
                 .setStartDate(LocalDateTime.parse("2025-03-12T10:00:00"))
@@ -216,7 +217,7 @@ class BookingIntervalHelperTest {
     void getOverlappingBookingIntervalsForOccupied() {
         //given
         var scoutCenter = newCenter(1);
-        var booking1 = new Booking().setScoutCenter(scoutCenter)
+        var booking1 = new GeneralBooking().setScoutCenter(scoutCenter)
             .setStatus(BookingStatus.OCCUPIED)
             .setExclusiveReservation(false)
             .setStartDate(LocalDateTime.parse("2025-03-12T10:00:00"))
@@ -249,7 +250,7 @@ class BookingIntervalHelperTest {
     void getOverlappingBookingIntervalsForFullyOccupied() {
         //given
         var scoutCenter = newCenter(1);
-        var booking1 = new Booking().setScoutCenter(scoutCenter)
+        var booking1 = new OwnBooking().setScoutCenter(scoutCenter)
             .setStatus(BookingStatus.OCCUPIED)
             .setExclusiveReservation(true)
             .setStartDate(LocalDateTime.parse("2025-03-12T10:00:00"))
@@ -282,7 +283,7 @@ class BookingIntervalHelperTest {
     void getOverlappingBookingIntervalsForReserved() {
         //given
         var scoutCenter = newCenter(1);
-        var bookingList = List.of(new Booking().setScoutCenter(scoutCenter)
+        var bookingList = List.of(new GeneralBooking().setScoutCenter(scoutCenter)
             .setStatus(BookingStatus.RESERVED)
             .setStartDate(LocalDateTime.parse("2025-03-12T10:00:00"))
             .setEndDate(LocalDateTime.parse("2025-03-12T11:00:00")));
@@ -314,15 +315,15 @@ class BookingIntervalHelperTest {
         //given
         var scoutCenter = newCenter(1);
         var bookingList = List.of(
-            new Booking().setScoutCenter(scoutCenter)
+            new GeneralBooking().setScoutCenter(scoutCenter)
                 .setStatus(BookingStatus.RESERVED)
                 .setStartDate(LocalDateTime.parse("2025-03-12T09:00:00"))
                 .setEndDate(LocalDateTime.parse("2025-03-12T11:00:00")),
-            new Booking().setScoutCenter(scoutCenter)
+            new GeneralBooking().setScoutCenter(scoutCenter)
                 .setStatus(BookingStatus.RESERVED)
                 .setStartDate(LocalDateTime.parse("2025-03-12T12:00:00"))
                 .setEndDate(LocalDateTime.parse("2025-03-12T14:00:00")),
-            new Booking().setScoutCenter(scoutCenter)
+            new GeneralBooking().setScoutCenter(scoutCenter)
                 .setStatus(BookingStatus.OCCUPIED)
                 .setExclusiveReservation(true)
                 .setStartDate(LocalDateTime.parse("2025-03-12T13:00:00"))
@@ -362,22 +363,22 @@ class BookingIntervalHelperTest {
         //given
         var scoutCenter = newCenter(1);
         var bookingList = List.of(
-            new Booking().setScoutCenter(scoutCenter)
+            new OwnBooking().setScoutCenter(scoutCenter)
                 .setStatus(BookingStatus.OCCUPIED)
                 .setExclusiveReservation(true)
                 .setStartDate(LocalDateTime.parse("2025-03-12T10:30:00"))
                 .setEndDate(LocalDateTime.parse("2025-03-12T10:50:00")),
-            new Booking().setScoutCenter(scoutCenter)
+            new GeneralBooking().setScoutCenter(scoutCenter)
                 .setStatus(BookingStatus.OCCUPIED)
                 .setExclusiveReservation(false)
                 .setStartDate(LocalDateTime.parse("2025-03-12T09:00:00"))
                 .setEndDate(LocalDateTime.parse("2025-03-12T10:30:00")),
-            new Booking().setScoutCenter(scoutCenter)
+            new GeneralBooking().setScoutCenter(scoutCenter)
                 .setStatus(BookingStatus.OCCUPIED)
                 .setExclusiveReservation(false)
                 .setStartDate(LocalDateTime.parse("2025-03-12T10:45:00"))
                 .setEndDate(LocalDateTime.parse("2025-03-12T13:00:00")),
-            new Booking().setScoutCenter(scoutCenter)
+            new OwnBooking().setScoutCenter(scoutCenter)
                 .setStatus(BookingStatus.RESERVED)
                 .setStartDate(LocalDateTime.parse("2025-03-12T08:00:00"))
                 .setEndDate(LocalDateTime.parse("2025-03-12T18:00:00"))
@@ -427,37 +428,37 @@ class BookingIntervalHelperTest {
         var scoutCenter = newCenter(1);
 
         var bookingList = List.of(
-            new Booking().setScoutCenter(scoutCenter)
+            new GeneralBooking().setScoutCenter(scoutCenter)
                 .setStatus(BookingStatus.OCCUPIED)
                 .setExclusiveReservation(true)
                 .setStartDate(LocalDateTime.parse("2025-03-12T10:30:00"))
                 .setEndDate(LocalDateTime.parse("2025-03-12T15:00:00")),
 
-            new Booking().setScoutCenter(scoutCenter)
+            new OwnBooking().setScoutCenter(scoutCenter)
                 .setStatus(BookingStatus.OCCUPIED)
                 .setExclusiveReservation(true)
                 .setStartDate(LocalDateTime.parse("2025-03-12T14:30:00"))
                 .setEndDate(LocalDateTime.parse("2025-03-12T18:00:00")),
 
-            new Booking().setScoutCenter(scoutCenter)
+            new OwnBooking().setScoutCenter(scoutCenter)
                 .setStatus(BookingStatus.OCCUPIED)
                 .setExclusiveReservation(false)
                 .setStartDate(LocalDateTime.parse("2025-03-12T17:00:00"))
                 .setEndDate(LocalDateTime.parse("2025-03-13T08:00:00")),
 
-            new Booking().setScoutCenter(scoutCenter)
+            new GeneralBooking().setScoutCenter(scoutCenter)
                 .setStatus(BookingStatus.OCCUPIED)
                 .setExclusiveReservation(false)
                 .setStartDate(LocalDateTime.parse("2025-03-12T15:00:00"))
                 .setEndDate(LocalDateTime.parse("2025-03-12T18:00:00")),
 
-            new Booking().setScoutCenter(scoutCenter)
+            new GeneralBooking().setScoutCenter(scoutCenter)
                 .setStatus(BookingStatus.OCCUPIED)
                 .setExclusiveReservation(false)
                 .setStartDate(LocalDateTime.parse("2025-03-12T14:00:00"))
                 .setEndDate(LocalDateTime.parse("2025-03-13T09:30:00")),
 
-            new Booking().setScoutCenter(scoutCenter)
+            new GeneralBooking().setScoutCenter(scoutCenter)
                 .setStatus(BookingStatus.RESERVED)
                 .setStartDate(LocalDateTime.parse("2025-03-12T08:00:00"))
                 .setEndDate(LocalDateTime.parse("2025-03-12T18:00:00"))

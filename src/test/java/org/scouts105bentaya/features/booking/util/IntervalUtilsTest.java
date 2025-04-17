@@ -6,6 +6,7 @@ import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.junit.jupiter.api.Test;
 import org.scouts105bentaya.features.booking.entity.Booking;
+import org.scouts105bentaya.features.booking.entity.GeneralBooking;
 
 import java.time.LocalDateTime;
 import java.time.Month;
@@ -19,7 +20,7 @@ class IntervalUtilsTest {
         //given
         var start = LocalDateTime.of(2020, 1, 1, 0, 0);
         var end = LocalDateTime.of(2020, 1, 4, 1, 0);
-        Booking booking = new Booking()
+        Booking booking = new GeneralBooking()
             .setStartDate(start)
             .setEndDate(end);
 
@@ -36,7 +37,7 @@ class IntervalUtilsTest {
         //given
         var start = LocalDateTime.of(2020, 1, 4, 1, 0);
         var end = LocalDateTime.of(2020, 1, 1, 0, 0);
-        Booking booking = new Booking()
+        Booking booking = new GeneralBooking()
             .setStartDate(start)
             .setEndDate(end);
 
