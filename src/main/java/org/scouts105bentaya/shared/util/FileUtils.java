@@ -64,6 +64,13 @@ public final class FileUtils {
         }
     }
 
+    public static void validateFileIsImgOrPdf(MultipartFile file) {
+        if (!(Objects.equals(file.getContentType(), MediaType.APPLICATION_PDF.toString()) || IMG_TYPES.containsValue(file.getContentType()))) {
+            logUnsupportedType(file);
+            throw new WebBentayaBadRequestException("El archivo debe ser de tipo pdf, jpg, png o svg");
+        }
+    }
+
     private static void logUnsupportedType(MultipartFile file) {
         log.warn("Unsupported document type: {}", file.getContentType());
     }

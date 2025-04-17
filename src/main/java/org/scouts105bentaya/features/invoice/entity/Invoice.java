@@ -5,11 +5,13 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Getter
@@ -44,4 +46,6 @@ public class Invoice {
     @ManyToOne
     @NotNull
     private InvoicePayer payer;
+    @OneToMany(mappedBy = "invoice")
+    private List<InvoiceFile> files;
 }
