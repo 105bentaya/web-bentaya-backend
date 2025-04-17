@@ -89,6 +89,7 @@ public class OwnBookingService {
         String managementSubject = "%s - %d - Nueva Solicitud de Reserva".formatted(booking.getScoutCenter().getName(), booking.getId());
 
         Context context = this.getBookingBasicContext(booking, managementSubject);
+        context.setVariable("packs", booking.getPacks());
         context.setVariable("startDate", booking.getStartDate());
         context.setVariable("endDate", booking.getEndDate());
         context.setVariable("observations", booking.getObservations());

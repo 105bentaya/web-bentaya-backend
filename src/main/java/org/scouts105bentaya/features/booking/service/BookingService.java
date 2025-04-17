@@ -99,6 +99,9 @@ public class BookingService {
             throw new WebBentayaBadRequestException("La fecha de salida no puede ser posterior a la de entrada.");
         }
         List<Booking> sameCenterBookings = this.bookingRepository.findAllOverlapping(booking.getStartDate(), booking.getEndDate(), booking.getScoutCenter().getId());
+        if (booking.getId() != null) {
+            sameCenterBookings.removeIf(sameCenterBooking -> sameCenterBooking.getId().equals(booking.getId()));
+        }
         Interval mainInterval = IntervalUtils.intervalFromBooking(booking);
         if (BookingIntervalHelper.overlapsWithFullyOccupiedBooking(sameCenterBookings, mainInterval)) {
             log.warn("validateBookingDates - selected date is taken");
