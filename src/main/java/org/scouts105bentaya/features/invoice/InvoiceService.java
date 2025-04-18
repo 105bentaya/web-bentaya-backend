@@ -2,6 +2,7 @@ package org.scouts105bentaya.features.invoice;
 
 import jakarta.transaction.Transactional;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
+import org.scouts105bentaya.features.invoice.dto.InvoiceDataDto;
 import org.scouts105bentaya.features.invoice.entity.Invoice;
 import org.scouts105bentaya.features.invoice.entity.InvoiceFile;
 import org.scouts105bentaya.features.invoice.entity.InvoicePayer;
@@ -57,11 +58,12 @@ public class InvoiceService {
     }
 
     public InvoiceDataDto getInvoiceData() {
-        return InvoiceDataDto.builder()
-            .expenseTypes(invoiceExpenseTypeRepository.findAll())
-            .grants(invoiceGrantRepository.findAll())
-            .payers(invoicePayerRepository.findAll().stream().sorted(this::invoiceComparator).collect(Collectors.toList()))
-            .build();
+        return new InvoiceDataDto(
+            invoiceExpenseTypeRepository.findAll(),
+            invoiceGrantRepository.findAll(),
+            invoicePayerRepository.findAll().stream().sorted(this::invoiceComparator).collect(Collectors.toList()),
+            invoiceRepository.findAllIssuerNif()
+        );
     }
 
     private int invoiceComparator(InvoicePayer a, InvoicePayer b) {

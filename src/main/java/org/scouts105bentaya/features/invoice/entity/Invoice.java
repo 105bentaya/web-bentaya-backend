@@ -7,6 +7,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -27,6 +28,7 @@ public class Invoice {
     @NotNull
     private String invoiceNumber;
     @NotNull
+    @Pattern(regexp = "^[A-Z0-9?]*$")
     private String nif;
     @NotNull
     private Integer amount;
