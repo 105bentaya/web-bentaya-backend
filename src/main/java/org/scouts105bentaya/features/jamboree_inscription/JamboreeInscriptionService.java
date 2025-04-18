@@ -169,10 +169,10 @@ public class JamboreeInscriptionService {
                 Optional<JamboreeContact> secondaryContact = inscription.getContacts().stream().filter(contact -> contact.getLandlinePhone() == null).findFirst();
                 if (secondaryContact.isPresent()) {
                     JamboreeContact contact = secondaryContact.get();
-                    excelRowHelper.addRow(contact.getSurname().toUpperCase());
-                    excelRowHelper.addRow(contact.getName().toUpperCase());
-                    excelRowHelper.addRow(contact.getMobilePhone());
-                    excelRowHelper.addRow(contact.getEmail());
+                    excelRowHelper.addRow(Optional.ofNullable(contact.getSurname()).orElse("-").toUpperCase());
+                    excelRowHelper.addRow(Optional.ofNullable(contact.getName()).orElse("-").toUpperCase());
+                    excelRowHelper.addRow(Optional.ofNullable(contact.getMobilePhone()).orElse("-"));
+                    excelRowHelper.addRow(Optional.ofNullable(contact.getEmail()).orElse("-"));
                 } else {
                     IntStream.range(0, 4).forEach(ignore -> excelRowHelper.addRow("-"));
                 }

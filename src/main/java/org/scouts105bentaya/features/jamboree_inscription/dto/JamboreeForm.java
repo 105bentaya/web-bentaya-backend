@@ -83,7 +83,6 @@ public class JamboreeForm {
     @Valid
     private JamboreeFormContact mainContact;
 
-    @Valid
     private JamboreeFormContact secondaryContact;
 
     @Getter
