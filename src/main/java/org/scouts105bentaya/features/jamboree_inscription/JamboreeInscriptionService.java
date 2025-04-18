@@ -58,7 +58,9 @@ public class JamboreeInscriptionService {
             .setPhoneNumber(form.getPhoneNumber())
             .setEmail(form.getEmail())
             .setResident(form.isResident())
-            .setMunicipality(form.getMunicipality())
+            .setAddress(form.getAddress())
+            .setCp(form.getCp())
+            .setLocality(form.getLocality())
             .setBloodType(form.getBloodType())
             .setMedicalData(form.getMedicalData())
             .setMedication(form.getMedication())
@@ -75,9 +77,6 @@ public class JamboreeInscriptionService {
             .setMobilePhone(form.getMainContact().getMobilePhone())
             .setLandlinePhone(form.getMainContact().getLandlinePhone())
             .setEmail(form.getMainContact().getEmail())
-            .setAddress(form.getMainContact().getAddress())
-            .setCp(form.getMainContact().getCp())
-            .setLocality(form.getMainContact().getLocality())
             .setInscription(inscription);
 
 
@@ -130,7 +129,9 @@ public class JamboreeInscriptionService {
                 excelRowHelper.addRow(inscription.getPassportNumber().toUpperCase());
                 excelRowHelper.addRow(inscription.getNationality());
                 excelRowHelper.addRow(inscription.isResident() ? "Sí" : "No");
-                excelRowHelper.addRow(inscription.getMunicipality());
+                excelRowHelper.addRow(inscription.getAddress());
+                excelRowHelper.addRow(inscription.getCp());
+                excelRowHelper.addRow(inscription.getLocality());
                 excelRowHelper.addRow(inscription.getBirthDate().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
                 Period age = Period.between(inscription.getBirthDate(), LocalDate.now());
                 excelRowHelper.addRow("%d años, %d meses, %d días".formatted(age.getYears(), age.getMonths(), age.getDays()));
@@ -159,11 +160,8 @@ public class JamboreeInscriptionService {
                     excelRowHelper.addRow(contact.getMobilePhone());
                     excelRowHelper.addRow(contact.getLandlinePhone());
                     excelRowHelper.addRow(contact.getEmail());
-                    excelRowHelper.addRow(contact.getAddress());
-                    excelRowHelper.addRow(contact.getCp());
-                    excelRowHelper.addRow(contact.getLocality());
                 } else {
-                    IntStream.range(0, 8).forEach(ignore -> excelRowHelper.addRow("-"));
+                    IntStream.range(0, 5).forEach(ignore -> excelRowHelper.addRow("-"));
                 }
 
                 Optional<JamboreeContact> secondaryContact = inscription.getContacts().stream().filter(contact -> contact.getLandlinePhone() == null).findFirst();

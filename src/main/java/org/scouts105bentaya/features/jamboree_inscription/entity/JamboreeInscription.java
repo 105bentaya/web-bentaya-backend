@@ -37,7 +37,10 @@ public class JamboreeInscription {
     private String phoneNumber;
     private String email;
     private boolean resident;
-    private String municipality;
+    @Column(length = 511)
+    private String address;
+    private String cp;
+    private String locality;
 
     private String bloodType;
     @Column(length = 2000)

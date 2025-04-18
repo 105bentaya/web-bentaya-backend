@@ -24,10 +24,6 @@ public class JamboreeContact {
     private String mobilePhone;
     private String landlinePhone;
     private String email;
-    @Column(length = 511)
-    private String address;
-    private String cp;
-    private String locality;
 
     @ManyToOne(optional = false)
     private JamboreeInscription inscription;
