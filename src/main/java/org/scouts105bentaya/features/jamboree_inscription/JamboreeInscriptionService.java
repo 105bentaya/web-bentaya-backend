@@ -107,13 +107,10 @@ public class JamboreeInscriptionService {
 
     public ResponseEntity<byte[]> getExcel() {
         List<JamboreeInscription> list = jamboreeInscriptionRepository.findAll();
-        try (XSSFWorkbook workbook = new XSSFWorkbook();
-             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+        try (XSSFWorkbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 
-            // Create a sheet and populate it
             XSSFSheet sheet = workbook.createSheet("Asistentes Jamboree");
 
-            // Header row
             XSSFRow headerRow = sheet.createRow(0);
             for (int i = 0; i < JamboreeExcelConstants.HEADERS.length; i++) {
                 headerRow.createCell(i).setCellValue(JamboreeExcelConstants.HEADERS[i]);
@@ -125,6 +122,7 @@ public class JamboreeInscriptionService {
                 ExcelRowHelper excelRowHelper = new ExcelRowHelper(row);
 
                 excelRowHelper.addRow(Optional.ofNullable(inscription.getCensus()).map("35-105-%s"::formatted).orElse(""));
+                excelRowHelper.addRow(inscription.getParticipantType());
                 excelRowHelper.addRow(inscription.getSurname().toUpperCase());
                 excelRowHelper.addRow(inscription.getName().toUpperCase());
                 excelRowHelper.addRow(Optional.ofNullable(inscription.getFeltName()).orElse("").toUpperCase());
@@ -157,7 +155,7 @@ public class JamboreeInscriptionService {
                 if (mainContact.isPresent()) {
                     JamboreeContact contact = mainContact.get();
                     excelRowHelper.addRow(contact.getSurname().toUpperCase());
-                    excelRowHelper.addRow(contact.getName());
+                    excelRowHelper.addRow(contact.getName().toUpperCase());
                     excelRowHelper.addRow(contact.getMobilePhone());
                     excelRowHelper.addRow(contact.getLandlinePhone());
                     excelRowHelper.addRow(contact.getEmail());

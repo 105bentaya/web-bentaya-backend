@@ -7,6 +7,7 @@ final class JamboreeExcelConstants {
 
     static final String[] HEADERS = new String[]{
         "Censo",
+        "Tipo de participación",
         "Apellidos",
         "Nombre",
         "Nombre identificativo",
