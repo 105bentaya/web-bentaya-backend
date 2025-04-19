@@ -61,6 +61,8 @@ public class JamboreeForm {
     private boolean vaccineProgram;
     @NotNull
     private boolean resident;
+    @Length(max = 255)
+    private String municipality;
     @NotNull
     @Length(max = 511)
     private String address;

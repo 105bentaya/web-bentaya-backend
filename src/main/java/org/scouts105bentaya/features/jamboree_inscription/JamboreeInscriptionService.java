@@ -58,6 +58,7 @@ public class JamboreeInscriptionService {
             .setPhoneNumber(form.getPhoneNumber())
             .setEmail(form.getEmail())
             .setResident(form.isResident())
+            .setMunicipality(form.getMunicipality())
             .setAddress(form.getAddress())
             .setCp(form.getCp())
             .setLocality(form.getLocality())
@@ -129,6 +130,7 @@ public class JamboreeInscriptionService {
                 excelRowHelper.addRow(inscription.getPassportNumber().toUpperCase());
                 excelRowHelper.addRow(inscription.getNationality());
                 excelRowHelper.addRow(inscription.isResident() ? "Sí" : "No");
+                excelRowHelper.addRow(inscription.getMunicipality());
                 excelRowHelper.addRow(inscription.getAddress());
                 excelRowHelper.addRow(inscription.getCp());
                 excelRowHelper.addRow(inscription.getLocality());

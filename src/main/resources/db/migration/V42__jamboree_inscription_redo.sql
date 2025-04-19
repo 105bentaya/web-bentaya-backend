@@ -31,6 +31,7 @@ CREATE TABLE jamboree_inscription
     phone_number      VARCHAR(255)       NULL,
     email             VARCHAR(255)       NULL,
     resident          BIT(1)             NOT NULL,
+    municipality      VARCHAR(511)       NULL,
     address           VARCHAR(511)       NULL,
     cp                VARCHAR(255)       NULL,
     locality          VARCHAR(255)       NULL,

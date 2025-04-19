@@ -15,6 +15,7 @@ final class JamboreeExcelConstants {
         "Pasaporte",
         "Nacionalidad",
         "Residente",
+        "Municipio de Residencia",
         "Dirección",
         "CP",
         "Localidad",
