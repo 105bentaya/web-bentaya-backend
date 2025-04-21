@@ -19,7 +19,7 @@ import org.scouts105bentaya.features.group.Group;
 import org.scouts105bentaya.features.scout_contact.Contact;
 import org.scouts105bentaya.features.user.User;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
@@ -39,7 +39,7 @@ public class Scout {
     private String dni;
     private String medicalData;
     private String gender;
-    private Date birthday;
+    private LocalDate birthday;
     private boolean imageAuthorization;
     private String shirtSize;
     private String municipality;

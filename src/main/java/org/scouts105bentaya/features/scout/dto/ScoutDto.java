@@ -3,7 +3,7 @@ package org.scouts105bentaya.features.scout.dto;
 import org.scouts105bentaya.features.group.GroupBasicDataDto;
 import org.scouts105bentaya.features.scout_contact.ContactDto;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 public record ScoutDto(
@@ -12,7 +12,7 @@ public record ScoutDto(
     String name,
     String surname,
     String dni,
-    Date birthday,
+    LocalDate birthday,
     String medicalData,
     String gender,
     boolean imageAuthorization,
