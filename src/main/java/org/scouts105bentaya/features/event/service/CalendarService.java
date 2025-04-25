@@ -29,7 +29,7 @@ import org.scouts105bentaya.core.exception.WebBentayaUnauthorizedException;
 import org.scouts105bentaya.core.security.InvalidJwtException;
 import org.scouts105bentaya.features.event.Event;
 import org.scouts105bentaya.features.group.Group;
-import org.scouts105bentaya.features.scout.Scout;
+import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.user.User;
 import org.scouts105bentaya.features.user.UserService;
 import org.scouts105bentaya.features.user.role.RoleEnum;

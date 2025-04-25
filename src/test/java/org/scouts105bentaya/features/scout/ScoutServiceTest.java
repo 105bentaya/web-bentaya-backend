@@ -47,18 +47,18 @@ class ScoutServiceTest {
         scoutService = new ScoutService(scoutRepository, contactRepository, scoutConverter, null, null, null, confirmationService, null);
     }
 
-    private Scout buildScout() {
+    private OldScout buildScout() {
         Contact contact = new Contact();
         contact.setName("asdads");
         contact.setPhone("asdasddas");
         contact.setRelationship("asdasdas");
         contact.setId(23);
 
-        Scout scout = new Scout();
+        OldScout scout = new OldScout();
         scout.setId(1);
         scout.setGroup(GroupUtils.basicGroup());
-        scout.setName("Scout 1");
-        scout.setSurname("Scout 1");
+        scout.setName("OldScout 1");
+        scout.setSurname("OldScout 1");
         scout.setDni("dni");
         scout.setBirthday(Date.from(Instant.now()));
         scout.setMedicalData("Medical data");

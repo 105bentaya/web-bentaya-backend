@@ -1,27 +1,32 @@
-package org.scouts105bentaya.features.scout_contact;
+package org.scouts105bentaya.features.scout.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import lombok.Getter;
 import lombok.Setter;
-import org.scouts105bentaya.features.scout.entity.Scout;
 
+import java.time.LocalDate;
+
+@Entity
 @Getter
 @Setter
-@Entity
-public class Contact {
+public class ScoutRegistrationDates {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonIgnore
     private Integer id;
-    private String name;
-    private String relationship;
-    private String phone;
-    private String email;
-    @ManyToOne
-    @JoinColumn(name = "scout_id")
+
+    //not null???
+    private LocalDate registrationDate;
+
+    private LocalDate unregistrationDate;
+
+    @ManyToOne(optional = false)
+    @JsonIgnore
     private Scout scout;
 }

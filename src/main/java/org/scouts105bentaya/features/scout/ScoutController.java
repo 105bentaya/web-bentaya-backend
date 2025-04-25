@@ -3,6 +3,7 @@ package org.scouts105bentaya.features.scout;
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.features.scout.converter.ScoutConverter;
 import org.scouts105bentaya.features.scout.converter.ScoutUserConverter;
+import org.scouts105bentaya.features.scout.dto.MemberDto;
 import org.scouts105bentaya.features.scout.dto.ScoutDto;
 import org.scouts105bentaya.features.scout.dto.ScoutFormUserUpdateDto;
 import org.scouts105bentaya.features.scout.dto.ScoutUserDto;
@@ -52,6 +53,13 @@ public class ScoutController {
     public List<ScoutDto> findAllAndDisabled() {
         log.info("METHOD ScoutController.findAllAndDisabled{}", SecurityUtils.getLoggedUserUsernameForLog());
         return scoutConverter.convertEntityCollectionToDtoList(scoutService.adminFindAll());
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'SCOUTER', 'GROUP_SCOUTER')")
+    @GetMapping("/{id}")
+    public MemberDto findById(@PathVariable Integer id) {
+        log.info("findById{}", SecurityUtils.getLoggedUserUsernameForLog());
+        return scoutService.findMember(id);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'SCOUTER', 'GROUP_SCOUTER')")

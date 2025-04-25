@@ -10,8 +10,8 @@ import org.scouts105bentaya.core.security.service.LoginAttemptService;
 import org.scouts105bentaya.core.security.service.RequestService;
 import org.scouts105bentaya.features.group.GroupBasicDataDto;
 import org.scouts105bentaya.features.group.GroupService;
-import org.scouts105bentaya.features.scout.Scout;
 import org.scouts105bentaya.features.scout.ScoutRepository;
+import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.setting.enums.SettingEnum;
 import org.scouts105bentaya.features.user.dto.ChangePasswordDto;
 import org.scouts105bentaya.features.user.dto.UserFormDto;
@@ -172,7 +172,7 @@ public class UserService implements UserDetailsService {
                     Contraseña: %s
                     Es altamente recomendable cambiar la contraseña.
                     Si cree que esto es un error, por favor avísenos enviando un correo a %s""",
-                url, username, scout.getName(), scout.getSurname(), password, this.emailService.getSettingEmails(SettingEnum.ADMINISTRATION_MAIL)[0]),
+                url, username, scout.getPersonalData().getName(), scout.getPersonalData().getSurname(), password, this.emailService.getSettingEmails(SettingEnum.ADMINISTRATION_MAIL)[0]),
             username
         );
     }
@@ -216,7 +216,7 @@ public class UserService implements UserDetailsService {
                 """
                     Se ha añadido a la persona educanda %s %s a tu usuario %s de la web de la Asociación Scouts Exploradores Bentaya.
                     Si cree que esto es un error, por favor avísenos enviando un correo a %s
-                    """.formatted(scout.getName(), scout.getSurname(), user.getUsername(), this.emailService.getSettingEmails(SettingEnum.ADMINISTRATION_MAIL)[0]),
+                    """.formatted(scout.getPersonalData().getName(), scout.getPersonalData().getSurname(), user.getUsername(), this.emailService.getSettingEmails(SettingEnum.ADMINISTRATION_MAIL)[0]),
                 user.getUsername()
             );
 
@@ -248,8 +248,8 @@ public class UserService implements UserDetailsService {
                 new UserScoutDto(
                     scout.getId(),
                     GroupBasicDataDto.fromGroup(scout.getGroup()),
-                    scout.getName(),
-                    scout.getSurname()
+                    scout.getPersonalData().getName(),
+                    scout.getPersonalData().getSurname()
                 )
             ).toList()
         );

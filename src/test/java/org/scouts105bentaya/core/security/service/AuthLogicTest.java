@@ -20,7 +20,7 @@ import org.scouts105bentaya.features.event.service.EventService;
 import org.scouts105bentaya.features.pre_scout.entity.PreScout;
 import org.scouts105bentaya.features.pre_scout.entity.PreScoutAssignation;
 import org.scouts105bentaya.features.pre_scout.service.PreScoutService;
-import org.scouts105bentaya.features.scout.Scout;
+import org.scouts105bentaya.features.scout.OldScout;
 import org.scouts105bentaya.features.scout.ScoutService;
 import org.scouts105bentaya.features.user.User;
 import org.scouts105bentaya.shared.service.AuthService;
@@ -57,7 +57,7 @@ class AuthLogicTest {
     @Test
     void userHasSameGroupIdAsScoutShouldReturnTrue() {
         //given
-        var scout = new Scout().setId(1).setGroup(GroupUtils.basicGroup());
+        var scout = new OldScout().setId(1).setGroup(GroupUtils.basicGroup());
         var loggedUser = new User().setId(1).setGroup(GroupUtils.basicGroup());
 
         //when
@@ -72,7 +72,7 @@ class AuthLogicTest {
     @Test
     void userHasDifferentGroupIdAsScoutShouldReturnFalse() {
         //given
-        var scout = new Scout().setId(1).setGroup(GroupUtils.groupOfId(2));
+        var scout = new OldScout().setId(1).setGroup(GroupUtils.groupOfId(2));
         var loggedUser = new User().setId(1).setGroup(GroupUtils.basicGroup());
 
         //when
@@ -99,7 +99,7 @@ class AuthLogicTest {
     }
 
     void mockScout() {
-        Mockito.when(scoutService.findById(1)).thenReturn(new Scout().setId(1).setGroup(GroupUtils.basicGroup()));
+        Mockito.when(scoutService.findById(1)).thenReturn(new OldScout().setId(1).setGroup(GroupUtils.basicGroup()));
     }
 
     @Test
@@ -385,7 +385,7 @@ class AuthLogicTest {
     @Test
     void userHasScoutId() {
         //given
-        var loggedUser = new User().setId(1).setScoutList(Set.of(new Scout().setId(1), new Scout().setId(2)));
+        var loggedUser = new User().setId(1).setScoutList(Set.of(new OldScout().setId(1), new OldScout().setId(2)));
 
         //when
         Mockito.when(authService.getLoggedUser()).thenReturn(loggedUser);
@@ -398,7 +398,7 @@ class AuthLogicTest {
     @Test
     void userHasScoutId2() {
         //given
-        var loggedUser = new User().setId(1).setScoutList(Set.of(new Scout().setId(1), new Scout().setId(2)));
+        var loggedUser = new User().setId(1).setScoutList(Set.of(new OldScout().setId(1), new OldScout().setId(2)));
 
         //when
         Mockito.when(authService.getLoggedUser()).thenReturn(loggedUser);

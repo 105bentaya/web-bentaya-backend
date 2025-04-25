@@ -35,7 +35,7 @@ import org.scouts105bentaya.features.confirmation.Confirmation;
 import org.scouts105bentaya.features.event.Event;
 import org.scouts105bentaya.features.event.service.EventService;
 import org.scouts105bentaya.features.group.Group;
-import org.scouts105bentaya.features.scout.Scout;
+import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.user.User;
 import org.scouts105bentaya.shared.service.AuthService;
 import org.springframework.core.io.ClassPathResource;
@@ -99,7 +99,7 @@ public class AttendanceExcelReportService {
             .flatMap(Collection::stream)
             .map(Confirmation::getScout)
             .distinct()
-            .sorted(Comparator.comparing(Scout::getSurname).thenComparing(Scout::getName).thenComparing(Scout::getId))
+            .sorted(Comparator.comparing((Scout sc) -> sc.getPersonalData().getSurname()).thenComparing((Scout sc) -> sc.getPersonalData().getName()).thenComparing((Scout sc) -> sc.getPersonalData().getBirthday()))
             .toList();
     }
 
@@ -158,7 +158,7 @@ public class AttendanceExcelReportService {
         if (index > 0) sheet.copyRows(FIRST_SCOUT_ROW, FIRST_SCOUT_ROW, FIRST_SCOUT_ROW + index, cellCopyPolicy);
         XSSFRow row = sheet.getRow(FIRST_SCOUT_ROW + index);
         row.getCell(0).setCellValue(index + 1d);
-        row.getCell(1).setCellValue("%s, %s".formatted(scout.getSurname(), scout.getName()).toUpperCase());
+        row.getCell(1).setCellValue("%s, %s".formatted(scout.getPersonalData().getSurname(), scout.getPersonalData().getName()).toUpperCase());
 
         List<Confirmation> confirmations = scout.getConfirmationList();
 

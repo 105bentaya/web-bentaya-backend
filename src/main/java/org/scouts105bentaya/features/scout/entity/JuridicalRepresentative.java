@@ -1,27 +1,25 @@
-package org.scouts105bentaya.features.scout_contact;
+package org.scouts105bentaya.features.scout.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import lombok.Getter;
 import lombok.Setter;
-import org.scouts105bentaya.features.scout.entity.Scout;
 
+@Entity
 @Getter
 @Setter
-@Entity
-public class Contact {
+public class JuridicalRepresentative {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+    @OneToOne
+    private IdentificationDocument idDocument;
     private String name;
-    private String relationship;
-    private String phone;
+    private String surname;
     private String email;
-    @ManyToOne
-    @JoinColumn(name = "scout_id")
-    private Scout scout;
+    private String phone;
+    private String landline;
 }

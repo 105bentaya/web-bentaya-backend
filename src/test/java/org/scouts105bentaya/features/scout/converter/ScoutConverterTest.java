@@ -8,7 +8,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.scouts105bentaya.features.group.GroupBasicDataDto;
 import org.scouts105bentaya.features.group.GroupService;
-import org.scouts105bentaya.features.scout.Scout;
+import org.scouts105bentaya.features.scout.OldScout;
 import org.scouts105bentaya.features.scout.dto.ScoutDto;
 import org.scouts105bentaya.features.scout_contact.Contact;
 import org.scouts105bentaya.features.scout_contact.ContactConverter;
@@ -36,22 +36,22 @@ class ScoutConverterTest {
 
     @Test
     void scoutConverterDoesNotReturnUnmodifiableList() {
-        Scout scout = scoutConverter.convertFromDto(buildScoutDto());
+        OldScout scout = scoutConverter.convertFromDto(buildScoutDto());
         scout.getContactList().add(new Contact());
         Assertions.assertThat(scout.getContactList()).hasSize(2);
     }
 
-    private Scout buildScout() {
+    private OldScout buildScout() {
         Contact contact = new Contact();
         contact.setName("asdads");
         contact.setPhone("asdasddas");
         contact.setRelationship("asdasdas");
         contact.setId(23);
-        Scout scout = new Scout();
+        OldScout scout = new OldScout();
         scout.setId(1);
         scout.setGroup(GroupUtils.basicGroup());
-        scout.setName("Scout 1");
-        scout.setSurname("Scout 1");
+        scout.setName("OldScout 1");
+        scout.setSurname("OldScout 1");
         scout.setDni("dni");
         scout.setBirthday(Date.from(Instant.now()));
         scout.setMedicalData("Medical data");

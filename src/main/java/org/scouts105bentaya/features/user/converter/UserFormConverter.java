@@ -1,7 +1,7 @@
 package org.scouts105bentaya.features.user.converter;
 
 import org.scouts105bentaya.features.group.Group;
-import org.scouts105bentaya.features.scout.Scout;
+import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.user.User;
 import org.scouts105bentaya.features.user.dto.UserFormDto;
 import org.scouts105bentaya.features.user.role.Role;

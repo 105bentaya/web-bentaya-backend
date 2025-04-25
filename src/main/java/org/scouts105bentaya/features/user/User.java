@@ -19,7 +19,7 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.scouts105bentaya.features.booking.entity.GeneralBooking;
 import org.scouts105bentaya.features.group.Group;
-import org.scouts105bentaya.features.scout.Scout;
+import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.user.role.Role;
 import org.scouts105bentaya.features.user.role.RoleEnum;
 

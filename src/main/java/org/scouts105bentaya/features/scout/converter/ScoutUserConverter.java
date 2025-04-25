@@ -1,13 +1,15 @@
 package org.scouts105bentaya.features.scout.converter;
 
 import org.scouts105bentaya.features.group.GroupBasicDataDto;
-import org.scouts105bentaya.features.scout.Scout;
 import org.scouts105bentaya.features.scout.dto.ScoutUserDto;
+import org.scouts105bentaya.features.scout.entity.IdentificationDocument;
+import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.scout_contact.ContactConverter;
 import org.scouts105bentaya.shared.GenericConstants;
 import org.scouts105bentaya.shared.GenericConverter;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
@@ -29,17 +31,17 @@ public class ScoutUserConverter extends GenericConverter<Scout, ScoutUserDto> {
         return new ScoutUserDto(
             entity.getId(),
             GroupBasicDataDto.fromGroup(entity.getGroup()),
-            entity.getName(),
-            entity.getSurname(),
-            entity.getDni(),
-            entity.getBirthday(),
-            entity.getMedicalData(),
-            entity.getGender(),
+            entity.getPersonalData().getName(),
+            entity.getPersonalData().getSurname(),
+            Optional.ofNullable(entity.getPersonalData().getIdDocument()).map(IdentificationDocument::getNumber).orElse(null),
+            entity.getPersonalData().getBirthday(),
+            entity.getMedicalDataOld(),
+            entity.getPersonalData().getGender(),
             entity.isImageAuthorization(),
-            entity.getShirtSize(),
-            entity.getMunicipality(),
+            entity.getPersonalData().getShirtSize(),
+            entity.getPersonalData().getResidenceMunicipality(),
             entity.getCensus(),
-            entity.getContactList().stream().map(contactConverter::convertFromEntity).collect(Collectors.toList())
+            entity.getOldContactList().stream().map(contactConverter::convertFromEntity).collect(Collectors.toList())
         );
     }
 }

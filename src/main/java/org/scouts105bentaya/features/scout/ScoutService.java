@@ -57,7 +57,7 @@ public class ScoutService {
     }
 
     public List<Scout> findAll() {
-        return scoutRepository.findAllByEnabledIsTrue();
+        return scoutRepository.findAllByActiveIsTrue();
     }
 
     public List<Scout> adminFindAll() {
@@ -65,11 +65,11 @@ public class ScoutService {
     }
 
     public List<Scout> findAllWithFalseImageAuthorization() {
-        return scoutRepository.findAllByImageAuthorizationAndEnabledIsTrue(false);
+        return scoutRepository.findAllByImageAuthorizationAndActiveIsTrue(false);
     }
 
     public List<Scout> findAllByLoggedScouterGroupId() {
-        return scoutRepository.findAllByGroupAndEnabledIsTrue(Objects.requireNonNull(authService.getLoggedUser().getGroup()));
+        return scoutRepository.findAllByGroupAndActiveIsTrue(Objects.requireNonNull(authService.getLoggedUser().getGroup()));
     }
 
     public List<String> findScoutUsernames(Integer id) {
@@ -82,19 +82,24 @@ public class ScoutService {
     }
 
     public Scout findById(Integer id) {
-        return scoutRepository.findByIdAndEnabledIsTrue(id).orElseThrow(WebBentayaNotFoundException::new);
+        return scoutRepository.findByIdAndActiveIsTrue(id).orElseThrow(WebBentayaNotFoundException::new);
+    }
+
+    public MemberDto findMember(Integer id) {
+        return MemberDto.fromScout(findById(id));
     }
 
     public Scout save(ScoutDto scoutDto) {
-        Scout scoutToSave = scoutConverter.convertFromDto(scoutDto);
-        scoutToSave.setEnabled(true);
-        Scout savedScout = scoutRepository.save(scoutToSave);
-        savedScout.getContactList().forEach(contact -> {
-            contact.setScout(savedScout);
-            contactRepository.save(contact);
-        });
-        this.createConfirmationForFutureEvents(savedScout);
-        return savedScout;
+//        OldScout scoutToSave = scoutConverter.convertFromDto(scoutDto);
+//        scoutToSave.setEnabled(true);
+//        OldScout savedScout = scoutRepository.save(scoutToSave);
+//        savedScout.getContactList().forEach(contact -> {
+//            contact.setScout(savedScout);
+//            contactRepository.save(contact);
+//        });
+//        this.createConfirmationForFutureEvents(savedScout);
+//        return savedScout;
+        return null;
     }
 
     public Scout saveFromPreScoutAndDelete(ScoutDto scoutDto, Integer preScoutId) {
@@ -104,37 +109,38 @@ public class ScoutService {
     }
 
     public Scout update(ScoutDto scoutDto) {
-        Scout scoutToUpdate = scoutConverter.convertFromDto(scoutDto);
-        Scout scoutDB = this.findById(scoutDto.id());
-        boolean hasChangedGroup = !scoutDB.getGroup().getId().equals(scoutToUpdate.getGroup().getId());
-
-        scoutDB.setDni(scoutToUpdate.getDni());
-        scoutDB.setName(scoutToUpdate.getName());
-        scoutDB.setMedicalData(scoutToUpdate.getMedicalData());
-        scoutDB.setGroup(scoutToUpdate.getGroup());
-        scoutDB.setBirthday(scoutToUpdate.getBirthday());
-        scoutDB.setSurname(scoutToUpdate.getSurname());
-        scoutDB.setGender(scoutToUpdate.getGender());
-        scoutDB.setShirtSize(scoutToUpdate.getShirtSize());
-        scoutDB.setMunicipality(scoutToUpdate.getMunicipality());
-        scoutDB.setCensus(scoutToUpdate.getCensus());
-        scoutDB.setObservations(scoutToUpdate.getObservations());
-        scoutDB.setImageAuthorization(scoutToUpdate.isImageAuthorization());
-        scoutDB.setProgressions(scoutToUpdate.getProgressions());
-
-        this.deleteContacts(scoutDB.getContactList(), scoutToUpdate.getContactList());
-
-        scoutDB.setContactList(scoutToUpdate.getContactList());
-        scoutDB.getContactList().forEach(contact -> contact.setScout(scoutDB));
-
-        Scout savedScout = scoutRepository.save(scoutDB);
-
-        if (hasChangedGroup) {
-            this.deleteFutureConfirmations(savedScout);
-            this.createConfirmationForFutureEvents(scoutDB);
-        }
-
-        return savedScout;
+//        OldScout scoutToUpdate = scoutConverter.convertFromDto(scoutDto);
+//        OldScout scoutDB = this.findById(scoutDto.id());
+//        boolean hasChangedGroup = !scoutDB.getGroup().getId().equals(scoutToUpdate.getGroup().getId());
+//
+//        scoutDB.setDni(scoutToUpdate.getDni());
+//        scoutDB.setName(scoutToUpdate.getName());
+//        scoutDB.setMedicalData(scoutToUpdate.getMedicalData());
+//        scoutDB.setGroup(scoutToUpdate.getGroup());
+//        scoutDB.setBirthday(scoutToUpdate.getBirthday());
+//        scoutDB.setSurname(scoutToUpdate.getSurname());
+//        scoutDB.setGender(scoutToUpdate.getGender());
+//        scoutDB.setShirtSize(scoutToUpdate.getShirtSize());
+//        scoutDB.setMunicipality(scoutToUpdate.getMunicipality());
+//        scoutDB.setCensus(scoutToUpdate.getCensus());
+//        scoutDB.setObservations(scoutToUpdate.getObservations());
+//        scoutDB.setImageAuthorization(scoutToUpdate.isImageAuthorization());
+//        scoutDB.setProgressions(scoutToUpdate.getProgressions());
+//
+//        this.deleteContacts(scoutDB.getContactList(), scoutToUpdate.getContactList());
+//
+//        scoutDB.setContactList(scoutToUpdate.getContactList());
+//        scoutDB.getContactList().forEach(contact -> contact.setScout(scoutDB));
+//
+//        OldScout savedScout = scoutRepository.save(scoutDB);
+//
+//        if (hasChangedGroup) {
+//            this.deleteFutureConfirmations(savedScout);
+//            this.createConfirmationForFutureEvents(scoutDB);
+//        }
+//
+//        return savedScout;
+        return null;
     }
 
     public void updateScoutUsers(Integer scoutId, List<String> scoutUsers) {
@@ -213,7 +219,7 @@ public class ScoutService {
         Scout scout = this.findById(id);
         scout.getUserList().forEach(user -> userService.removeScoutFromUser(user, scout));
         this.deleteFutureConfirmations(scout);
-        scout.setEnabled(false);
+        scout.setActive(false);
         scoutRepository.save(scout);
     }
 

@@ -14,7 +14,7 @@ import org.scouts105bentaya.features.confirmation.dto.ConfirmationDto;
 import org.scouts105bentaya.features.event.Event;
 import org.scouts105bentaya.features.event.service.EventService;
 import org.scouts105bentaya.features.group.Group;
-import org.scouts105bentaya.features.scout.Scout;
+import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.user.User;
 import org.scouts105bentaya.shared.service.AuthService;
 import org.springframework.context.annotation.Lazy;
@@ -64,7 +64,7 @@ public class ConfirmationService {
     private AttendanceScoutEventInfo confirmationToAttendanceScoutEventInfo(Confirmation confirmation) {
         return new AttendanceScoutEventInfo(
             confirmation.getAttending(),
-            confirmation.getScout().getName(),
+            confirmation.getScout().getPersonalData().getName(),
             confirmation.getScout().getId(),
             confirmation.getPayed()
         );
@@ -110,8 +110,8 @@ public class ConfirmationService {
     private AttendanceListUserDto getAttendanceListUserDtoFromScout(Scout scout) {
         return new AttendanceListUserDto(
             scout.getId(),
-            scout.getName(),
-            scout.getSurname(),
+            scout.getPersonalData().getName(),
+            scout.getPersonalData().getSurname(),
             this.confirmationRepository.findAllByScoutId(scout.getId()).stream()
                 .map(this::getAttendanceScoutInfoFromConfirmation)
                 .toList()

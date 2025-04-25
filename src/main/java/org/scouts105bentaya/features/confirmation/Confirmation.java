@@ -8,7 +8,7 @@ import jakarta.persistence.ManyToOne;
 import lombok.Getter;
 import lombok.Setter;
 import org.scouts105bentaya.features.event.Event;
-import org.scouts105bentaya.features.scout.Scout;
+import org.scouts105bentaya.features.scout.entity.Scout;
 
 @Entity
 @IdClass(ConfirmationId.class)
