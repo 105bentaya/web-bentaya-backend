@@ -30,7 +30,9 @@ import org.scouts105bentaya.features.user.UserService;
 import org.scouts105bentaya.shared.service.AuthService;
 import org.scouts105bentaya.shared.service.BlobService;
 import org.scouts105bentaya.shared.util.FileUtils;
+import org.scouts105bentaya.shared.util.dto.FileTransferDto;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -333,5 +335,10 @@ public class ScoutService {
         memberRepository.save(member);
 
         memberFileRepository.deleteById(fileId);
+    }
+
+    public ResponseEntity<byte[]> downloadMemberFile(Integer id) {
+        MemberFile file = memberFileRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
+        return new FileTransferDto(blobService.getBlob(file.getUuid()), file.getName(), file.getMimeType()).asResponseEntity();
     }
 }

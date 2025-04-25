@@ -11,6 +11,7 @@ import org.scouts105bentaya.features.scout.dto.ScoutUserDto;
 import org.scouts105bentaya.features.scout.dto.form.PersonalDataFormDto;
 import org.scouts105bentaya.features.scout.entity.MemberFile;
 import org.scouts105bentaya.shared.util.SecurityUtils;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -147,7 +148,8 @@ public class ScoutController {
         scoutService.delete(id);
     }
 
-    //NEW
+    //NEW - TODO AUTH, LOGS
+
     @PatchMapping("/personal/{id}")
     public MemberDto updatePersonalData(@PathVariable Integer id, @RequestBody @Valid PersonalDataFormDto personalDataFormDto) {
         return MemberDto.fromMember(scoutService.updateMemberPersonalData(id, personalDataFormDto));
@@ -161,5 +163,10 @@ public class ScoutController {
     @DeleteMapping("/personal/docs/{memberId}/{fileId}")
     public void deletePersonalData(@PathVariable Integer memberId, @PathVariable Integer fileId) {
         scoutService.deletePersonalDataFile(memberId, fileId);
+    }
+
+    @GetMapping("/document/{id}")
+    public ResponseEntity<byte[]> getMemberFile(@PathVariable Integer id) {
+        return scoutService.downloadMemberFile(id);
     }
 }
