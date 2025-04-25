@@ -290,14 +290,7 @@ public class ScoutService {
         }
 
         PersonalData personalData = member.getPersonalData();
-        IdDocumentFormDto idDocumentDto = form.idDocument();
-        if (idDocumentDto == null) {
-            personalData.setIdDocument(null);
-        } else {
-            personalData.setIdDocument(
-                new IdentificationDocument().setIdType(idDocumentDto.idType()).setNumber(idDocumentDto.number())
-            );
-        }
+        personalData.setIdDocument(updateIdDocument(personalData.getIdDocument(), form.idDocument()));
         personalData.setObservations(form.observations());
 
         return memberRepository.save(member);
@@ -370,33 +363,12 @@ public class ScoutService {
         ScoutContact newContact = new ScoutContact();
 
         updateContact(contactFormDto, newContact);
-
-        if (contactFormDto.idDocument() != null) {
-            newContact.setIdDocument(new IdentificationDocument()
-                .setNumber(contactFormDto.idDocument().number())
-                .setIdType(contactFormDto.idDocument().idType()));
-        } else {
-            newContact.setIdDocument(null);
-        }
         newContact.setScout(scout);
         return newContact;
     }
 
     private void updateExistingContact(ScoutContact existingContact, ContactFormDto contactFormDto) {
         updateContact(contactFormDto, existingContact);
-        if (contactFormDto.idDocument() != null) {
-            IdentificationDocument identificationDocument = existingContact.getIdDocument();
-            if (identificationDocument != null) {
-                identificationDocument.setNumber(contactFormDto.idDocument().number());
-                identificationDocument.setIdType(contactFormDto.idDocument().idType());
-            } else {
-                existingContact.setIdDocument(new IdentificationDocument()
-                    .setNumber(contactFormDto.idDocument().number())
-                    .setIdType(contactFormDto.idDocument().idType()));
-            }
-        } else {
-            existingContact.setIdDocument(null);
-        }
     }
 
     private void updateContact(ContactFormDto contactFormDto, ScoutContact contact) {
@@ -406,12 +378,11 @@ public class ScoutService {
             contact.setStudies(contactFormDto.studies());
             contact.setProfession(contactFormDto.profession());
             contact.setRelationship(contactFormDto.relationship());
-        } else if (contact.getPersonType() == PersonType.JURIDICAL){
-            contact.setCompanyName(contact.getCompanyName());
+        } else if (contact.getPersonType() == PersonType.JURIDICAL) {
+            contact.setCompanyName(contactFormDto.companyName());
             contact.setStudies(null);
             contact.setProfession(null);
             contact.setRelationship(null);
-
         }
 
         contact.setName(contactFormDto.name());
@@ -420,5 +391,21 @@ public class ScoutService {
         contact.setPhone(contactFormDto.phone());
         contact.setDonor(contactFormDto.donor());
         contact.setObservations(contactFormDto.observations());
+        contact.setIdDocument(updateIdDocument(contact.getIdDocument(), contactFormDto.idDocument()));
+    }
+
+    private IdentificationDocument updateIdDocument(IdentificationDocument identificationDocument, IdDocumentFormDto idForm) {
+        if (idForm == null) {
+            return null;
+        }
+        if (identificationDocument != null) {
+            identificationDocument.setNumber(idForm.number());
+            identificationDocument.setIdType(idForm.idType());
+            return identificationDocument;
+        } else {
+            return new IdentificationDocument()
+                .setNumber(idForm.number())
+                .setIdType(idForm.idType());
+        }
     }
 }
