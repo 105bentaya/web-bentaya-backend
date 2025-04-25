@@ -1,5 +1,6 @@
 package org.scouts105bentaya.features.scout;
 
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.features.scout.converter.ScoutConverter;
 import org.scouts105bentaya.features.scout.converter.ScoutUserConverter;
@@ -7,10 +8,13 @@ import org.scouts105bentaya.features.scout.dto.MemberDto;
 import org.scouts105bentaya.features.scout.dto.ScoutDto;
 import org.scouts105bentaya.features.scout.dto.ScoutFormUserUpdateDto;
 import org.scouts105bentaya.features.scout.dto.ScoutUserDto;
+import org.scouts105bentaya.features.scout.dto.form.PersonalDataFormDto;
+import org.scouts105bentaya.features.scout.entity.MemberFile;
 import org.scouts105bentaya.shared.util.SecurityUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -18,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Collections;
 import java.util.List;
@@ -140,5 +145,21 @@ public class ScoutController {
     public void delete(@PathVariable Integer id) {
         log.info("METHOD ScoutController.delete --- PARAMS id: {}{}", id, SecurityUtils.getLoggedUserUsernameForLog());
         scoutService.delete(id);
+    }
+
+    //NEW
+    @PatchMapping("/personal/{id}")
+    public MemberDto updatePersonalData(@PathVariable Integer id, @RequestBody @Valid PersonalDataFormDto personalDataFormDto) {
+        return MemberDto.fromMember(scoutService.updateMemberPersonalData(id, personalDataFormDto));
+    }
+
+    @PostMapping("/personal/docs/{id}")
+    public MemberFile updatePersonalData(@PathVariable Integer id, @RequestParam("file") MultipartFile file) {
+        return scoutService.uploadPersonalDataFile(id, file);
+    }
+
+    @DeleteMapping("/personal/docs/{memberId}/{fileId}")
+    public void deletePersonalData(@PathVariable Integer memberId, @PathVariable Integer fileId) {
+        scoutService.deletePersonalDataFile(memberId, fileId);
     }
 }

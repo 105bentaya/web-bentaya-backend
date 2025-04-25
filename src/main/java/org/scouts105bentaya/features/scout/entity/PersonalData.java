@@ -1,6 +1,7 @@
 package org.scouts105bentaya.features.scout.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -25,14 +26,14 @@ public abstract class PersonalData {
     @JsonIgnore
     private Integer memberId;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.PERSIST, orphanRemoval = true)
     @Nullable
     private IdentificationDocument idDocument;
 
     @Column(columnDefinition = "text")
     private String observations;
 
-    @OneToMany
+    @OneToMany(cascade = CascadeType.PERSIST)
     private List<MemberFile> documents;
 
     @MapsId

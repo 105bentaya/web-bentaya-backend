@@ -1,7 +1,9 @@
 package org.scouts105bentaya.features.scout;
 
 import jakarta.transaction.Transactional;
+import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
+import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.core.exception.WebBentayaUserNotFoundException;
 import org.scouts105bentaya.features.confirmation.Confirmation;
@@ -9,16 +11,30 @@ import org.scouts105bentaya.features.confirmation.service.ConfirmationService;
 import org.scouts105bentaya.features.event.service.EventService;
 import org.scouts105bentaya.features.pre_scout.service.PreScoutService;
 import org.scouts105bentaya.features.scout.converter.ScoutConverter;
+import org.scouts105bentaya.features.scout.dto.MemberDto;
 import org.scouts105bentaya.features.scout.dto.ScoutDto;
 import org.scouts105bentaya.features.scout.dto.ScoutFormUserUpdateDto;
+import org.scouts105bentaya.features.scout.dto.form.IdDocumentFormDto;
+import org.scouts105bentaya.features.scout.dto.form.PersonalDataFormDto;
+import org.scouts105bentaya.features.scout.entity.IdentificationDocument;
+import org.scouts105bentaya.features.scout.entity.Member;
+import org.scouts105bentaya.features.scout.entity.MemberFile;
+import org.scouts105bentaya.features.scout.entity.PersonalData;
+import org.scouts105bentaya.features.scout.entity.RealPersonalData;
+import org.scouts105bentaya.features.scout.entity.Scout;
+import org.scouts105bentaya.features.scout.enums.MemberType;
 import org.scouts105bentaya.features.scout_contact.Contact;
 import org.scouts105bentaya.features.scout_contact.ContactRepository;
 import org.scouts105bentaya.features.user.User;
 import org.scouts105bentaya.features.user.UserService;
 import org.scouts105bentaya.shared.service.AuthService;
+import org.scouts105bentaya.shared.service.BlobService;
+import org.scouts105bentaya.shared.util.FileUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -35,6 +51,9 @@ public class ScoutService {
     private final ConfirmationService confirmationService;
     private final PreScoutService preScoutService;
     private final ScoutConverter scoutConverter;
+    private final MemberRepository memberRepository;
+    private final BlobService blobService;
+    private final MemberFileRepository memberFileRepository;
 
     public ScoutService(
         ScoutRepository scoutRepository,
@@ -44,7 +63,10 @@ public class ScoutService {
         UserService userService,
         @Lazy EventService eventService,
         ConfirmationService confirmationService,
-        PreScoutService preScoutService
+        PreScoutService preScoutService,
+        MemberRepository memberRepository,
+        BlobService blobService,
+        MemberFileRepository memberFileRepository
     ) {
         this.scoutRepository = scoutRepository;
         this.contactRepository = contactRepository;
@@ -54,6 +76,9 @@ public class ScoutService {
         this.eventService = eventService;
         this.confirmationService = confirmationService;
         this.preScoutService = preScoutService;
+        this.memberRepository = memberRepository;
+        this.blobService = blobService;
+        this.memberFileRepository = memberFileRepository;
     }
 
     public List<Scout> findAll() {
@@ -228,5 +253,85 @@ public class ScoutService {
         Scout scout = scoutRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
         scout.getUserList().forEach(user -> userService.removeScoutFromUser(user, scout));
         scoutRepository.deleteById(id);
+    }
+
+    //NEW
+
+    public Member updateMemberPersonalData(Integer id, PersonalDataFormDto form) {
+        Member member = memberRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
+        if (member.getType() != form.type()) {
+            throw new WebBentayaBadRequestException("No se puede cambiar el tipo de persona");
+        }
+
+        if (member.getType() == MemberType.REAL) {
+            if (form.realData() == null) {
+                throw new WebBentayaBadRequestException("No se han aportado los datos para actualizar a una persona física");
+            }
+            RealPersonalData data = (RealPersonalData) member.getPersonalData();
+            data.setSurname(form.realData().surname());
+            data.setName(form.realData().name());
+            data.setFeltName(form.realData().feltName());
+            data.setBirthday(form.realData().birthday());
+            data.setBirthplace(form.realData().birthplace());
+            data.setBirthProvince(form.realData().birthProvince());
+            data.setNationality(form.realData().nationality());
+            data.setAddress(form.realData().address());
+            data.setCity(form.realData().city());
+            data.setProvince(form.realData().province());
+            data.setPhone(form.realData().phone());
+            data.setLandline(form.realData().landline());
+            data.setEmail(form.realData().email());
+            data.setShirtSize(form.realData().shirtSize());
+            data.setResidenceMunicipality(form.realData().residenceMunicipality());
+            data.setGender(form.realData().gender());
+        } else if (member.getType() == MemberType.JURIDICAL && form.juridicalData() == null) {
+            //todo finish
+        }
+
+        PersonalData personalData = member.getPersonalData();
+        IdDocumentFormDto idDocumentDto = form.idDocument();
+        if (idDocumentDto == null) {
+            personalData.setIdDocument(null);
+        } else {
+            personalData.setIdDocument(
+                new IdentificationDocument().setIdType(idDocumentDto.idType()).setNumber(idDocumentDto.number())
+            );
+        }
+        personalData.setObservations(form.observations());
+
+        return memberRepository.save(member);
+    }
+
+    @Synchronized
+    public MemberFile uploadPersonalDataFile(Integer id, MultipartFile file) {
+        FileUtils.validateFileIsPdf(file); //todo check
+        Member member = memberRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
+
+        MemberFile memberFile = new MemberFile();
+        memberFile.setName(file.getOriginalFilename());
+        memberFile.setMimeType(file.getContentType());
+        memberFile.setUuid(blobService.createBlob(file));
+        memberFile.setUploadDate(ZonedDateTime.now());
+
+        member.getPersonalData().getDocuments().add(memberFile);
+
+        memberRepository.save(member);
+        return memberFile;
+    }
+
+    public void deletePersonalDataFile(Integer memberId, Integer fileId) {
+        Member member = memberRepository.findById(memberId).orElseThrow(WebBentayaNotFoundException::new);
+        List<MemberFile> memberFiles = member.getPersonalData().getDocuments();
+
+        MemberFile memberFile = memberFiles.stream()
+            .filter(document -> document.getId().equals(fileId))
+            .findFirst().orElseThrow(WebBentayaNotFoundException::new);
+
+        blobService.deleteBlob(memberFile.getUuid());
+
+        memberFiles.remove(memberFile);
+        memberRepository.save(member);
+
+        memberFileRepository.deleteById(fileId);
     }
 }
