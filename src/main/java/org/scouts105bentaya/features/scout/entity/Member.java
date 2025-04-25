@@ -13,7 +13,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import lombok.Getter;
 import lombok.Setter;
-import org.scouts105bentaya.features.scout.enums.MemberType;
+import org.scouts105bentaya.features.scout.enums.PersonType;
 
 import java.util.List;
 import java.util.Set;
@@ -29,7 +29,7 @@ public class Member {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private MemberType type;
+    private PersonType type;
 
     @OneToMany(mappedBy = "member")
     private Set<MemberRoleInfo> roles;

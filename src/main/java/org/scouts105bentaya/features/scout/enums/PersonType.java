@@ -1,5 +1,5 @@
 package org.scouts105bentaya.features.scout.enums;
 
-public enum MemberType {
+public enum PersonType {
     REAL, JURIDICAL
 }

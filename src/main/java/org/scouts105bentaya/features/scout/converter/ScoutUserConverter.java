@@ -4,22 +4,14 @@ import org.scouts105bentaya.features.group.GroupBasicDataDto;
 import org.scouts105bentaya.features.scout.dto.ScoutUserDto;
 import org.scouts105bentaya.features.scout.entity.IdentificationDocument;
 import org.scouts105bentaya.features.scout.entity.Scout;
-import org.scouts105bentaya.features.scout_contact.ContactConverter;
 import org.scouts105bentaya.shared.GenericConstants;
 import org.scouts105bentaya.shared.GenericConverter;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Component
 public class ScoutUserConverter extends GenericConverter<Scout, ScoutUserDto> {
-
-    private final ContactConverter contactConverter;
-
-    public ScoutUserConverter(ContactConverter contactConverter) {
-        this.contactConverter = contactConverter;
-    }
 
     @Override
     public Scout convertFromDto(ScoutUserDto dto) {
@@ -41,7 +33,7 @@ public class ScoutUserConverter extends GenericConverter<Scout, ScoutUserDto> {
             entity.getPersonalData().getShirtSize(),
             entity.getPersonalData().getResidenceMunicipality(),
             entity.getCensus(),
-            entity.getOldContactList().stream().map(contactConverter::convertFromEntity).collect(Collectors.toList())
+            entity.getContactList()
         );
     }
 }

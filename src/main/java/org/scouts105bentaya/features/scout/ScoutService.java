@@ -1,6 +1,7 @@
 package org.scouts105bentaya.features.scout;
 
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
@@ -14,6 +15,7 @@ import org.scouts105bentaya.features.scout.converter.ScoutConverter;
 import org.scouts105bentaya.features.scout.dto.MemberDto;
 import org.scouts105bentaya.features.scout.dto.ScoutDto;
 import org.scouts105bentaya.features.scout.dto.ScoutFormUserUpdateDto;
+import org.scouts105bentaya.features.scout.dto.form.ContactFormDto;
 import org.scouts105bentaya.features.scout.dto.form.IdDocumentFormDto;
 import org.scouts105bentaya.features.scout.dto.form.PersonalDataFormDto;
 import org.scouts105bentaya.features.scout.entity.IdentificationDocument;
@@ -22,9 +24,8 @@ import org.scouts105bentaya.features.scout.entity.MemberFile;
 import org.scouts105bentaya.features.scout.entity.PersonalData;
 import org.scouts105bentaya.features.scout.entity.RealPersonalData;
 import org.scouts105bentaya.features.scout.entity.Scout;
-import org.scouts105bentaya.features.scout.enums.MemberType;
-import org.scouts105bentaya.features.scout_contact.Contact;
-import org.scouts105bentaya.features.scout_contact.ContactRepository;
+import org.scouts105bentaya.features.scout.entity.ScoutContact;
+import org.scouts105bentaya.features.scout.enums.PersonType;
 import org.scouts105bentaya.features.user.User;
 import org.scouts105bentaya.features.user.UserService;
 import org.scouts105bentaya.shared.service.AuthService;
@@ -37,6 +38,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -46,7 +48,6 @@ import java.util.Set;
 public class ScoutService {
 
     private final ScoutRepository scoutRepository;
-    private final ContactRepository contactRepository;
     private final AuthService authService;
     private final UserService userService;
     private final EventService eventService;
@@ -59,7 +60,6 @@ public class ScoutService {
 
     public ScoutService(
         ScoutRepository scoutRepository,
-        ContactRepository contactRepository,
         ScoutConverter scoutConverter,
         AuthService authService,
         UserService userService,
@@ -71,7 +71,6 @@ public class ScoutService {
         MemberFileRepository memberFileRepository
     ) {
         this.scoutRepository = scoutRepository;
-        this.contactRepository = contactRepository;
         this.scoutConverter = scoutConverter;
         this.authService = authService;
         this.userService = userService;
@@ -192,12 +191,12 @@ public class ScoutService {
         });
     }
 
-    private void deleteContacts(List<Contact> currentContacts, List<Contact> newContacts) {
-        currentContacts.stream().filter(
-            contact -> newContacts.stream().noneMatch(
-                contact1 -> contact1.getId() != null && contact1.getId().equals(contact.getId()))
-        ).forEach(contactRepository::delete);
-    }
+//    private void deleteContacts(List<Contact> currentContacts, List<Contact> newContacts) {
+//        currentContacts.stream().filter(
+//            contact -> newContacts.stream().noneMatch(
+//                contact1 -> contact1.getId() != null && contact1.getId().equals(contact.getId()))
+//        ).forEach(contactRepository::delete);
+//    }
 
     private void deleteFutureConfirmations(Scout scout) { //todo this method should be in confirmation service
         confirmationService.deleteAll(scout.getConfirmationList().stream()
@@ -265,7 +264,7 @@ public class ScoutService {
             throw new WebBentayaBadRequestException("No se puede cambiar el tipo de persona");
         }
 
-        if (member.getType() == MemberType.REAL) {
+        if (member.getType() == PersonType.REAL) {
             if (form.realData() == null) {
                 throw new WebBentayaBadRequestException("No se han aportado los datos para actualizar a una persona física");
             }
@@ -286,7 +285,7 @@ public class ScoutService {
             data.setShirtSize(form.realData().shirtSize());
             data.setResidenceMunicipality(form.realData().residenceMunicipality());
             data.setGender(form.realData().gender());
-        } else if (member.getType() == MemberType.JURIDICAL && form.juridicalData() == null) {
+        } else if (member.getType() == PersonType.JURIDICAL && form.juridicalData() == null) {
             //todo finish
         }
 
@@ -340,5 +339,86 @@ public class ScoutService {
     public ResponseEntity<byte[]> downloadMemberFile(Integer id) {
         MemberFile file = memberFileRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
         return new FileTransferDto(blobService.getBlob(file.getUuid()), file.getName(), file.getMimeType()).asResponseEntity();
+    }
+
+    public Scout updateScoutContactData(Integer id, @Valid List<ContactFormDto> contactList) {
+        if (contactList == null || contactList.isEmpty() || contactList.size() > 3) {
+            throw new WebBentayaBadRequestException("La lista de contactos debe contener entre 1 y 3 contactos");
+        }
+
+        Scout scout = scoutRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
+
+        List<ScoutContact> newContacts = new ArrayList<>();
+        contactList.forEach(contactFormDto -> {
+            if (contactFormDto.id() != null) {
+                ScoutContact existingContact = scout.getContactList().stream()
+                    .filter(contact -> contact.getId().equals(contactFormDto.id()))
+                    .findFirst().orElseThrow(WebBentayaNotFoundException::new);
+                this.updateExistingContact(existingContact, contactFormDto);
+            } else {
+                newContacts.add(this.newContact(contactFormDto, scout));
+            }
+        });
+
+        scout.getContactList().removeIf(contact -> contactList.stream().noneMatch(form -> contact.getId().equals(form.id())));
+        scout.getContactList().addAll(newContacts);
+
+        return scoutRepository.save(scout);
+    }
+
+    private ScoutContact newContact(ContactFormDto contactFormDto, Scout scout) {
+        ScoutContact newContact = new ScoutContact();
+
+        updateContact(contactFormDto, newContact);
+
+        if (contactFormDto.idDocument() != null) {
+            newContact.setIdDocument(new IdentificationDocument()
+                .setNumber(contactFormDto.idDocument().number())
+                .setIdType(contactFormDto.idDocument().idType()));
+        } else {
+            newContact.setIdDocument(null);
+        }
+        newContact.setScout(scout);
+        return newContact;
+    }
+
+    private void updateExistingContact(ScoutContact existingContact, ContactFormDto contactFormDto) {
+        updateContact(contactFormDto, existingContact);
+        if (contactFormDto.idDocument() != null) {
+            IdentificationDocument identificationDocument = existingContact.getIdDocument();
+            if (identificationDocument != null) {
+                identificationDocument.setNumber(contactFormDto.idDocument().number());
+                identificationDocument.setIdType(contactFormDto.idDocument().idType());
+            } else {
+                existingContact.setIdDocument(new IdentificationDocument()
+                    .setNumber(contactFormDto.idDocument().number())
+                    .setIdType(contactFormDto.idDocument().idType()));
+            }
+        } else {
+            existingContact.setIdDocument(null);
+        }
+    }
+
+    private void updateContact(ContactFormDto contactFormDto, ScoutContact contact) {
+        contact.setPersonType(contactFormDto.personType());
+        if (contact.getPersonType() == PersonType.REAL) {
+            contact.setCompanyName(null);
+            contact.setStudies(contactFormDto.studies());
+            contact.setProfession(contactFormDto.profession());
+            contact.setRelationship(contactFormDto.relationship());
+        } else if (contact.getPersonType() == PersonType.JURIDICAL){
+            contact.setCompanyName(contact.getCompanyName());
+            contact.setStudies(null);
+            contact.setProfession(null);
+            contact.setRelationship(null);
+
+        }
+
+        contact.setName(contactFormDto.name());
+        contact.setSurname(contactFormDto.surname());
+        contact.setEmail(contactFormDto.email());
+        contact.setPhone(contactFormDto.phone());
+        contact.setDonor(contactFormDto.donor());
+        contact.setObservations(contactFormDto.observations());
     }
 }

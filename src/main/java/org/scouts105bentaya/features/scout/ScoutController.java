@@ -8,6 +8,7 @@ import org.scouts105bentaya.features.scout.dto.MemberDto;
 import org.scouts105bentaya.features.scout.dto.ScoutDto;
 import org.scouts105bentaya.features.scout.dto.ScoutFormUserUpdateDto;
 import org.scouts105bentaya.features.scout.dto.ScoutUserDto;
+import org.scouts105bentaya.features.scout.dto.form.ContactListFormDto;
 import org.scouts105bentaya.features.scout.dto.form.PersonalDataFormDto;
 import org.scouts105bentaya.features.scout.entity.MemberFile;
 import org.scouts105bentaya.shared.util.SecurityUtils;
@@ -150,6 +151,11 @@ public class ScoutController {
 
     //NEW - TODO AUTH, LOGS
 
+    @GetMapping("/document/{id}")
+    public ResponseEntity<byte[]> getMemberFile(@PathVariable Integer id) {
+        return scoutService.downloadMemberFile(id);
+    }
+
     @PatchMapping("/personal/{id}")
     public MemberDto updatePersonalData(@PathVariable Integer id, @RequestBody @Valid PersonalDataFormDto personalDataFormDto) {
         return MemberDto.fromMember(scoutService.updateMemberPersonalData(id, personalDataFormDto));
@@ -165,8 +171,8 @@ public class ScoutController {
         scoutService.deletePersonalDataFile(memberId, fileId);
     }
 
-    @GetMapping("/document/{id}")
-    public ResponseEntity<byte[]> getMemberFile(@PathVariable Integer id) {
-        return scoutService.downloadMemberFile(id);
+    @PatchMapping("/contact/{id}")
+    public MemberDto updateContactData(@PathVariable Integer id, @RequestBody @Valid ContactListFormDto contactList) {
+        return MemberDto.fromScout(scoutService.updateScoutContactData(id, contactList.contactList()));
     }
 }

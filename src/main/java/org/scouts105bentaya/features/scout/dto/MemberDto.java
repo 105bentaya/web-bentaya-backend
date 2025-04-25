@@ -4,14 +4,14 @@ import org.scouts105bentaya.features.scout.entity.Member;
 import org.scouts105bentaya.features.scout.entity.MemberFile;
 import org.scouts105bentaya.features.scout.entity.MemberRoleInfo;
 import org.scouts105bentaya.features.scout.entity.Scout;
-import org.scouts105bentaya.features.scout.enums.MemberType;
+import org.scouts105bentaya.features.scout.enums.PersonType;
 
 import java.util.List;
 import java.util.Set;
 
 public record MemberDto(
     int id,
-    MemberType type,
+    PersonType type,
     Set<MemberRoleInfo> roleInfos,
     String observations,
     List<MemberFile> extraFiles,

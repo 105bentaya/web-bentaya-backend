@@ -5,7 +5,6 @@ import org.scouts105bentaya.features.group.GroupService;
 import org.scouts105bentaya.features.scout.dto.ScoutDto;
 import org.scouts105bentaya.features.scout.entity.IdentificationDocument;
 import org.scouts105bentaya.features.scout.entity.Scout;
-import org.scouts105bentaya.features.scout_contact.ContactConverter;
 import org.scouts105bentaya.shared.GenericConverter;
 import org.springframework.stereotype.Component;
 
@@ -14,11 +13,9 @@ import java.util.Optional;
 @Component
 public class ScoutConverter extends GenericConverter<Scout, ScoutDto> {
 
-    private final ContactConverter contactConverter;
     private final GroupService groupService;
 
-    public ScoutConverter(ContactConverter contactConverter, GroupService groupService) {
-        this.contactConverter = contactConverter;
+    public ScoutConverter(GroupService groupService) {
         this.groupService = groupService;
     }
 
@@ -61,7 +58,7 @@ public class ScoutConverter extends GenericConverter<Scout, ScoutDto> {
             entity.getCensus(),
             entity.getProgressionsOld(),
             entity.getObservationsOld(),
-            entity.getOldContactList().stream().map(contactConverter::convertFromEntity).toList(),
+            entity.getContactList(),
             entity.isActive(),
             entity.getUserList() != null && !entity.getUserList().isEmpty()
         );

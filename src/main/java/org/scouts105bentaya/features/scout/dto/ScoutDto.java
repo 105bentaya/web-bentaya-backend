@@ -1,7 +1,7 @@
 package org.scouts105bentaya.features.scout.dto;
 
 import org.scouts105bentaya.features.group.GroupBasicDataDto;
-import org.scouts105bentaya.features.scout_contact.ContactDto;
+import org.scouts105bentaya.features.scout.entity.ScoutContact;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -21,7 +21,7 @@ public record ScoutDto(
     Integer census,
     String progressions,
     String observations,
-    List<ContactDto> contactList,
+    List<ScoutContact> contactList,
     boolean enabled,
     boolean userAssigned
 ) {

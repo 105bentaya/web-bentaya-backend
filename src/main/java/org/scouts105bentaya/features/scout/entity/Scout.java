@@ -15,7 +15,6 @@ import lombok.Setter;
 import org.scouts105bentaya.features.confirmation.Confirmation;
 import org.scouts105bentaya.features.group.Group;
 import org.scouts105bentaya.features.scout.enums.ScoutType;
-import org.scouts105bentaya.features.scout_contact.Contact;
 import org.scouts105bentaya.features.user.User;
 
 import java.util.List;
@@ -43,8 +42,8 @@ public class Scout extends Member {
     @Column(length = 1024)
     private String medicalDataOld;
 
-    @OneToMany(mappedBy = "scout", cascade = {CascadeType.MERGE, CascadeType.REMOVE})
-    private List<Contact> oldContactList;
+    @OneToMany(mappedBy = "scout", orphanRemoval = true, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<ScoutContact> contactList;
 
     @OneToMany(mappedBy = "scout", cascade = CascadeType.REMOVE)
     private List<Confirmation> confirmationList;
