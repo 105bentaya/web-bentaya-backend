@@ -39,8 +39,8 @@ public class Scout extends Member {
 
     private boolean imageAuthorization;
 
-    @Column(length = 1024)
-    private String medicalDataOld;
+    @OneToOne(mappedBy = "scout", optional = false)
+    private MedicalData medicalData;
 
     @OneToMany(mappedBy = "scout", orphanRemoval = true, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<ScoutContact> contactList;

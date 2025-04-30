@@ -9,6 +9,7 @@ import org.scouts105bentaya.features.scout.dto.ScoutDto;
 import org.scouts105bentaya.features.scout.dto.ScoutFormUserUpdateDto;
 import org.scouts105bentaya.features.scout.dto.ScoutUserDto;
 import org.scouts105bentaya.features.scout.dto.form.ContactListFormDto;
+import org.scouts105bentaya.features.scout.dto.form.MedicalDataFormDto;
 import org.scouts105bentaya.features.scout.dto.form.PersonalDataFormDto;
 import org.scouts105bentaya.features.scout.entity.MemberFile;
 import org.scouts105bentaya.shared.util.SecurityUtils;
@@ -162,13 +163,28 @@ public class ScoutController {
     }
 
     @PostMapping("/personal/docs/{id}")
-    public MemberFile updatePersonalData(@PathVariable Integer id, @RequestParam("file") MultipartFile file) {
+    public MemberFile uploadPersonalDocument(@PathVariable Integer id, @RequestParam("file") MultipartFile file) {
         return scoutService.uploadPersonalDataFile(id, file);
     }
 
     @DeleteMapping("/personal/docs/{memberId}/{fileId}")
-    public void deletePersonalData(@PathVariable Integer memberId, @PathVariable Integer fileId) {
+    public void deletePersonalDocument(@PathVariable Integer memberId, @PathVariable Integer fileId) {
         scoutService.deletePersonalDataFile(memberId, fileId);
+    }
+
+    @PatchMapping("/medical/{id}")
+    public MemberDto updateMedicalData(@PathVariable Integer id, @RequestBody @Valid MedicalDataFormDto medicalDataFormDto) {
+        return MemberDto.fromScout(scoutService.updateMedicalData(id, medicalDataFormDto));
+    }
+
+    @PostMapping("/medical/docs/{id}")
+    public MemberFile uploadMedicalDocument(@PathVariable Integer id, @RequestParam("file") MultipartFile file) {
+        return scoutService.uploadMedicalDataFile(id, file);
+    }
+
+    @DeleteMapping("/medical/docs/{memberId}/{fileId}")
+    public void deleteMedicalDocument(@PathVariable Integer memberId, @PathVariable Integer fileId) {
+        scoutService.deleteMedicalDataFile(memberId, fileId);
     }
 
     @PatchMapping("/contact/{id}")

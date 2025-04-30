@@ -2,6 +2,7 @@ package org.scouts105bentaya.features.scout;
 
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
@@ -17,8 +18,12 @@ import org.scouts105bentaya.features.scout.dto.ScoutDto;
 import org.scouts105bentaya.features.scout.dto.ScoutFormUserUpdateDto;
 import org.scouts105bentaya.features.scout.dto.form.ContactFormDto;
 import org.scouts105bentaya.features.scout.dto.form.IdDocumentFormDto;
+import org.scouts105bentaya.features.scout.dto.form.InsuranceHolderForm;
+import org.scouts105bentaya.features.scout.dto.form.MedicalDataFormDto;
 import org.scouts105bentaya.features.scout.dto.form.PersonalDataFormDto;
 import org.scouts105bentaya.features.scout.entity.IdentificationDocument;
+import org.scouts105bentaya.features.scout.entity.InsuranceHolder;
+import org.scouts105bentaya.features.scout.entity.MedicalData;
 import org.scouts105bentaya.features.scout.entity.Member;
 import org.scouts105bentaya.features.scout.entity.MemberFile;
 import org.scouts105bentaya.features.scout.entity.PersonalData;
@@ -334,6 +339,39 @@ public class ScoutService {
         return new FileTransferDto(blobService.getBlob(file.getUuid()), file.getName(), file.getMimeType()).asResponseEntity();
     }
 
+    @Synchronized
+    public MemberFile uploadMedicalDataFile(Integer id, MultipartFile file) {
+        FileUtils.validateFileIsPdf(file); //todo check
+        Scout scout = scoutRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
+
+        MemberFile memberFile = new MemberFile();
+        memberFile.setName(file.getOriginalFilename());
+        memberFile.setMimeType(file.getContentType());
+        memberFile.setUuid(blobService.createBlob(file));
+        memberFile.setUploadDate(ZonedDateTime.now());
+
+        scout.getMedicalData().getDocuments().add(memberFile);
+
+        memberRepository.save(scout);
+        return memberFile;
+    }
+
+    public void deleteMedicalDataFile(Integer memberId, Integer fileId) {
+        Scout scout = scoutRepository.findById(memberId).orElseThrow(WebBentayaNotFoundException::new);
+        List<MemberFile> medicalFiles = scout.getMedicalData().getDocuments();
+
+        MemberFile memberFile = medicalFiles.stream()
+            .filter(document -> document.getId().equals(fileId))
+            .findFirst().orElseThrow(WebBentayaNotFoundException::new);
+
+        blobService.deleteBlob(memberFile.getUuid());
+
+        medicalFiles.remove(memberFile);
+        scoutRepository.save(scout);
+
+        memberFileRepository.deleteById(fileId);
+    }
+
     public Scout updateScoutContactData(Integer id, @Valid List<ContactFormDto> contactList) {
         if (contactList == null || contactList.isEmpty() || contactList.size() > 3) {
             throw new WebBentayaBadRequestException("La lista de contactos debe contener entre 1 y 3 contactos");
@@ -407,5 +445,80 @@ public class ScoutService {
                 .setNumber(idForm.number())
                 .setIdType(idForm.idType());
         }
+    }
+
+    public Scout updateMedicalData(Integer id, MedicalDataFormDto form) {
+        Scout scout = scoutRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
+
+        MedicalData medicalData = scout.getMedicalData();
+        medicalData.setFoodIntolerances(form.foodIntolerances());
+        medicalData.setFoodAllergies(form.foodAllergies());
+        medicalData.setFoodProblems(form.foodProblems());
+        medicalData.setFoodMedication(form.foodMedication());
+        medicalData.setFoodDiet(form.foodDiet());
+        medicalData.setMedicalIntolerances(form.medicalIntolerances());
+        medicalData.setMedicalAllergies(form.medicalAllergies());
+        medicalData.setMedicalDiagnoses(form.medicalDiagnoses());
+        medicalData.setMedicalPrecautions(form.medicalPrecautions());
+        medicalData.setMedicalMedications(form.medicalMedications());
+        medicalData.setMedicalEmergencies(form.medicalEmergencies());
+        medicalData.setAddictions(form.addictions());
+        medicalData.setTendencies(form.tendencies());
+        medicalData.setRecords(form.records());
+        medicalData.setBullyingProtocol(form.bullyingProtocol());
+        medicalData.setBloodType(form.bloodType());
+
+        if (form.socialSecurityNumber() != null) {
+            medicalData.setSocialSecurityNumber(form.socialSecurityNumber());
+            medicalData.setSocialSecurityHolder(form.socialSecurityHolder() != null ?
+                updateInsuranceHolder(medicalData.getSocialSecurityHolder(), form.socialSecurityHolder(), scout) :
+                null
+            );
+        } else {
+            medicalData.setSocialSecurityNumber(null);
+            medicalData.setSocialSecurityHolder(null);
+        }
+
+        if (form.privateInsuranceNumber() != null) {
+            medicalData.setPrivateInsuranceNumber(form.privateInsuranceNumber());
+            medicalData.setPrivateInsuranceEntity(form.privateInsuranceEntity());
+            medicalData.setPrivateInsuranceHolder(form.privateInsuranceHolder() != null ?
+                updateInsuranceHolder(medicalData.getPrivateInsuranceHolder(), form.privateInsuranceHolder(), scout)
+                : null
+            );
+        } else {
+            medicalData.setPrivateInsuranceNumber(null);
+            medicalData.setPrivateInsuranceEntity(null);
+            medicalData.setPrivateInsuranceHolder(null);
+        }
+
+        return scoutRepository.save(scout);
+    }
+
+    private InsuranceHolder updateInsuranceHolder(InsuranceHolder existing, InsuranceHolderForm form, Scout scout) {
+        return form != null ?
+            updateInsuranceHolderData(Objects.requireNonNullElseGet(existing, InsuranceHolder::new), form, scout) :
+            null;
+    }
+
+    private InsuranceHolder updateInsuranceHolderData(@NotNull InsuranceHolder insuranceHolder, InsuranceHolderForm form, Scout scout) {
+        if (form.contactId() != null) {
+            return insuranceHolder.setContact(
+                    scout.getContactList().stream()
+                        .filter(contact -> contact.getId().equals(form.contactId()))
+                        .findFirst().orElseThrow(WebBentayaNotFoundException::new)
+                )
+                .setName(null)
+                .setSurname(null)
+                .setEmail(null)
+                .setPhone(null)
+                .setIdDocument(null);
+        }
+        return insuranceHolder.setContact(null)
+            .setName(form.name())
+            .setSurname(form.surname())
+            .setEmail(form.email())
+            .setPhone(form.phone())
+            .setIdDocument(updateIdDocument(insuranceHolder.getIdDocument(), form.idDocument()));
     }
 }

@@ -22,7 +22,7 @@ public class AttendanceInfoConverter extends GenericConverter<Confirmation, Atte
             entity.getAttending(),
             entity.getPayed(),
             entity.getText(),
-            entity.getScout().getMedicalDataOld()
+            entity.getScout().getMedicalData().getMedicalDiagnoses()
         );
     }
 }

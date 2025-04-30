@@ -27,7 +27,7 @@ public class ScoutUserConverter extends GenericConverter<Scout, ScoutUserDto> {
             entity.getPersonalData().getSurname(),
             Optional.ofNullable(entity.getPersonalData().getIdDocument()).map(IdentificationDocument::getNumber).orElse(null),
             entity.getPersonalData().getBirthday(),
-            entity.getMedicalDataOld(),
+            entity.getMedicalData().getMedicalDiagnoses(),
             entity.getPersonalData().getGender(),
             entity.isImageAuthorization(),
             entity.getPersonalData().getShirtSize(),

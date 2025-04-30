@@ -1,6 +1,7 @@
 package org.scouts105bentaya.features.scout.dto;
 
 import org.scouts105bentaya.features.group.GroupBasicDataDto;
+import org.scouts105bentaya.features.scout.entity.MedicalData;
 import org.scouts105bentaya.features.scout.entity.MemberFile;
 import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.scout.entity.ScoutContact;
@@ -18,7 +19,8 @@ public record ScoutInfoDto(
     boolean imageAuthorization,
     GroupBasicDataDto group,
     MemberFile photo,
-    List<ScoutContact> contactList
+    List<ScoutContact> contactList,
+    MedicalData medicalData
 ) {
     public static ScoutInfoDto fromScout(Scout scout) {
         return new ScoutInfoDto(
@@ -30,7 +32,8 @@ public record ScoutInfoDto(
             scout.isImageAuthorization(),
             GroupBasicDataDto.fromGroup(scout.getGroup()),
             scout.getPhoto(),
-            scout.getContactList()
+            scout.getContactList(),
+            scout.getMedicalData()
         );
     }
 }
