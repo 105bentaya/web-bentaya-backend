@@ -9,7 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.scouts105bentaya.features.group.GroupBasicDataDto;
 import org.scouts105bentaya.features.group.GroupService;
 import org.scouts105bentaya.features.scout.OldScout;
-import org.scouts105bentaya.features.scout.dto.ScoutDto;
+import org.scouts105bentaya.features.scout.dto.OldScoutDto;
 import org.scouts105bentaya.features.scout_contact.Contact;
 import org.scouts105bentaya.features.scout_contact.ContactConverter;
 import org.scouts105bentaya.features.scout_contact.ContactDto;
@@ -67,8 +67,8 @@ class ScoutConverterTest {
         return scout;
     }
 
-    private ScoutDto buildScoutDto() {
-        return new ScoutDto(
+    private OldScoutDto buildScoutDto() {
+        return new OldScoutDto(
             1,
             GroupBasicDataDto.fromGroup(GroupUtils.basicGroup()),
             "",

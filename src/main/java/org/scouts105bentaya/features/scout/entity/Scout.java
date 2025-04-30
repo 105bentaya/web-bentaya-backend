@@ -6,6 +6,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
@@ -23,10 +26,17 @@ import java.util.Set;
 @Entity
 @Getter
 @Setter
-public class Scout extends Member {
+public class Scout {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private ScoutType scoutType;
+
+    @ManyToOne
+    private Group group;
 
     @OneToMany(mappedBy = "scout")
     private List<ScoutRegistrationDates> registrationDates;
@@ -38,6 +48,9 @@ public class Scout extends Member {
     private Integer census;
 
     private boolean imageAuthorization;
+
+    @OneToOne(mappedBy = "scout", optional = false)
+    private PersonalData personalData;
 
     @OneToOne(mappedBy = "scout", optional = false)
     private MedicalData medicalData;
@@ -57,14 +70,16 @@ public class Scout extends Member {
     @Column(columnDefinition = "text")
     private String observationsOld;
 
-    @ManyToOne
-    private Group group;
+    @OneToMany(mappedBy = "scout")
+    private Set<SpecialMember> specialRoles;
 
-    @OneToOne
-    private MemberFile photo;
 
-    @Override
-    public RealPersonalData getPersonalData() {
-        return (RealPersonalData) super.getPersonalData();
-    }
+    @Column(columnDefinition = "text")
+    private String observations;
+
+    @OneToMany
+    private List<ScoutFile> extraFiles;
+
+    @OneToMany
+    private List<ScoutFile> images;
 }

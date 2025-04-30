@@ -70,7 +70,7 @@ public class MedicalData {
     private String bullyingProtocol;
 
     @OneToMany(cascade = CascadeType.PERSIST)
-    private List<MemberFile> documents;
+    private List<ScoutFile> documents;
 
     @MapsId
     @OneToOne(optional = false)

@@ -13,7 +13,7 @@ import java.time.ZonedDateTime;
 @Entity
 @Getter
 @Setter
-public class MemberFile {
+public class ScoutFile {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;

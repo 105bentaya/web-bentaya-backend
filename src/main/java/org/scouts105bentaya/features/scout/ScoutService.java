@@ -13,7 +13,7 @@ import org.scouts105bentaya.features.confirmation.service.ConfirmationService;
 import org.scouts105bentaya.features.event.service.EventService;
 import org.scouts105bentaya.features.pre_scout.service.PreScoutService;
 import org.scouts105bentaya.features.scout.converter.ScoutConverter;
-import org.scouts105bentaya.features.scout.dto.MemberDto;
+import org.scouts105bentaya.features.scout.dto.OldScoutDto;
 import org.scouts105bentaya.features.scout.dto.ScoutDto;
 import org.scouts105bentaya.features.scout.dto.ScoutFormUserUpdateDto;
 import org.scouts105bentaya.features.scout.dto.form.ContactFormDto;
@@ -24,12 +24,10 @@ import org.scouts105bentaya.features.scout.dto.form.PersonalDataFormDto;
 import org.scouts105bentaya.features.scout.entity.IdentificationDocument;
 import org.scouts105bentaya.features.scout.entity.InsuranceHolder;
 import org.scouts105bentaya.features.scout.entity.MedicalData;
-import org.scouts105bentaya.features.scout.entity.Member;
-import org.scouts105bentaya.features.scout.entity.MemberFile;
 import org.scouts105bentaya.features.scout.entity.PersonalData;
-import org.scouts105bentaya.features.scout.entity.RealPersonalData;
 import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.scout.entity.ScoutContact;
+import org.scouts105bentaya.features.scout.entity.ScoutFile;
 import org.scouts105bentaya.features.scout.enums.PersonType;
 import org.scouts105bentaya.features.user.User;
 import org.scouts105bentaya.features.user.UserService;
@@ -59,7 +57,6 @@ public class ScoutService {
     private final ConfirmationService confirmationService;
     private final PreScoutService preScoutService;
     private final ScoutConverter scoutConverter;
-    private final MemberRepository memberRepository;
     private final BlobService blobService;
     private final MemberFileRepository memberFileRepository;
 
@@ -71,7 +68,6 @@ public class ScoutService {
         @Lazy EventService eventService,
         ConfirmationService confirmationService,
         PreScoutService preScoutService,
-        MemberRepository memberRepository,
         BlobService blobService,
         MemberFileRepository memberFileRepository
     ) {
@@ -82,7 +78,6 @@ public class ScoutService {
         this.eventService = eventService;
         this.confirmationService = confirmationService;
         this.preScoutService = preScoutService;
-        this.memberRepository = memberRepository;
         this.blobService = blobService;
         this.memberFileRepository = memberFileRepository;
     }
@@ -116,12 +111,12 @@ public class ScoutService {
         return scoutRepository.findByIdAndActiveIsTrue(id).orElseThrow(WebBentayaNotFoundException::new);
     }
 
-    public MemberDto findMember(Integer id) {
-        return MemberDto.fromScout(findById(id));
+    public ScoutDto findMember(Integer id) {
+        return ScoutDto.fromScout(findById(id));
     }
 
-    public Scout save(ScoutDto scoutDto) {
-//        OldScout scoutToSave = scoutConverter.convertFromDto(scoutDto);
+    public Scout save(OldScoutDto oldScoutDto) {
+//        OldScout scoutToSave = scoutConverter.convertFromDto(oldScoutDto);
 //        scoutToSave.setEnabled(true);
 //        OldScout savedScout = scoutRepository.save(scoutToSave);
 //        savedScout.getContactList().forEach(contact -> {
@@ -133,15 +128,15 @@ public class ScoutService {
         return null;
     }
 
-    public Scout saveFromPreScoutAndDelete(ScoutDto scoutDto, Integer preScoutId) {
-        Scout scout = save(scoutDto);
+    public Scout saveFromPreScoutAndDelete(OldScoutDto oldScoutDto, Integer preScoutId) {
+        Scout scout = save(oldScoutDto);
         this.preScoutService.saveAsAssigned(preScoutId);
         return scout;
     }
 
-    public Scout update(ScoutDto scoutDto) {
-//        OldScout scoutToUpdate = scoutConverter.convertFromDto(scoutDto);
-//        OldScout scoutDB = this.findById(scoutDto.id());
+    public Scout update(OldScoutDto oldScoutDto) {
+//        OldScout scoutToUpdate = scoutConverter.convertFromDto(oldScoutDto);
+//        OldScout scoutDB = this.findById(oldScoutDto.id());
 //        boolean hasChangedGroup = !scoutDB.getGroup().getId().equals(scoutToUpdate.getGroup().getId());
 //
 //        scoutDB.setDni(scoutToUpdate.getDni());
@@ -263,110 +258,98 @@ public class ScoutService {
 
     //NEW
 
-    public Member updateMemberPersonalData(Integer id, PersonalDataFormDto form) {
-        Member member = memberRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
-        if (member.getType() != form.type()) {
-            throw new WebBentayaBadRequestException("No se puede cambiar el tipo de persona");
-        }
+    public Scout updateMemberPersonalData(Integer id, PersonalDataFormDto form) {
+        Scout scout = scoutRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
+        PersonalData data = scout.getPersonalData();
+        data.setSurname(form.surname());
+        data.setName(form.name());
+        data.setFeltName(form.feltName());
+        data.setBirthday(form.birthday());
+        data.setBirthplace(form.birthplace());
+        data.setBirthProvince(form.birthProvince());
+        data.setNationality(form.nationality());
+        data.setAddress(form.address());
+        data.setCity(form.city());
+        data.setProvince(form.province());
+        data.setPhone(form.phone());
+        data.setLandline(form.landline());
+        data.setEmail(form.email());
+        data.setShirtSize(form.shirtSize());
+        data.setResidenceMunicipality(form.residenceMunicipality());
+        data.setGender(form.gender());
 
-        if (member.getType() == PersonType.REAL) {
-            if (form.realData() == null) {
-                throw new WebBentayaBadRequestException("No se han aportado los datos para actualizar a una persona física");
-            }
-            RealPersonalData data = (RealPersonalData) member.getPersonalData();
-            data.setSurname(form.realData().surname());
-            data.setName(form.realData().name());
-            data.setFeltName(form.realData().feltName());
-            data.setBirthday(form.realData().birthday());
-            data.setBirthplace(form.realData().birthplace());
-            data.setBirthProvince(form.realData().birthProvince());
-            data.setNationality(form.realData().nationality());
-            data.setAddress(form.realData().address());
-            data.setCity(form.realData().city());
-            data.setProvince(form.realData().province());
-            data.setPhone(form.realData().phone());
-            data.setLandline(form.realData().landline());
-            data.setEmail(form.realData().email());
-            data.setShirtSize(form.realData().shirtSize());
-            data.setResidenceMunicipality(form.realData().residenceMunicipality());
-            data.setGender(form.realData().gender());
-        } else if (member.getType() == PersonType.JURIDICAL && form.juridicalData() == null) {
-            //todo finish
-        }
+        data.setIdDocument(updateIdDocument(data.getIdDocument(), form.idDocument()));
+        data.setObservations(form.observations());
 
-        PersonalData personalData = member.getPersonalData();
-        personalData.setIdDocument(updateIdDocument(personalData.getIdDocument(), form.idDocument()));
-        personalData.setObservations(form.observations());
-
-        return memberRepository.save(member);
+        return scoutRepository.save(scout);
     }
 
     @Synchronized
-    public MemberFile uploadPersonalDataFile(Integer id, MultipartFile file) {
+    public ScoutFile uploadPersonalDataFile(Integer id, MultipartFile file) {
         FileUtils.validateFileIsPdf(file); //todo check
-        Member member = memberRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
+        Scout scout = scoutRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
 
-        MemberFile memberFile = new MemberFile();
-        memberFile.setName(file.getOriginalFilename());
-        memberFile.setMimeType(file.getContentType());
-        memberFile.setUuid(blobService.createBlob(file));
-        memberFile.setUploadDate(ZonedDateTime.now());
+        ScoutFile scoutFile = new ScoutFile();
+        scoutFile.setName(file.getOriginalFilename());
+        scoutFile.setMimeType(file.getContentType());
+        scoutFile.setUuid(blobService.createBlob(file));
+        scoutFile.setUploadDate(ZonedDateTime.now());
 
-        member.getPersonalData().getDocuments().add(memberFile);
+        scout.getPersonalData().getDocuments().add(scoutFile);
 
-        memberRepository.save(member);
-        return memberFile;
+        scoutRepository.save(scout);
+        return scoutFile;
     }
 
     public void deletePersonalDataFile(Integer memberId, Integer fileId) {
-        Member member = memberRepository.findById(memberId).orElseThrow(WebBentayaNotFoundException::new);
-        List<MemberFile> memberFiles = member.getPersonalData().getDocuments();
+        Scout scout = scoutRepository.findById(memberId).orElseThrow(WebBentayaNotFoundException::new);
+        List<ScoutFile> scoutFiles = scout.getPersonalData().getDocuments();
 
-        MemberFile memberFile = memberFiles.stream()
+        ScoutFile scoutFile = scoutFiles.stream()
             .filter(document -> document.getId().equals(fileId))
             .findFirst().orElseThrow(WebBentayaNotFoundException::new);
 
-        blobService.deleteBlob(memberFile.getUuid());
+        blobService.deleteBlob(scoutFile.getUuid());
 
-        memberFiles.remove(memberFile);
-        memberRepository.save(member);
+        scoutFiles.remove(scoutFile);
+        scoutRepository.save(scout);
 
         memberFileRepository.deleteById(fileId);
     }
 
     public ResponseEntity<byte[]> downloadMemberFile(Integer id) {
-        MemberFile file = memberFileRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
+        ScoutFile file = memberFileRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
         return new FileTransferDto(blobService.getBlob(file.getUuid()), file.getName(), file.getMimeType()).asResponseEntity();
     }
 
     @Synchronized
-    public MemberFile uploadMedicalDataFile(Integer id, MultipartFile file) {
+    public ScoutFile uploadMedicalDataFile(Integer id, MultipartFile file) {
         FileUtils.validateFileIsPdf(file); //todo check
         Scout scout = scoutRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
 
-        MemberFile memberFile = new MemberFile();
-        memberFile.setName(file.getOriginalFilename());
-        memberFile.setMimeType(file.getContentType());
-        memberFile.setUuid(blobService.createBlob(file));
-        memberFile.setUploadDate(ZonedDateTime.now());
+        ScoutFile scoutFile = new ScoutFile();
+        scoutFile.setName(file.getOriginalFilename());
+        scoutFile.setMimeType(file.getContentType());
+        scoutFile.setUuid(blobService.createBlob(file));
+        scoutFile.setUploadDate(ZonedDateTime.now());
 
-        scout.getMedicalData().getDocuments().add(memberFile);
+        scout.getMedicalData().getDocuments().add(scoutFile);
 
-        memberRepository.save(scout);
-        return memberFile;
+        scoutRepository.save(scout);
+        return scoutFile;
     }
 
     public void deleteMedicalDataFile(Integer memberId, Integer fileId) {
         Scout scout = scoutRepository.findById(memberId).orElseThrow(WebBentayaNotFoundException::new);
-        List<MemberFile> medicalFiles = scout.getMedicalData().getDocuments();
+        List<ScoutFile> medicalFiles = scout.getMedicalData().getDocuments();
 
-        MemberFile memberFile = medicalFiles.stream()
+        ScoutFile scoutFile = medicalFiles.stream()
             .filter(document -> document.getId().equals(fileId))
             .findFirst().orElseThrow(WebBentayaNotFoundException::new);
 
-        blobService.deleteBlob(memberFile.getUuid());
+        blobService.deleteBlob(scoutFile.getUuid());
 
-        medicalFiles.remove(memberFile);
+        medicalFiles.remove(scoutFile);
         scoutRepository.save(scout);
 
         memberFileRepository.deleteById(fileId);
@@ -399,7 +382,6 @@ public class ScoutService {
 
     private ScoutContact newContact(ContactFormDto contactFormDto, Scout scout) {
         ScoutContact newContact = new ScoutContact();
-
         updateContact(contactFormDto, newContact);
         newContact.setScout(scout);
         return newContact;

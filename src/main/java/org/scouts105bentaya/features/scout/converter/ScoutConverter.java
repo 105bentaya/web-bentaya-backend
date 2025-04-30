@@ -2,7 +2,7 @@ package org.scouts105bentaya.features.scout.converter;
 
 import org.scouts105bentaya.features.group.GroupBasicDataDto;
 import org.scouts105bentaya.features.group.GroupService;
-import org.scouts105bentaya.features.scout.dto.ScoutDto;
+import org.scouts105bentaya.features.scout.dto.OldScoutDto;
 import org.scouts105bentaya.features.scout.entity.IdentificationDocument;
 import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.shared.GenericConverter;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import java.util.Optional;
 
 @Component
-public class ScoutConverter extends GenericConverter<Scout, ScoutDto> {
+public class ScoutConverter extends GenericConverter<Scout, OldScoutDto> {
 
     private final GroupService groupService;
 
@@ -20,7 +20,7 @@ public class ScoutConverter extends GenericConverter<Scout, ScoutDto> {
     }
 
     @Override
-    public Scout convertFromDto(ScoutDto dto) {
+    public Scout convertFromDto(OldScoutDto dto) {
         Scout scout = new Scout();
 //        scout.setId(dto.id());
 //        scout.setName(dto.name());
@@ -42,8 +42,8 @@ public class ScoutConverter extends GenericConverter<Scout, ScoutDto> {
     }
 
     @Override
-    public ScoutDto convertFromEntity(Scout entity) {
-        return new ScoutDto(
+    public OldScoutDto convertFromEntity(Scout entity) {
+        return new OldScoutDto(
             entity.getId(),
             GroupBasicDataDto.fromGroup(entity.getGroup()),
             entity.getPersonalData().getName(),
@@ -57,7 +57,7 @@ public class ScoutConverter extends GenericConverter<Scout, ScoutDto> {
             entity.getPersonalData().getResidenceMunicipality(),
             entity.getCensus(),
             entity.getProgressionsOld(),
-            entity.getObservationsOld(),
+            entity.getObservations(),
             entity.getContactList(),
             entity.isActive(),
             entity.getUserList() != null && !entity.getUserList().isEmpty()

@@ -4,14 +4,14 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.features.scout.converter.ScoutConverter;
 import org.scouts105bentaya.features.scout.converter.ScoutUserConverter;
-import org.scouts105bentaya.features.scout.dto.MemberDto;
+import org.scouts105bentaya.features.scout.dto.OldScoutDto;
 import org.scouts105bentaya.features.scout.dto.ScoutDto;
 import org.scouts105bentaya.features.scout.dto.ScoutFormUserUpdateDto;
 import org.scouts105bentaya.features.scout.dto.ScoutUserDto;
 import org.scouts105bentaya.features.scout.dto.form.ContactListFormDto;
 import org.scouts105bentaya.features.scout.dto.form.MedicalDataFormDto;
 import org.scouts105bentaya.features.scout.dto.form.PersonalDataFormDto;
-import org.scouts105bentaya.features.scout.entity.MemberFile;
+import org.scouts105bentaya.features.scout.entity.ScoutFile;
 import org.scouts105bentaya.shared.util.SecurityUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -51,35 +51,35 @@ public class ScoutController {
 
     @PreAuthorize("hasAnyRole('ADMIN', 'SCOUTER', 'GROUP_SCOUTER')")
     @GetMapping
-    public List<ScoutDto> findAll() {
+    public List<OldScoutDto> findAll() {
         log.info("METHOD ScoutController.findAll{}", SecurityUtils.getLoggedUserUsernameForLog());
         return scoutConverter.convertEntityCollectionToDtoList(scoutService.findAll());
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/all")
-    public List<ScoutDto> findAllAndDisabled() {
+    public List<OldScoutDto> findAllAndDisabled() {
         log.info("METHOD ScoutController.findAllAndDisabled{}", SecurityUtils.getLoggedUserUsernameForLog());
         return scoutConverter.convertEntityCollectionToDtoList(scoutService.adminFindAll());
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'SCOUTER', 'GROUP_SCOUTER')")
     @GetMapping("/{id}")
-    public MemberDto findById(@PathVariable Integer id) {
+    public ScoutDto findById(@PathVariable Integer id) {
         log.info("findById{}", SecurityUtils.getLoggedUserUsernameForLog());
         return scoutService.findMember(id);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'SCOUTER', 'GROUP_SCOUTER')")
     @GetMapping("/image")
-    public List<ScoutDto> findAllWithoutImageAuthorization() {
+    public List<OldScoutDto> findAllWithoutImageAuthorization() {
         log.info("METHOD ScoutController.findAllWithoutImageAuthorization{}", SecurityUtils.getLoggedUserUsernameForLog());
         return scoutConverter.convertEntityCollectionToDtoList(scoutService.findAllWithFalseImageAuthorization());
     }
 
     @PreAuthorize("hasRole('SCOUTER')")
     @GetMapping("/group")
-    public List<ScoutDto> findAllByUserGroup() {
+    public List<OldScoutDto> findAllByUserGroup() {
         log.info("METHOD ScoutController.findAllByUserGroup{}", SecurityUtils.getLoggedUserUsernameForLog());
         return scoutConverter.convertEntityCollectionToDtoList(scoutService.findAllByLoggedScouterGroupId());
     }
@@ -108,25 +108,25 @@ public class ScoutController {
         return scoutUserConverter.convertEntityCollectionToDtoList(scoutService.findCurrentByUser());
     }
 
-    @PreAuthorize("hasRole('ADMIN') and #scoutDto.id == null")
+    @PreAuthorize("hasRole('ADMIN') and #oldScoutDto.id == null")
     @PostMapping
-    public ScoutDto save(@RequestBody ScoutDto scoutDto) {
+    public OldScoutDto save(@RequestBody OldScoutDto oldScoutDto) {
         log.info("METHOD ScoutController.save{}", SecurityUtils.getLoggedUserUsernameForLog());
-        return scoutConverter.convertFromEntity(scoutService.save(scoutDto));
+        return scoutConverter.convertFromEntity(scoutService.save(oldScoutDto));
     }
 
-    @PreAuthorize("hasRole('SCOUTER') and @authLogic.scouterHasGroupId(#scoutDto.group.id) and @authLogic.preScoutHasGroupId(#preScoutId, #scoutDto.group.id)")
+    @PreAuthorize("hasRole('SCOUTER') and @authLogic.scouterHasGroupId(#oldScoutDto.group.id) and @authLogic.preScoutHasGroupId(#preScoutId, #oldScoutDto.group.id)")
     @PostMapping("/{preScoutId}")
-    public ScoutDto saveFromPreScout(@RequestBody ScoutDto scoutDto, @PathVariable Integer preScoutId) {
+    public OldScoutDto saveFromPreScout(@RequestBody OldScoutDto oldScoutDto, @PathVariable Integer preScoutId) {
         log.info("METHOD ScoutController.saveFromPreScout --- PARAMS preScoutId: {}{}", preScoutId, SecurityUtils.getLoggedUserUsernameForLog());
-        return scoutConverter.convertFromEntity(scoutService.saveFromPreScoutAndDelete(scoutDto, preScoutId));
+        return scoutConverter.convertFromEntity(scoutService.saveFromPreScoutAndDelete(oldScoutDto, preScoutId));
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SCOUTER') and @authLogic.userHasSameGroupIdAsScout(#scoutDto.id)")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SCOUTER') and @authLogic.userHasSameGroupIdAsScout(#oldScoutDto.id)")
     @PutMapping
-    public ScoutDto update(@RequestBody ScoutDto scoutDto) {
-        log.info("METHOD ScoutController.update --- PARAMS id: {}{}", scoutDto.id(), SecurityUtils.getLoggedUserUsernameForLog());
-        return scoutConverter.convertFromEntity(scoutService.update(scoutDto));
+    public OldScoutDto update(@RequestBody OldScoutDto oldScoutDto) {
+        log.info("METHOD ScoutController.update --- PARAMS id: {}{}", oldScoutDto.id(), SecurityUtils.getLoggedUserUsernameForLog());
+        return scoutConverter.convertFromEntity(scoutService.update(oldScoutDto));
     }
 
     @PreAuthorize("hasRole('ADMIN') or hasRole('SCOUTER') and @authLogic.userHasSameGroupIdAsScout(#id)")
@@ -158,12 +158,12 @@ public class ScoutController {
     }
 
     @PatchMapping("/personal/{id}")
-    public MemberDto updatePersonalData(@PathVariable Integer id, @RequestBody @Valid PersonalDataFormDto personalDataFormDto) {
-        return MemberDto.fromMember(scoutService.updateMemberPersonalData(id, personalDataFormDto));
+    public ScoutDto updatePersonalData(@PathVariable Integer id, @RequestBody @Valid PersonalDataFormDto personalDataFormDto) {
+        return ScoutDto.fromScout(scoutService.updateMemberPersonalData(id, personalDataFormDto));
     }
 
     @PostMapping("/personal/docs/{id}")
-    public MemberFile uploadPersonalDocument(@PathVariable Integer id, @RequestParam("file") MultipartFile file) {
+    public ScoutFile uploadPersonalDocument(@PathVariable Integer id, @RequestParam("file") MultipartFile file) {
         return scoutService.uploadPersonalDataFile(id, file);
     }
 
@@ -173,12 +173,12 @@ public class ScoutController {
     }
 
     @PatchMapping("/medical/{id}")
-    public MemberDto updateMedicalData(@PathVariable Integer id, @RequestBody @Valid MedicalDataFormDto medicalDataFormDto) {
-        return MemberDto.fromScout(scoutService.updateMedicalData(id, medicalDataFormDto));
+    public ScoutDto updateMedicalData(@PathVariable Integer id, @RequestBody @Valid MedicalDataFormDto medicalDataFormDto) {
+        return ScoutDto.fromScout(scoutService.updateMedicalData(id, medicalDataFormDto));
     }
 
     @PostMapping("/medical/docs/{id}")
-    public MemberFile uploadMedicalDocument(@PathVariable Integer id, @RequestParam("file") MultipartFile file) {
+    public ScoutFile uploadMedicalDocument(@PathVariable Integer id, @RequestParam("file") MultipartFile file) {
         return scoutService.uploadMedicalDataFile(id, file);
     }
 
@@ -188,7 +188,7 @@ public class ScoutController {
     }
 
     @PatchMapping("/contact/{id}")
-    public MemberDto updateContactData(@PathVariable Integer id, @RequestBody @Valid ContactListFormDto contactList) {
-        return MemberDto.fromScout(scoutService.updateScoutContactData(id, contactList.contactList()));
+    public ScoutDto updateContactData(@PathVariable Integer id, @RequestBody @Valid ContactListFormDto contactList) {
+        return ScoutDto.fromScout(scoutService.updateScoutContactData(id, contactList.contactList()));
     }
 }
