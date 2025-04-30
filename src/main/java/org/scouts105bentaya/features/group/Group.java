@@ -2,6 +2,8 @@ package org.scouts105bentaya.features.group;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -25,4 +27,7 @@ public class Group {
     @Unique
     @Column(name = "group_order")
     private int order;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Section section;
 }
