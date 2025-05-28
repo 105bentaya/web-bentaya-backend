@@ -18,7 +18,7 @@ import org.scouts105bentaya.features.event.EventRepository;
 import org.scouts105bentaya.features.event.dto.EventFormDto;
 import org.scouts105bentaya.features.group.GroupService;
 import org.scouts105bentaya.features.scout.OldScout;
-import org.scouts105bentaya.features.scout.ScoutService;
+import org.scouts105bentaya.features.scout.service.ScoutService;
 import org.scouts105bentaya.utils.GroupUtils;
 
 import java.time.ZonedDateTime;

@@ -9,7 +9,7 @@ import org.scouts105bentaya.features.jamboree_inscription.dto.JamboreeForm;
 import org.scouts105bentaya.features.jamboree_inscription.entity.JamboreeContact;
 import org.scouts105bentaya.features.jamboree_inscription.entity.JamboreeInscription;
 import org.scouts105bentaya.features.jamboree_inscription.entity.JamboreeLanguage;
-import org.scouts105bentaya.features.scout.ScoutRepository;
+import org.scouts105bentaya.features.scout.repository.ScoutRepository;
 import org.scouts105bentaya.shared.util.dto.FileTransferDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;

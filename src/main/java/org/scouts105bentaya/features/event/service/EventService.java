@@ -13,7 +13,7 @@ import org.scouts105bentaya.features.event.dto.EventFormDto;
 import org.scouts105bentaya.features.group.Group;
 import org.scouts105bentaya.features.group.GroupBasicDataDto;
 import org.scouts105bentaya.features.group.GroupService;
-import org.scouts105bentaya.features.scout.ScoutService;
+import org.scouts105bentaya.features.scout.service.ScoutService;
 import org.scouts105bentaya.shared.GenericConstants;
 import org.springframework.stereotype.Service;
 

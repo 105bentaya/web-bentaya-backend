@@ -1,5 +1,7 @@
 package org.scouts105bentaya.features.scout;
 
+import org.scouts105bentaya.features.scout.dto.form.IdDocumentFormDto;
+import org.scouts105bentaya.features.scout.entity.IdentificationDocument;
 import org.scouts105bentaya.features.scout.entity.Scout;
 
 import java.time.LocalDate;
@@ -21,4 +23,20 @@ public class ScoutUtils {
         }
         return "Infantil";
     }
+
+    public static IdentificationDocument updateIdDocument(IdentificationDocument identificationDocument, IdDocumentFormDto idForm) {
+        if (idForm == null) {
+            return null;
+        }
+        if (identificationDocument != null) {
+            identificationDocument.setNumber(idForm.number());
+            identificationDocument.setIdType(idForm.idType());
+            return identificationDocument;
+        } else {
+            return new IdentificationDocument()
+                .setNumber(idForm.number())
+                .setIdType(idForm.idType());
+        }
+    }
+
 }

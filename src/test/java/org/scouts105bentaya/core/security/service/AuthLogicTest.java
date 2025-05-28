@@ -21,7 +21,7 @@ import org.scouts105bentaya.features.pre_scout.entity.PreScout;
 import org.scouts105bentaya.features.pre_scout.entity.PreScoutAssignation;
 import org.scouts105bentaya.features.pre_scout.service.PreScoutService;
 import org.scouts105bentaya.features.scout.OldScout;
-import org.scouts105bentaya.features.scout.ScoutService;
+import org.scouts105bentaya.features.scout.service.ScoutService;
 import org.scouts105bentaya.features.user.User;
 import org.scouts105bentaya.shared.service.AuthService;
 import org.scouts105bentaya.utils.GroupUtils;

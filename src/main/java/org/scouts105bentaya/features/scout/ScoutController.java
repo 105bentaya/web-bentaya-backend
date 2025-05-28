@@ -15,6 +15,12 @@ import org.scouts105bentaya.features.scout.dto.form.ScoutInfoFormDto;
 import org.scouts105bentaya.features.scout.dto.form.ScoutRecordFormDto;
 import org.scouts105bentaya.features.scout.entity.ScoutFile;
 import org.scouts105bentaya.features.scout.entity.ScoutRecord;
+import org.scouts105bentaya.features.scout.service.ScoutContactDataService;
+import org.scouts105bentaya.features.scout.service.ScoutFileService;
+import org.scouts105bentaya.features.scout.service.ScoutGroupDataService;
+import org.scouts105bentaya.features.scout.service.ScoutMedicalDataService;
+import org.scouts105bentaya.features.scout.service.ScoutPersonalDataService;
+import org.scouts105bentaya.features.scout.service.ScoutService;
 import org.scouts105bentaya.shared.util.SecurityUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -41,15 +47,30 @@ public class ScoutController {
     private final ScoutService scoutService;
     private final ScoutConverter scoutConverter;
     private final ScoutUserConverter scoutUserConverter;
+    private final ScoutFileService scoutFileService;
+    private final ScoutPersonalDataService scoutPersonalDataService;
+    private final ScoutMedicalDataService scoutMedicalDataService;
+    private final ScoutContactDataService scoutContactDataService;
+    private final ScoutGroupDataService scoutGroupDataService;
 
     public ScoutController(
         ScoutService scoutService,
         ScoutConverter scoutConverter,
-        ScoutUserConverter scoutUserConverter
+        ScoutUserConverter scoutUserConverter,
+        ScoutFileService scoutFileService,
+        ScoutPersonalDataService scoutPersonalDataService,
+        ScoutMedicalDataService scoutMedicalDataService,
+        ScoutContactDataService scoutContactDataService,
+        ScoutGroupDataService scoutGroupDataService
     ) {
         this.scoutService = scoutService;
         this.scoutConverter = scoutConverter;
         this.scoutUserConverter = scoutUserConverter;
+        this.scoutFileService = scoutFileService;
+        this.scoutPersonalDataService = scoutPersonalDataService;
+        this.scoutMedicalDataService = scoutMedicalDataService;
+        this.scoutContactDataService = scoutContactDataService;
+        this.scoutGroupDataService = scoutGroupDataService;
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'SCOUTER', 'GROUP_SCOUTER')")
@@ -157,71 +178,71 @@ public class ScoutController {
 
     @GetMapping("/document/{id}")
     public ResponseEntity<byte[]> getMemberFile(@PathVariable Integer id) {
-        return scoutService.downloadMemberFile(id);
+        return scoutFileService.downloadMemberFile(id);
     }
 
     @PatchMapping("/personal/{id}")
     public ScoutDto updatePersonalData(@PathVariable Integer id, @RequestBody @Valid PersonalDataFormDto personalDataFormDto) {
-        return ScoutDto.fromScout(scoutService.updateMemberPersonalData(id, personalDataFormDto));
+        return ScoutDto.fromScout(scoutPersonalDataService.updateMemberPersonalData(id, personalDataFormDto));
     }
 
     @PostMapping("/personal/docs/{id}")
     public ScoutFile uploadPersonalDocument(@PathVariable Integer id, @RequestParam("file") MultipartFile file) {
-        return scoutService.uploadPersonalDataFile(id, file);
+        return scoutPersonalDataService.uploadPersonalDataFile(id, file);
     }
 
     @DeleteMapping("/personal/docs/{memberId}/{fileId}")
     public void deletePersonalDocument(@PathVariable Integer memberId, @PathVariable Integer fileId) {
-        scoutService.deletePersonalDataFile(memberId, fileId);
+        scoutPersonalDataService.deletePersonalDataFile(memberId, fileId);
     }
 
     @PatchMapping("/medical/{id}")
     public ScoutDto updateMedicalData(@PathVariable Integer id, @RequestBody @Valid MedicalDataFormDto medicalDataFormDto) {
-        return ScoutDto.fromScout(scoutService.updateMedicalData(id, medicalDataFormDto));
+        return ScoutDto.fromScout(scoutMedicalDataService.updateMedicalData(id, medicalDataFormDto));
     }
 
     @PostMapping("/medical/docs/{id}")
     public ScoutFile uploadMedicalDocument(@PathVariable Integer id, @RequestParam("file") MultipartFile file) {
-        return scoutService.uploadMedicalDataFile(id, file);
+        return scoutMedicalDataService.uploadMedicalDataFile(id, file);
     }
 
     @DeleteMapping("/medical/docs/{memberId}/{fileId}")
     public void deleteMedicalDocument(@PathVariable Integer memberId, @PathVariable Integer fileId) {
-        scoutService.deleteMedicalDataFile(memberId, fileId);
+        scoutMedicalDataService.deleteMedicalDataFile(memberId, fileId);
     }
 
     @PatchMapping("/contact/{id}")
     public ScoutDto updateContactData(@PathVariable Integer id, @RequestBody @Valid ContactListFormDto contactList) {
-        return ScoutDto.fromScout(scoutService.updateScoutContactData(id, contactList.contactList()));
+        return ScoutDto.fromScout(scoutContactDataService.updateScoutContactData(id, contactList.contactList()));
     }
 
     @PatchMapping("/scout-info/{id}")
     public ScoutDto updateScoutInfo(@PathVariable Integer id, @RequestBody @Valid ScoutInfoFormDto scoutInfoFormDto) {
-        return ScoutDto.fromScout(scoutService.updateScoutInfo(id, scoutInfoFormDto));
+        return ScoutDto.fromScout(scoutGroupDataService.updateScoutInfo(id, scoutInfoFormDto));
     }
 
     @PostMapping("/scout-info/record/{scoutId}")
     public ScoutRecord addScoutRecord(@PathVariable Integer scoutId, @RequestBody @Valid ScoutRecordFormDto recordFormDto) {
-        return scoutService.uploadScoutRecord(scoutId, recordFormDto);
+        return scoutGroupDataService.uploadScoutRecord(scoutId, recordFormDto);
     }
 
     @PutMapping("/scout-info/record/{scoutId}/{recordId}")
     public ScoutRecord updateScoutRecord(@PathVariable Integer recordId, @PathVariable Integer scoutId, @RequestBody @Valid ScoutRecordFormDto recordFormDto) {
-        return scoutService.updateScoutRecord(scoutId, recordId, recordFormDto);
+        return scoutGroupDataService.updateScoutRecord(scoutId, recordId, recordFormDto);
     }
 
     @DeleteMapping("/scout-info/record/{scoutId}/{recordId}")
     public void deleteScoutRecord(@PathVariable Integer recordId, @PathVariable Integer scoutId) {
-        scoutService.deleteScoutRecord(scoutId, recordId);
+        scoutGroupDataService.deleteScoutRecord(scoutId, recordId);
     }
 
     @PostMapping("/scout-info/record-documents/{recordId}")
     public ScoutFile uploadRecordDocument(@PathVariable Integer recordId, @RequestParam("file") MultipartFile file) {
-        return scoutService.uploadRecordFile(recordId, file);
+        return scoutGroupDataService.uploadRecordFile(recordId, file);
     }
 
     @DeleteMapping("/scout-info/record-documents/{recordId}/{fileId}")
     public void deleteRecordDocument(@PathVariable Integer recordId, @PathVariable Integer fileId) {
-        scoutService.deleteRecordFile(recordId, fileId);
+        scoutGroupDataService.deleteRecordFile(recordId, fileId);
     }
 }

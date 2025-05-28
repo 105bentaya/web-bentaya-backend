@@ -13,7 +13,7 @@ import org.scouts105bentaya.features.event.service.EventService;
 import org.scouts105bentaya.features.group.Group;
 import org.scouts105bentaya.features.pre_scout.entity.PreScoutAssignation;
 import org.scouts105bentaya.features.pre_scout.service.PreScoutService;
-import org.scouts105bentaya.features.scout.ScoutService;
+import org.scouts105bentaya.features.scout.service.ScoutService;
 import org.scouts105bentaya.shared.service.AuthService;
 import org.springframework.stereotype.Service;
 

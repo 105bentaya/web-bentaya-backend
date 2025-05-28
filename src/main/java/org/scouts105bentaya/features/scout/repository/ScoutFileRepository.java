@@ -1,4 +1,4 @@
-package org.scouts105bentaya.features.scout;
+package org.scouts105bentaya.features.scout.repository;
 
 import org.scouts105bentaya.features.scout.entity.ScoutFile;
 import org.springframework.data.jpa.repository.JpaRepository;
