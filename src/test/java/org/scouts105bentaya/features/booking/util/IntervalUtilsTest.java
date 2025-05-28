@@ -191,7 +191,7 @@ class IntervalUtilsTest {
     }
 
     @Test
-    void removeIntervalsOverlappingSectionsWithIntervalListWithMainIntervalListNotMerged() {
+    void removeIntervalsFullyOverlappingSectionsWithIntervalListWithMainIntervalListNotMerged() {
         //given
         List<Interval> mainIntervals = List.of(
             new Interval(10, 20),

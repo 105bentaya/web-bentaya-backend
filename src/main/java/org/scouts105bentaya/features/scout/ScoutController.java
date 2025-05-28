@@ -11,7 +11,10 @@ import org.scouts105bentaya.features.scout.dto.ScoutUserDto;
 import org.scouts105bentaya.features.scout.dto.form.ContactListFormDto;
 import org.scouts105bentaya.features.scout.dto.form.MedicalDataFormDto;
 import org.scouts105bentaya.features.scout.dto.form.PersonalDataFormDto;
+import org.scouts105bentaya.features.scout.dto.form.ScoutInfoFormDto;
+import org.scouts105bentaya.features.scout.dto.form.ScoutRecordFormDto;
 import org.scouts105bentaya.features.scout.entity.ScoutFile;
+import org.scouts105bentaya.features.scout.entity.ScoutRecord;
 import org.scouts105bentaya.shared.util.SecurityUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -190,5 +193,35 @@ public class ScoutController {
     @PatchMapping("/contact/{id}")
     public ScoutDto updateContactData(@PathVariable Integer id, @RequestBody @Valid ContactListFormDto contactList) {
         return ScoutDto.fromScout(scoutService.updateScoutContactData(id, contactList.contactList()));
+    }
+
+    @PatchMapping("/scout-info/{id}")
+    public ScoutDto updateScoutInfo(@PathVariable Integer id, @RequestBody @Valid ScoutInfoFormDto scoutInfoFormDto) {
+        return ScoutDto.fromScout(scoutService.updateScoutInfo(id, scoutInfoFormDto));
+    }
+
+    @PostMapping("/scout-info/record/{scoutId}")
+    public ScoutRecord addScoutRecord(@PathVariable Integer scoutId, @RequestBody @Valid ScoutRecordFormDto recordFormDto) {
+        return scoutService.uploadScoutRecord(scoutId, recordFormDto);
+    }
+
+    @PutMapping("/scout-info/record/{scoutId}/{recordId}")
+    public ScoutRecord updateScoutRecord(@PathVariable Integer recordId, @PathVariable Integer scoutId, @RequestBody @Valid ScoutRecordFormDto recordFormDto) {
+        return scoutService.updateScoutRecord(scoutId, recordId, recordFormDto);
+    }
+
+    @DeleteMapping("/scout-info/record/{scoutId}/{recordId}")
+    public void deleteScoutRecord(@PathVariable Integer recordId, @PathVariable Integer scoutId) {
+        scoutService.deleteScoutRecord(scoutId, recordId);
+    }
+
+    @PostMapping("/scout-info/record-documents/{recordId}")
+    public ScoutFile uploadRecordDocument(@PathVariable Integer recordId, @RequestParam("file") MultipartFile file) {
+        return scoutService.uploadRecordFile(recordId, file);
+    }
+
+    @DeleteMapping("/scout-info/record-documents/{recordId}/{fileId}")
+    public void deleteRecordDocument(@PathVariable Integer recordId, @PathVariable Integer fileId) {
+        scoutService.deleteRecordFile(recordId, fileId);
     }
 }

@@ -49,7 +49,7 @@ public class AuthLogic {
     public boolean userHasSameGroupIdAsScout(int scoutId) {
         Group loggedUserGroup = authService.getLoggedUser().getGroup();
         if (loggedUserGroup == null) return false;
-        Group scoutGroup = scoutService.findById(scoutId).getGroup();
+        Group scoutGroup = scoutService.findActiveById(scoutId).getGroup();
         return loggedUserGroup.getId().equals(scoutGroup.getId());
     }
 

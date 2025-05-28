@@ -62,7 +62,7 @@ class AuthLogicTest {
 
         //when
         Mockito.when(authService.getLoggedUser()).thenReturn(loggedUser);
-        Mockito.when(scoutService.findById(1)).thenReturn(scout);
+        Mockito.when(scoutService.findActiveById(1)).thenReturn(scout);
         var result = authLogic.userHasSameGroupIdAsScout(1);
 
         //then
@@ -77,7 +77,7 @@ class AuthLogicTest {
 
         //when
         Mockito.when(authService.getLoggedUser()).thenReturn(loggedUser);
-        Mockito.when(scoutService.findById(1)).thenReturn(scout);
+        Mockito.when(scoutService.findActiveById(1)).thenReturn(scout);
         var result = authLogic.userHasSameGroupIdAsScout(1);
 
         //then
@@ -99,7 +99,7 @@ class AuthLogicTest {
     }
 
     void mockScout() {
-        Mockito.when(scoutService.findById(1)).thenReturn(new OldScout().setId(1).setGroup(GroupUtils.basicGroup()));
+        Mockito.when(scoutService.findActiveById(1)).thenReturn(new OldScout().setId(1).setGroup(GroupUtils.basicGroup()));
     }
 
     @Test

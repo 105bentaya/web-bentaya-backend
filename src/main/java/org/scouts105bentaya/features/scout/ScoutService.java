@@ -5,12 +5,16 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
+import org.joda.time.Interval;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
+import org.scouts105bentaya.core.exception.WebBentayaConflictException;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.core.exception.WebBentayaUserNotFoundException;
+import org.scouts105bentaya.features.booking.util.IntervalUtils;
 import org.scouts105bentaya.features.confirmation.Confirmation;
 import org.scouts105bentaya.features.confirmation.service.ConfirmationService;
 import org.scouts105bentaya.features.event.service.EventService;
+import org.scouts105bentaya.features.group.GroupRepository;
 import org.scouts105bentaya.features.pre_scout.service.PreScoutService;
 import org.scouts105bentaya.features.scout.converter.ScoutConverter;
 import org.scouts105bentaya.features.scout.dto.OldScoutDto;
@@ -21,6 +25,9 @@ import org.scouts105bentaya.features.scout.dto.form.IdDocumentFormDto;
 import org.scouts105bentaya.features.scout.dto.form.InsuranceHolderForm;
 import org.scouts105bentaya.features.scout.dto.form.MedicalDataFormDto;
 import org.scouts105bentaya.features.scout.dto.form.PersonalDataFormDto;
+import org.scouts105bentaya.features.scout.dto.form.ScoutInfoFormDto;
+import org.scouts105bentaya.features.scout.dto.form.ScoutRecordFormDto;
+import org.scouts105bentaya.features.scout.dto.form.ScoutRegistrationDateFormDto;
 import org.scouts105bentaya.features.scout.entity.IdentificationDocument;
 import org.scouts105bentaya.features.scout.entity.InsuranceHolder;
 import org.scouts105bentaya.features.scout.entity.MedicalData;
@@ -28,7 +35,10 @@ import org.scouts105bentaya.features.scout.entity.PersonalData;
 import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.scout.entity.ScoutContact;
 import org.scouts105bentaya.features.scout.entity.ScoutFile;
+import org.scouts105bentaya.features.scout.entity.ScoutRecord;
+import org.scouts105bentaya.features.scout.entity.ScoutRegistrationDates;
 import org.scouts105bentaya.features.scout.enums.PersonType;
+import org.scouts105bentaya.features.scout.enums.ScoutType;
 import org.scouts105bentaya.features.user.User;
 import org.scouts105bentaya.features.user.UserService;
 import org.scouts105bentaya.shared.service.AuthService;
@@ -44,6 +54,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 @Slf4j
@@ -58,7 +69,9 @@ public class ScoutService {
     private final PreScoutService preScoutService;
     private final ScoutConverter scoutConverter;
     private final BlobService blobService;
-    private final MemberFileRepository memberFileRepository;
+    private final ScoutFileRepository scoutFileRepository;
+    private final GroupRepository groupRepository;
+    private final ScoutRecordRepository scoutRecordRepository;
 
     public ScoutService(
         ScoutRepository scoutRepository,
@@ -69,8 +82,9 @@ public class ScoutService {
         ConfirmationService confirmationService,
         PreScoutService preScoutService,
         BlobService blobService,
-        MemberFileRepository memberFileRepository
-    ) {
+        ScoutFileRepository scoutFileRepository,
+        GroupRepository groupRepository,
+        ScoutRecordRepository scoutRecordRepository) {
         this.scoutRepository = scoutRepository;
         this.scoutConverter = scoutConverter;
         this.authService = authService;
@@ -79,7 +93,9 @@ public class ScoutService {
         this.confirmationService = confirmationService;
         this.preScoutService = preScoutService;
         this.blobService = blobService;
-        this.memberFileRepository = memberFileRepository;
+        this.scoutFileRepository = scoutFileRepository;
+        this.groupRepository = groupRepository;
+        this.scoutRecordRepository = scoutRecordRepository;
     }
 
     public List<Scout> findAll() {
@@ -99,7 +115,7 @@ public class ScoutService {
     }
 
     public List<String> findScoutUsernames(Integer id) {
-        Scout scout = this.findById(id);
+        Scout scout = this.findActiveById(id);
         return scout.getUserList().stream().map(User::getUsername).toList();
     }
 
@@ -107,8 +123,12 @@ public class ScoutService {
         return authService.getLoggedUser().getScoutList();
     }
 
-    public Scout findById(Integer id) {
+    public Scout findActiveById(Integer id) {
         return scoutRepository.findByIdAndActiveIsTrue(id).orElseThrow(WebBentayaNotFoundException::new);
+    }
+
+    public Scout findById(Integer id) {
+        return scoutRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
     }
 
     public ScoutDto findMember(Integer id) {
@@ -136,7 +156,7 @@ public class ScoutService {
 
     public Scout update(OldScoutDto oldScoutDto) {
 //        OldScout scoutToUpdate = scoutConverter.convertFromDto(oldScoutDto);
-//        OldScout scoutDB = this.findById(oldScoutDto.id());
+//        OldScout scoutDB = this.findActiveById(oldScoutDto.id());
 //        boolean hasChangedGroup = !scoutDB.getGroup().getId().equals(scoutToUpdate.getGroup().getId());
 //
 //        scoutDB.setDni(scoutToUpdate.getDni());
@@ -170,7 +190,7 @@ public class ScoutService {
     }
 
     public void updateScoutUsers(Integer scoutId, List<String> scoutUsers) {
-        Scout scout = this.findById(scoutId);
+        Scout scout = this.findActiveById(scoutId);
         scout.getUserList().stream()
             .filter(user -> scoutUsers.stream()
                 .noneMatch(username -> username.equalsIgnoreCase(user.getUsername())))
@@ -220,7 +240,7 @@ public class ScoutService {
     public ScoutFormUserUpdateDto getScoutFormUpdateUserMessage(Integer scoutId, List<String> newUsers) {
         ScoutFormUserUpdateDto result = new ScoutFormUserUpdateDto();
         if (scoutId != null) {
-            Scout scout = this.findById(scoutId);
+            Scout scout = this.findActiveById(scoutId);
             List<String> currentUsers = scout.getUserList().stream().map(User::getUsername).toList();
             result.setAddedUsers(newUsers.stream().filter(newUser -> !currentUsers.contains(newUser)).toList());
             result.setDeletedUsers(currentUsers.stream().filter(currentUser -> !newUsers.contains(currentUser)).toList());
@@ -242,7 +262,7 @@ public class ScoutService {
 
     @Transactional
     public void disable(Integer id) {
-        Scout scout = this.findById(id);
+        Scout scout = this.findActiveById(id);
         scout.getUserList().forEach(user -> userService.removeScoutFromUser(user, scout));
         this.deleteFutureConfirmations(scout);
         scout.setActive(false);
@@ -289,12 +309,7 @@ public class ScoutService {
         FileUtils.validateFileIsPdf(file); //todo check
         Scout scout = scoutRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
 
-        ScoutFile scoutFile = new ScoutFile();
-        scoutFile.setName(file.getOriginalFilename());
-        scoutFile.setMimeType(file.getContentType());
-        scoutFile.setUuid(blobService.createBlob(file));
-        scoutFile.setUploadDate(ZonedDateTime.now());
-
+        ScoutFile scoutFile = createScoutFile(file);
         scout.getPersonalData().getDocuments().add(scoutFile);
 
         scoutRepository.save(scout);
@@ -314,11 +329,11 @@ public class ScoutService {
         scoutFiles.remove(scoutFile);
         scoutRepository.save(scout);
 
-        memberFileRepository.deleteById(fileId);
+        scoutFileRepository.deleteById(fileId);
     }
 
     public ResponseEntity<byte[]> downloadMemberFile(Integer id) {
-        ScoutFile file = memberFileRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
+        ScoutFile file = scoutFileRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
         return new FileTransferDto(blobService.getBlob(file.getUuid()), file.getName(), file.getMimeType()).asResponseEntity();
     }
 
@@ -327,11 +342,7 @@ public class ScoutService {
         FileUtils.validateFileIsPdf(file); //todo check
         Scout scout = scoutRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
 
-        ScoutFile scoutFile = new ScoutFile();
-        scoutFile.setName(file.getOriginalFilename());
-        scoutFile.setMimeType(file.getContentType());
-        scoutFile.setUuid(blobService.createBlob(file));
-        scoutFile.setUploadDate(ZonedDateTime.now());
+        ScoutFile scoutFile = createScoutFile(file);
 
         scout.getMedicalData().getDocuments().add(scoutFile);
 
@@ -352,7 +363,7 @@ public class ScoutService {
         medicalFiles.remove(scoutFile);
         scoutRepository.save(scout);
 
-        memberFileRepository.deleteById(fileId);
+        scoutFileRepository.deleteById(fileId);
     }
 
     public Scout updateScoutContactData(Integer id, @Valid List<ContactFormDto> contactList) {
@@ -502,5 +513,183 @@ public class ScoutService {
             .setEmail(form.email())
             .setPhone(form.phone())
             .setIdDocument(updateIdDocument(insuranceHolder.getIdDocument(), form.idDocument()));
+    }
+
+    public Scout updateScoutInfo(Integer id, ScoutInfoFormDto form) {
+        this.validateScoutGroup(form);
+        this.validateCensus(form, id);
+        this.validateRegistrationDates(form);
+
+        Scout scout = scoutRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
+
+        scout.setCensus(form.census());
+        scout.setScoutType(form.scoutType());
+
+        if (scout.getScoutType() == ScoutType.INACTIVE) {
+            scout.setActive(false);
+            scout.setFederated(false);
+        } else {
+            scout.setActive(true);
+            scout.setFederated(form.federated());
+        }
+
+        scout.setGroup(scout.getScoutType().hasGroup() && form.groupId() != 0 ?
+            groupRepository.findById(form.groupId()).orElseThrow(WebBentayaNotFoundException::new) :
+            null
+        );
+
+        this.updateScoutRegistrationDates(scout, form);
+
+        return scoutRepository.save(scout);
+    }
+
+    private void updateScoutRegistrationDates(Scout scout, ScoutInfoFormDto form) {
+        List<ScoutRegistrationDates> registrationDates = scout.getRegistrationDates();
+        List<ScoutRegistrationDates> newDates = new ArrayList<>();
+
+        form.registrationDates().forEach(newDate -> {
+            if (newDate.id() != null) {
+                ScoutRegistrationDates existingDate = registrationDates.stream()
+                    .filter(date -> date.getId().equals(newDate.id()))
+                    .findFirst().orElseThrow(WebBentayaNotFoundException::new);
+                existingDate.setRegistrationDate(newDate.registrationDate());
+                existingDate.setUnregistrationDate(newDate.unregistrationDate());
+            } else {
+                newDates.add(new ScoutRegistrationDates()
+                    .setRegistrationDate(newDate.registrationDate())
+                    .setUnregistrationDate(newDate.unregistrationDate())
+                    .setScout(scout)
+                );
+            }
+        });
+
+        registrationDates.removeIf(date -> form.registrationDates().stream()
+            .noneMatch(newDate -> date.getId().equals(newDate.id()))
+        );
+        registrationDates.addAll(newDates);
+    }
+
+    private void validateCensus(ScoutInfoFormDto form, Integer scoutId) {
+        Optional<Scout> existingCensus = scoutRepository.findFirstByCensus(form.census());
+        if (existingCensus.isPresent() && !existingCensus.get().getId().equals(scoutId)) {
+            throw new WebBentayaConflictException("Este censo ya está asignado");
+        }
+    }
+
+    private void validateScoutGroup(ScoutInfoFormDto form) {
+        if (form.scoutType() == ScoutType.SCOUT && (form.groupId() == null || form.groupId() == 0)) {
+            throw new WebBentayaBadRequestException("Es necesario especificar la unidad de la educanda");
+        }
+        if (form.scoutType() == ScoutType.SCOUTER && form.groupId() == null) {
+            throw new WebBentayaBadRequestException("Es necesario especificar la unidad de la educadora");
+        }
+    }
+
+    private void validateRegistrationDates(ScoutInfoFormDto form) {
+        List<ScoutRegistrationDateFormDto> dates = form.registrationDates();
+
+        if (dates.stream()
+            .filter(date -> date.unregistrationDate() != null)
+            .anyMatch(date -> !date.registrationDate().isBefore(date.unregistrationDate()))
+        ) {
+            throw new WebBentayaBadRequestException("Una fecha de baja debe ser posterior a la fecha de alta correspondiente");
+        }
+
+        if (dates.stream().filter(date -> date.unregistrationDate() == null).count() > 1) {
+            throw new WebBentayaBadRequestException("Hay dos o más fechas de baja sin especificar");
+        }
+
+        List<Interval> intervals = dates.stream()
+            .map(date -> IntervalUtils.intervalFromLocalDates(
+                date.registrationDate(), Optional.ofNullable(date.unregistrationDate()).orElse(date.registrationDate())
+            ))
+            .toList();
+
+        if (IntervalUtils.intervalsOverlapOrAbut(intervals)) {
+            throw new WebBentayaBadRequestException("Hay fechas de alta y baja que se superponen");
+        }
+    }
+
+    public ScoutRecord uploadScoutRecord(Integer scoutId, ScoutRecordFormDto recordForm) {
+        Scout scout = this.findById(scoutId);
+
+        ScoutRecord scoutRecord = new ScoutRecord()
+            .setRecordType(recordForm.recordType())
+            .setStartDate(recordForm.startDate())
+            .setEndDate(recordForm.endDate())
+            .setObservations(recordForm.observations())
+            .setScout(scout);
+
+        scoutRecord = scoutRecordRepository.save(scoutRecord);
+
+        scout.getRecordList().add(scoutRecord);
+        scoutRepository.save(scout);
+
+        return scoutRecord;
+    }
+
+    public ScoutRecord updateScoutRecord(Integer scoutId, Integer recordId, ScoutRecordFormDto recordForm) {
+        Scout scout = this.findById(scoutId);
+
+        ScoutRecord scoutRecord = scout.getRecordList().stream()
+            .filter(r -> r.getId().equals(recordId))
+            .findFirst()
+            .orElseThrow(WebBentayaNotFoundException::new);
+
+        scoutRecord.setRecordType(recordForm.recordType())
+            .setStartDate(recordForm.startDate())
+            .setEndDate(recordForm.endDate())
+            .setObservations(recordForm.observations());
+
+        return scoutRecordRepository.save(scoutRecord);
+    }
+
+    @Synchronized
+    public ScoutFile uploadRecordFile(Integer recordId, MultipartFile file) {
+        FileUtils.validateFileIsPdf(file); //todo check
+        ScoutRecord scoutRecord = scoutRecordRepository.findById(recordId).orElseThrow(WebBentayaNotFoundException::new);
+
+        ScoutFile scoutFile = createScoutFile(file);
+
+        scoutFile = scoutFileRepository.save(scoutFile);
+        scoutRecord.getFiles().add(scoutFile);
+        scoutRecordRepository.save(scoutRecord);
+        return scoutFile;
+    }
+
+    public void deleteRecordFile(Integer recordId, Integer fileId) {
+        ScoutRecord scoutRecord = scoutRecordRepository.findById(recordId).orElseThrow(WebBentayaNotFoundException::new);
+        List<ScoutFile> recordFiles = scoutRecord.getFiles();
+
+        ScoutFile scoutFile = recordFiles.stream()
+            .filter(document -> document.getId().equals(fileId))
+            .findFirst().orElseThrow(WebBentayaNotFoundException::new);
+
+        blobService.deleteBlob(scoutFile.getUuid());
+
+        recordFiles.remove(scoutFile);
+        scoutRecordRepository.save(scoutRecord);
+
+        scoutFileRepository.deleteById(fileId);
+    }
+
+    private ScoutFile createScoutFile(MultipartFile file) {
+        ScoutFile scoutFile = new ScoutFile();
+        scoutFile.setName(file.getOriginalFilename());
+        scoutFile.setMimeType(file.getContentType());
+        scoutFile.setUuid(blobService.createBlob(file));
+        scoutFile.setUploadDate(ZonedDateTime.now());
+        return scoutFile;
+    }
+
+    public void deleteScoutRecord(Integer scoutId, Integer recordId) {
+        Scout scout = this.findById(scoutId);
+        ScoutRecord scoutRecord = scout.getRecordList().stream()
+            .filter(r -> r.getId().equals(recordId))
+            .findFirst()
+            .orElseThrow(WebBentayaNotFoundException::new);
+
+        scoutRecord.getFiles().forEach(file -> blobService.deleteBlob(file.getUuid()));
+        scoutRecordRepository.deleteById(recordId);
     }
 }

@@ -7,7 +7,9 @@ import org.joda.time.base.AbstractInterval;
 import org.scouts105bentaya.features.booking.dto.in.BookingDateFormDto;
 import org.scouts105bentaya.features.booking.entity.Booking;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -30,6 +32,27 @@ public final class IntervalUtils {
         Instant instant1 = Instant.ofEpochSecond(startDate.toEpochSecond(ZoneOffset.ofHours(0)));
         Instant instant2 = Instant.ofEpochSecond(endDate.toEpochSecond(ZoneOffset.ofHours(0)));
         return new Interval(instant1, instant2);
+    }
+
+    public static Interval intervalFromLocalDates(LocalDate startDate, LocalDate endDate) {
+        Instant instant1 = Instant.ofEpochSecond(startDate.toEpochSecond(LocalTime.MIDNIGHT, ZoneOffset.ofHours(0)));
+        Instant instant2 = Instant.ofEpochSecond(endDate.toEpochSecond(LocalTime.MIDNIGHT, ZoneOffset.ofHours(0)));
+        return new Interval(instant1, instant2);
+    }
+
+    public static boolean intervalsOverlapOrAbut(List<Interval> intervals) {
+        List<Interval> sortedIntervals = intervals.stream()
+            .sorted(Comparator.comparing(Interval::getStart))
+            .toList();
+
+        for (int i = 0; i < sortedIntervals.size() - 1; i++) {
+            Interval currentInterval = sortedIntervals.get(i);
+            Interval nextInterval = sortedIntervals.get(i + 1);
+            if (currentInterval.overlaps(nextInterval) || currentInterval.abuts(nextInterval)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static LocalDateTime jodaLocalDateTimeToJavaDateTime(DateTime dateTime) {

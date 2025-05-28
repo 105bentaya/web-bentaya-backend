@@ -38,7 +38,7 @@ public class Scout {
     @ManyToOne
     private Group group;
 
-    @OneToMany(mappedBy = "scout")
+    @OneToMany(mappedBy = "scout", orphanRemoval = true, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<ScoutRegistrationDates> registrationDates;
 
     private boolean active;
@@ -60,6 +60,9 @@ public class Scout {
 
     @OneToMany(mappedBy = "scout", cascade = CascadeType.REMOVE)
     private List<Confirmation> confirmationList;
+
+    @OneToMany(mappedBy = "scout", cascade = CascadeType.MERGE)
+    private List<ScoutRecord> recordList;
 
     @ManyToMany(mappedBy = "scoutList", fetch = FetchType.LAZY)
     private Set<User> userList;
