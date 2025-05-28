@@ -83,10 +83,6 @@ public class ScoutService {
         return scoutRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
     }
 
-    public ScoutDto findMember(Integer id) {
-        return ScoutDto.fromScout(findById(id));
-    }
-
     public Scout save(OldScoutDto oldScoutDto) {
 //        OldScout scoutToSave = scoutConverter.convertFromDto(oldScoutDto);
 //        scoutToSave.setEnabled(true);

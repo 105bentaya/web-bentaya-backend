@@ -91,7 +91,7 @@ public class ScoutController {
     @GetMapping("/{id}")
     public ScoutDto findById(@PathVariable Integer id) {
         log.info("findById{}", SecurityUtils.getLoggedUserUsernameForLog());
-        return scoutService.findMember(id);
+        return ScoutDto.fromScout(scoutService.findById(id));
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'SCOUTER', 'GROUP_SCOUTER')")
@@ -177,13 +177,13 @@ public class ScoutController {
     //NEW - TODO AUTH, LOGS
 
     @GetMapping("/document/{id}")
-    public ResponseEntity<byte[]> getMemberFile(@PathVariable Integer id) {
-        return scoutFileService.downloadMemberFile(id);
+    public ResponseEntity<byte[]> getScoutFile(@PathVariable Integer id) {
+        return scoutFileService.downloadScoutFile(id);
     }
 
     @PatchMapping("/personal/{id}")
     public ScoutDto updatePersonalData(@PathVariable Integer id, @RequestBody @Valid PersonalDataFormDto personalDataFormDto) {
-        return ScoutDto.fromScout(scoutPersonalDataService.updateMemberPersonalData(id, personalDataFormDto));
+        return ScoutDto.fromScout(scoutPersonalDataService.updatePersonalData(id, personalDataFormDto));
     }
 
     @PostMapping("/personal/docs/{id}")
@@ -191,9 +191,9 @@ public class ScoutController {
         return scoutPersonalDataService.uploadPersonalDataFile(id, file);
     }
 
-    @DeleteMapping("/personal/docs/{memberId}/{fileId}")
-    public void deletePersonalDocument(@PathVariable Integer memberId, @PathVariable Integer fileId) {
-        scoutPersonalDataService.deletePersonalDataFile(memberId, fileId);
+    @DeleteMapping("/personal/docs/{scoutId}/{fileId}")
+    public void deletePersonalDocument(@PathVariable Integer scoutId, @PathVariable Integer fileId) {
+        scoutPersonalDataService.deletePersonalDataFile(scoutId, fileId);
     }
 
     @PatchMapping("/medical/{id}")
@@ -206,9 +206,9 @@ public class ScoutController {
         return scoutMedicalDataService.uploadMedicalDataFile(id, file);
     }
 
-    @DeleteMapping("/medical/docs/{memberId}/{fileId}")
-    public void deleteMedicalDocument(@PathVariable Integer memberId, @PathVariable Integer fileId) {
-        scoutMedicalDataService.deleteMedicalDataFile(memberId, fileId);
+    @DeleteMapping("/medical/docs/{scoutId}/{fileId}")
+    public void deleteMedicalDocument(@PathVariable Integer scoutId, @PathVariable Integer fileId) {
+        scoutMedicalDataService.deleteMedicalDataFile(scoutId, fileId);
     }
 
     @PatchMapping("/contact/{id}")

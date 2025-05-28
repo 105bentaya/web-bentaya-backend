@@ -130,8 +130,8 @@ public class ScoutMedicalDataService {
         return scoutFile;
     }
 
-    public void deleteMedicalDataFile(Integer memberId, Integer fileId) {
-        Scout scout = scoutRepository.findById(memberId).orElseThrow(WebBentayaNotFoundException::new);
+    public void deleteMedicalDataFile(Integer scoutId, Integer fileId) {
+        Scout scout = scoutRepository.findById(scoutId).orElseThrow(WebBentayaNotFoundException::new);
         List<ScoutFile> medicalFiles = scout.getMedicalData().getDocuments();
 
         ScoutFile scoutFile = medicalFiles.stream()

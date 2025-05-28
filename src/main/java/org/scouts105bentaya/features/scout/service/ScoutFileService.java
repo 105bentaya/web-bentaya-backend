@@ -27,7 +27,7 @@ public class ScoutFileService {
         this.scoutFileRepository = scoutFileRepository;
     }
 
-    public ResponseEntity<byte[]> downloadMemberFile(Integer id) {
+    public ResponseEntity<byte[]> downloadScoutFile(Integer id) {
         ScoutFile file = scoutFileRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
         return new FileTransferDto(blobService.getBlob(file.getUuid()), file.getName(), file.getMimeType()).asResponseEntity();
     }

@@ -38,7 +38,7 @@ public class ScoutPersonalDataService {
         this.scoutFileService = scoutFileService;
     }
 
-    public Scout updateMemberPersonalData(Integer id, PersonalDataFormDto form) {
+    public Scout updatePersonalData(Integer id, PersonalDataFormDto form) {
         Scout scout = scoutRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
         PersonalData data = scout.getPersonalData();
         data.setSurname(form.surname());
@@ -76,8 +76,8 @@ public class ScoutPersonalDataService {
         return scoutFile;
     }
 
-    public void deletePersonalDataFile(Integer memberId, Integer fileId) {
-        Scout scout = scoutRepository.findById(memberId).orElseThrow(WebBentayaNotFoundException::new);
+    public void deletePersonalDataFile(Integer scoutId, Integer fileId) {
+        Scout scout = scoutRepository.findById(scoutId).orElseThrow(WebBentayaNotFoundException::new);
         List<ScoutFile> scoutFiles = scout.getPersonalData().getDocuments();
 
         ScoutFile scoutFile = scoutFiles.stream()
