@@ -1,6 +1,5 @@
 package org.scouts105bentaya.features.scout.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -9,37 +8,34 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import org.scouts105bentaya.features.scout.enums.SpecialMemberRole;
+import org.scouts105bentaya.features.scout.enums.PersonType;
 
-import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Getter
 @Setter
 @Accessors(chain = true)
-public class SpecialMember {
+public class SpecialMemberPerson {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     @Enumerated(EnumType.STRING)
-    private SpecialMemberRole role;
     @Column(nullable = false)
-    private Integer roleCensus;
-    private LocalDate agreementDate;
-    private LocalDate awardDate;
-    private String details;
-    @Column(columnDefinition = "text")
-    private String observations;
+    private PersonType type;
+    private String name;
+    private String surname;
+    private String companyName;
+    @OneToOne(optional = false, cascade = CascadeType.PERSIST)
+    private IdentificationDocument idDocument;
+    private String phone;
+    private String email;
 
-    @ManyToOne
-    @JsonIgnore
-    private Scout scout;
-
-    @ManyToOne(cascade = CascadeType.PERSIST)
-    @JsonIgnore
-    private SpecialMemberPerson person;
+    @OneToMany(mappedBy = "person")
+    private List<SpecialMember> specialMembers;
 }

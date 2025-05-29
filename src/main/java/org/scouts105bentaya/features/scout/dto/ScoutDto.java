@@ -5,11 +5,10 @@ import org.scouts105bentaya.features.scout.entity.ScoutFile;
 import org.scouts105bentaya.features.scout.entity.SpecialMember;
 
 import java.util.List;
-import java.util.Set;
 
 public record ScoutDto(
     int id,
-    Set<SpecialMember> roleInfos,
+    List<SpecialMember> roleInfos,
     String observations,
     List<ScoutFile> extraFiles,
     List<ScoutFile> images,

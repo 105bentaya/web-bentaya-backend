@@ -1,0 +1,35 @@
+package org.scouts105bentaya.features.scout.dto;
+
+import org.scouts105bentaya.features.scout.entity.PersonalData;
+import org.scouts105bentaya.features.scout.entity.SpecialMember;
+import org.scouts105bentaya.features.scout.entity.SpecialMemberPerson;
+import org.scouts105bentaya.features.scout.enums.PersonType;
+import org.scouts105bentaya.features.scout.enums.SpecialMemberRole;
+
+import java.util.Optional;
+
+public record SpecialMemberBasicDataDto(
+    int id,
+    SpecialMemberRole role,
+    int roleCensus,
+    String personName
+) {
+    public static SpecialMemberBasicDataDto fromEntity(SpecialMember entity) {
+        String name;
+        if (Optional.ofNullable(entity.getScout()).isPresent()) {
+            PersonalData personalData = entity.getScout().getPersonalData();
+            name = personalData.getName() + " " + personalData.getSurname();
+        } else {
+            SpecialMemberPerson person = entity.getPerson();
+            name = person.getType() == PersonType.REAL ?
+                person.getName() + " " + person.getSurname() :
+                person.getCompanyName();
+        }
+        return new SpecialMemberBasicDataDto(
+            entity.getId(),
+            entity.getRole(),
+            entity.getRoleCensus(),
+            name.trim()
+        );
+    }
+}

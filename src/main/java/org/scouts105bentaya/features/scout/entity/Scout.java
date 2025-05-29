@@ -74,8 +74,7 @@ public class Scout {
     private String observationsOld;
 
     @OneToMany(mappedBy = "scout")
-    private Set<SpecialMember> specialRoles;
-
+    private List<SpecialMember> specialRoles;
 
     @Column(columnDefinition = "text")
     private String observations;

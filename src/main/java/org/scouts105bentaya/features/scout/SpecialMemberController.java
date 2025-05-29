@@ -1,0 +1,69 @@
+package org.scouts105bentaya.features.scout;
+
+import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
+import org.scouts105bentaya.features.scout.dto.FilteredResultDto;
+import org.scouts105bentaya.features.scout.dto.SpecialMemberBasicDataDto;
+import org.scouts105bentaya.features.scout.dto.SpecialMemberDetailDto;
+import org.scouts105bentaya.features.scout.dto.form.SpecialMemberFormDto;
+import org.scouts105bentaya.features.scout.enums.SpecialMemberRole;
+import org.scouts105bentaya.features.scout.service.SpecialMemberService;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+@Slf4j
+@RestController
+@RequestMapping("api/special-member")
+@PreAuthorize("hasRole('ADMIN')")
+public class SpecialMemberController {
+
+    private final SpecialMemberService specialMemberService;
+
+    public SpecialMemberController(SpecialMemberService specialMemberService) {
+        this.specialMemberService = specialMemberService;
+    }
+
+    @GetMapping
+    public List<SpecialMemberBasicDataDto> getSpecialMembers() {
+        return specialMemberService.findAll().stream().map(SpecialMemberBasicDataDto::fromEntity).toList();
+    }
+
+    @GetMapping("/{id}")
+    public SpecialMemberDetailDto getSpecialMember(@PathVariable Integer id) {
+        return specialMemberService.findById(id);
+    }
+
+    @GetMapping("/last-census/{role}")
+    public int getSpecialMemberLastCensus(@PathVariable SpecialMemberRole role) {
+        return specialMemberService.findLastCensus(role);
+    }
+
+    @GetMapping("/search-scout")
+    public List<FilteredResultDto> getScoutFiltered(@RequestParam String filter) {
+        return specialMemberService.searchScout(filter);
+    }
+
+    @GetMapping("/search-special-member")
+    public List<FilteredResultDto> getSpecialMemberFiltered(@RequestParam String filter) {
+        return specialMemberService.searchSpecialMember(filter);
+    }
+
+    @PostMapping
+    public SpecialMemberBasicDataDto saveSpecialMember(@RequestBody @Valid SpecialMemberFormDto specialMemberFormDto) {
+        return SpecialMemberBasicDataDto.fromEntity(specialMemberService.saveSpecialMember(specialMemberFormDto));
+    }
+
+    @PutMapping("/{id}")
+    public SpecialMemberDetailDto updateSpecialMember(@PathVariable Integer id, @RequestBody @Valid SpecialMemberFormDto specialMemberFormDto) {
+        return specialMemberService.updatedSpecialMember(id, specialMemberFormDto);
+    }
+}

@@ -35,9 +35,12 @@ public class SettingService {
         Setting settingToUpdate = this.findByName(name);
         SettingEnum setting = settingToUpdate.getName();
         Object value = settingInDto.settingValue();
-        if ((value == null || value == "" || value == "null")) {
-            if (setting.isNullable()) settingToUpdate.setValue("");
-            else throw new WebBentayaBadRequestException("El ajuste %s no puede ser nulo".formatted(name));
+        if (value == null || value == "" || value == "null") {
+            if (setting.isNullable()) {
+                settingToUpdate.setValue("");
+            } else {
+                throw new WebBentayaBadRequestException("El ajuste %s no puede ser nulo".formatted(name));
+            }
         } else if (setting.getType() == SettingType.BOOLEAN) {
             settingToUpdate.setValue((boolean) value ? "1" : "0");
         } else {

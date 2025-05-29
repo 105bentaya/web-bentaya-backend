@@ -1,6 +1,7 @@
 package org.scouts105bentaya.features.setting.enums;
 
 import lombok.Getter;
+import org.scouts105bentaya.features.scout.enums.SpecialMemberRole;
 
 @Getter
 public enum SettingEnum {
@@ -16,7 +17,13 @@ public enum SettingEnum {
     ADMINISTRATION_MAIL(SettingType.STRING),
     BOOKING_DATE(SettingType.DATE),
     BOOKING_MIN_DAY_NUMBER(SettingType.NUMBER),
-    BOOKING_MAX_DAY_NUMBER(SettingType.NUMBER);
+    BOOKING_MAX_DAY_NUMBER(SettingType.NUMBER),
+    LAST_CENSUS_FOUNDER(SettingType.NUMBER),
+    LAST_CENSUS_HONOURED(SettingType.NUMBER),
+    LAST_CENSUS_ACKNOWLEDGED(SettingType.NUMBER),
+    LAST_CENSUS_PROTECTOR(SettingType.NUMBER),
+    LAST_CENSUS_DONOR(SettingType.NUMBER),
+    LAST_CENSUS_SCOUT(SettingType.NUMBER);
 
     private final SettingType type;
     private final boolean nullable;
@@ -33,5 +40,15 @@ public enum SettingEnum {
 
     public boolean isBookingRelated() {
         return this == BOOKING_DATE || this == BOOKING_MIN_DAY_NUMBER || this == BOOKING_MAX_DAY_NUMBER;
+    }
+
+    public static SettingEnum getSpecialMemberSetting(SpecialMemberRole role) {
+        return switch (role) {
+            case FOUNDER -> LAST_CENSUS_FOUNDER;
+            case HONOUR -> LAST_CENSUS_HONOURED;
+            case ACKNOWLEDGEMENT -> LAST_CENSUS_ACKNOWLEDGED;
+            case PROTECTOR -> LAST_CENSUS_PROTECTOR;
+            case DONOR -> LAST_CENSUS_DONOR;
+        };
     }
 }
