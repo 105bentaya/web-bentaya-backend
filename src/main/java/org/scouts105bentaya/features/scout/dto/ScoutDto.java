@@ -2,7 +2,7 @@ package org.scouts105bentaya.features.scout.dto;
 
 import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.scout.entity.ScoutFile;
-import org.scouts105bentaya.features.scout.entity.SpecialMember;
+import org.scouts105bentaya.features.special_member.entity.SpecialMember;
 
 import java.util.List;
 

@@ -1,7 +1,7 @@
 package org.scouts105bentaya.features.setting.enums;
 
 import lombok.Getter;
-import org.scouts105bentaya.features.scout.enums.SpecialMemberRole;
+import org.scouts105bentaya.features.special_member.SpecialMemberRole;
 
 @Getter
 public enum SettingEnum {

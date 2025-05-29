@@ -18,6 +18,7 @@ import lombok.Setter;
 import org.scouts105bentaya.features.confirmation.Confirmation;
 import org.scouts105bentaya.features.group.Group;
 import org.scouts105bentaya.features.scout.enums.ScoutType;
+import org.scouts105bentaya.features.special_member.entity.SpecialMember;
 import org.scouts105bentaya.features.user.User;
 
 import java.util.List;

@@ -1,4 +1,4 @@
-package org.scouts105bentaya.features.scout.entity;
+package org.scouts105bentaya.features.special_member.entity;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -13,6 +13,7 @@ import jakarta.persistence.OneToOne;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.scouts105bentaya.features.scout.entity.IdentificationDocument;
 import org.scouts105bentaya.features.scout.enums.PersonType;
 
 import java.util.List;

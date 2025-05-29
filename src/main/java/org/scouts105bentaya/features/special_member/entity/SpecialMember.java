@@ -1,4 +1,4 @@
-package org.scouts105bentaya.features.scout.entity;
+package org.scouts105bentaya.features.special_member.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.CascadeType;
@@ -13,7 +13,8 @@ import jakarta.persistence.ManyToOne;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import org.scouts105bentaya.features.scout.enums.SpecialMemberRole;
+import org.scouts105bentaya.features.scout.entity.Scout;
+import org.scouts105bentaya.features.special_member.SpecialMemberRole;
 
 import java.time.LocalDate;
 

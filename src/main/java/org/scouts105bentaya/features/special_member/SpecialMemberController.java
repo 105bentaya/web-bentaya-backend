@@ -1,13 +1,11 @@
-package org.scouts105bentaya.features.scout;
+package org.scouts105bentaya.features.special_member;
 
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.features.scout.dto.FilteredResultDto;
-import org.scouts105bentaya.features.scout.dto.SpecialMemberBasicDataDto;
-import org.scouts105bentaya.features.scout.dto.SpecialMemberDetailDto;
-import org.scouts105bentaya.features.scout.dto.form.SpecialMemberFormDto;
-import org.scouts105bentaya.features.scout.enums.SpecialMemberRole;
-import org.scouts105bentaya.features.scout.service.SpecialMemberService;
+import org.scouts105bentaya.features.special_member.dto.SpecialMemberBasicDataDto;
+import org.scouts105bentaya.features.special_member.dto.SpecialMemberDetailDto;
+import org.scouts105bentaya.features.special_member.dto.form.SpecialMemberFormDto;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

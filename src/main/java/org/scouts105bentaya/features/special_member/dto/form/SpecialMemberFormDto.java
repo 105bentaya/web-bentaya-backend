@@ -1,9 +1,9 @@
-package org.scouts105bentaya.features.scout.dto.form;
+package org.scouts105bentaya.features.special_member.dto.form;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.Length;
-import org.scouts105bentaya.features.scout.enums.SpecialMemberRole;
+import org.scouts105bentaya.features.special_member.SpecialMemberRole;
 import org.scouts105bentaya.shared.GenericConstants;
 
 import java.time.LocalDate;

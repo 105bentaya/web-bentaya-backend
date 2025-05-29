@@ -1,6 +1,6 @@
-package org.scouts105bentaya.features.scout.dto;
+package org.scouts105bentaya.features.special_member.dto;
 
-import org.scouts105bentaya.features.scout.entity.SpecialMember;
+import org.scouts105bentaya.features.special_member.entity.SpecialMember;
 
 import java.util.List;
 

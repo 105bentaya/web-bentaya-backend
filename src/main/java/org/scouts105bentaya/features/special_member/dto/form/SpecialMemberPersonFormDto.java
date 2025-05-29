@@ -1,9 +1,10 @@
-package org.scouts105bentaya.features.scout.dto.form;
+package org.scouts105bentaya.features.special_member.dto.form;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.Length;
+import org.scouts105bentaya.features.scout.dto.form.IdDocumentFormDto;
 import org.scouts105bentaya.features.scout.enums.PersonType;
 import org.scouts105bentaya.shared.GenericConstants;
 
