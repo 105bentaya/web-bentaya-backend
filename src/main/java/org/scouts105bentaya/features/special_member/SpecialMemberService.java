@@ -20,6 +20,8 @@ import org.scouts105bentaya.features.special_member.dto.form.SpecialMemberPerson
 import org.scouts105bentaya.features.special_member.entity.SpecialMember;
 import org.scouts105bentaya.features.special_member.entity.SpecialMemberDonation;
 import org.scouts105bentaya.features.special_member.entity.SpecialMemberPerson;
+import org.scouts105bentaya.features.special_member.enums.DonationType;
+import org.scouts105bentaya.features.special_member.enums.SpecialMemberRole;
 import org.scouts105bentaya.features.special_member.repository.SpecialMemberPersonRepository;
 import org.scouts105bentaya.features.special_member.repository.SpecialMemberRepository;
 import org.scouts105bentaya.features.special_member.specification.SpecialMemberSpecification;

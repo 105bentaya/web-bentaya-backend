@@ -15,7 +15,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.scouts105bentaya.features.scout.entity.Scout;
-import org.scouts105bentaya.features.special_member.SpecialMemberRole;
+import org.scouts105bentaya.features.special_member.enums.SpecialMemberRole;
 
 import java.time.LocalDate;
 import java.util.List;

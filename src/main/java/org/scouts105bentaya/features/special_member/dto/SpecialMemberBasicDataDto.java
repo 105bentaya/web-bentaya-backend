@@ -2,9 +2,9 @@ package org.scouts105bentaya.features.special_member.dto;
 
 import org.scouts105bentaya.features.scout.entity.PersonalData;
 import org.scouts105bentaya.features.scout.enums.PersonType;
-import org.scouts105bentaya.features.special_member.SpecialMemberRole;
 import org.scouts105bentaya.features.special_member.entity.SpecialMember;
 import org.scouts105bentaya.features.special_member.entity.SpecialMemberPerson;
+import org.scouts105bentaya.features.special_member.enums.SpecialMemberRole;
 
 import java.util.Optional;
 

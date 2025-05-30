@@ -1,8 +1,8 @@
 package org.scouts105bentaya.features.special_member.dto;
 
-import org.scouts105bentaya.features.special_member.SpecialMemberRole;
 import org.scouts105bentaya.features.special_member.entity.SpecialMember;
 import org.scouts105bentaya.features.special_member.entity.SpecialMemberDonation;
+import org.scouts105bentaya.features.special_member.enums.SpecialMemberRole;
 
 import java.time.LocalDate;
 import java.util.List;

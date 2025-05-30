@@ -3,7 +3,7 @@ package org.scouts105bentaya.features.special_member.dto.form;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.Length;
-import org.scouts105bentaya.features.special_member.DonationType;
+import org.scouts105bentaya.features.special_member.enums.DonationType;
 import org.scouts105bentaya.shared.GenericConstants;
 
 import java.time.LocalDate;

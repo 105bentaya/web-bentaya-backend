@@ -27,6 +27,9 @@ public class EconomicData {
     @OneToMany(cascade = CascadeType.PERSIST)
     private List<ScoutFile> documents;
 
+    @OneToMany(mappedBy = "economicData")
+    private List<EconomicEntry> entries;
+
     @MapsId
     @OneToOne(optional = false)
     @JoinColumn(name = "scout_id")

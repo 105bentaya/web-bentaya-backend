@@ -8,6 +8,7 @@ import org.scouts105bentaya.features.special_member.dto.SpecialMemberDetailDto;
 import org.scouts105bentaya.features.special_member.dto.form.SpecialMemberDonationFormDto;
 import org.scouts105bentaya.features.special_member.dto.form.SpecialMemberFormDto;
 import org.scouts105bentaya.features.special_member.entity.SpecialMemberDonation;
+import org.scouts105bentaya.features.special_member.enums.SpecialMemberRole;
 import org.scouts105bentaya.features.special_member.specification.SpecialMemberSpecificationFilter;
 import org.scouts105bentaya.shared.GenericConverter;
 import org.scouts105bentaya.shared.specification.PageDto;
@@ -72,7 +73,7 @@ public class SpecialMemberController {
     }
 
     @PostMapping("/donation/{memberId}")
-    public SpecialMemberDonation addScoutRecord(
+    public SpecialMemberDonation addDonation(
         @PathVariable Integer memberId,
         @RequestBody @Valid SpecialMemberDonationFormDto form
     ) {
@@ -80,7 +81,7 @@ public class SpecialMemberController {
     }
 
     @PutMapping("/donation/{memberId}/{donationId}")
-    public SpecialMemberDonation updateScoutRecord(
+    public SpecialMemberDonation updateDonation(
         @PathVariable Integer donationId,
         @PathVariable Integer memberId,
         @RequestBody @Valid SpecialMemberDonationFormDto form
@@ -89,7 +90,7 @@ public class SpecialMemberController {
     }
 
     @DeleteMapping("/donation/{memberId}/{donationId}")
-    public void deleteScoutRecord(@PathVariable Integer donationId, @PathVariable Integer memberId) {
+    public void deleteDonation(@PathVariable Integer donationId, @PathVariable Integer memberId) {
         specialMemberService.deleteDonation(memberId, donationId);
     }
 }

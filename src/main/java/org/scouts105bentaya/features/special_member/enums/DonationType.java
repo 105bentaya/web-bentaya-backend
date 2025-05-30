@@ -1,4 +1,4 @@
-package org.scouts105bentaya.features.special_member;
+package org.scouts105bentaya.features.special_member.enums;
 
 import lombok.Getter;
 

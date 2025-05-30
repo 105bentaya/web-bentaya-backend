@@ -1,7 +1,7 @@
 package org.scouts105bentaya.features.special_member.repository;
 
-import org.scouts105bentaya.features.special_member.SpecialMemberRole;
 import org.scouts105bentaya.features.special_member.entity.SpecialMember;
+import org.scouts105bentaya.features.special_member.enums.SpecialMemberRole;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;

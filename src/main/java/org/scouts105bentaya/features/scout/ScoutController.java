@@ -10,10 +10,12 @@ import org.scouts105bentaya.features.scout.dto.ScoutFormUserUpdateDto;
 import org.scouts105bentaya.features.scout.dto.ScoutUserDto;
 import org.scouts105bentaya.features.scout.dto.form.ContactListFormDto;
 import org.scouts105bentaya.features.scout.dto.form.EconomicDataFormDto;
+import org.scouts105bentaya.features.scout.dto.form.EconomicEntryFormDto;
 import org.scouts105bentaya.features.scout.dto.form.MedicalDataFormDto;
 import org.scouts105bentaya.features.scout.dto.form.PersonalDataFormDto;
 import org.scouts105bentaya.features.scout.dto.form.ScoutInfoFormDto;
 import org.scouts105bentaya.features.scout.dto.form.ScoutRecordFormDto;
+import org.scouts105bentaya.features.scout.entity.EconomicEntry;
 import org.scouts105bentaya.features.scout.entity.ScoutFile;
 import org.scouts105bentaya.features.scout.entity.ScoutRecord;
 import org.scouts105bentaya.features.scout.service.ScoutContactDataService;
@@ -264,5 +266,27 @@ public class ScoutController {
     @DeleteMapping("/economic/docs/{scoutId}/{fileId}")
     public void deleteEconomicDocument(@PathVariable Integer scoutId, @PathVariable Integer fileId) {
         scoutEconomicDataService.deleteEconomicDataFile(scoutId, fileId);
+    }
+
+    @PostMapping("/economic/entry/{scoutId}")
+    public EconomicEntry addDonation(
+        @PathVariable Integer scoutId,
+        @RequestBody @Valid EconomicEntryFormDto form
+    ) {
+        return scoutEconomicDataService.addEntry(scoutId, form);
+    }
+
+    @PutMapping("/economic/entry/{scoutId}/{entryId}")
+    public EconomicEntry updateDonation(
+        @PathVariable Integer entryId,
+        @PathVariable Integer scoutId,
+        @RequestBody @Valid EconomicEntryFormDto form
+    ) {
+        return scoutEconomicDataService.updateEntry(scoutId, entryId, form);
+    }
+
+    @DeleteMapping("/economic/entry/{scoutId}/{entryId}")
+    public void deleteDonation(@PathVariable Integer entryId, @PathVariable Integer scoutId) {
+        scoutEconomicDataService.deleteEntry(scoutId, entryId);
     }
 }

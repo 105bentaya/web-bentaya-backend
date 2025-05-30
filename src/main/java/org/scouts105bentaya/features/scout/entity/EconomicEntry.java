@@ -1,10 +1,8 @@
-package org.scouts105bentaya.features.special_member.entity;
+package org.scouts105bentaya.features.scout.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -12,7 +10,6 @@ import jakarta.persistence.ManyToOne;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import org.scouts105bentaya.features.special_member.enums.DonationType;
 
 import java.time.LocalDate;
 
@@ -20,23 +17,29 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @Accessors(chain = true)
-public class SpecialMemberDonation {
+public class EconomicEntry {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @Column(nullable = false)
     private LocalDate date;
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private DonationType type;
-    private String inKindDonationType;
+    private String description;
+    @Column(nullable = false)
     private Integer amount;
-    private String paymentType;
-    private String bankAccount;
+    //todo this four change with something lixe expense type????
+    private String income;
+    private String spending;
+    private String account;
+    @Column(nullable = false)
+    private String type;
+
     @Column(length = 511)
-    private String notes;
+    private String observations;
+
     @ManyToOne(optional = false)
     @JsonIgnore
-    private SpecialMember specialMember;
+    private EconomicData economicData;
+
 }
