@@ -7,19 +7,23 @@ import org.scouts105bentaya.core.exception.WebBentayaConflictException;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.scout.ScoutUtils;
 import org.scouts105bentaya.features.scout.dto.FilteredResultDto;
+import org.scouts105bentaya.features.scout.entity.Scout;
+import org.scouts105bentaya.features.scout.enums.PersonType;
+import org.scouts105bentaya.features.scout.repository.ScoutRepository;
 import org.scouts105bentaya.features.scout.service.ScoutService;
+import org.scouts105bentaya.features.setting.SettingService;
+import org.scouts105bentaya.features.setting.enums.SettingEnum;
 import org.scouts105bentaya.features.special_member.dto.SpecialMemberDetailDto;
 import org.scouts105bentaya.features.special_member.dto.form.SpecialMemberFormDto;
 import org.scouts105bentaya.features.special_member.dto.form.SpecialMemberPersonFormDto;
-import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.special_member.entity.SpecialMember;
 import org.scouts105bentaya.features.special_member.entity.SpecialMemberPerson;
-import org.scouts105bentaya.features.scout.enums.PersonType;
-import org.scouts105bentaya.features.scout.repository.ScoutRepository;
 import org.scouts105bentaya.features.special_member.repository.SpecialMemberPersonRepository;
 import org.scouts105bentaya.features.special_member.repository.SpecialMemberRepository;
-import org.scouts105bentaya.features.setting.SettingService;
-import org.scouts105bentaya.features.setting.enums.SettingEnum;
+import org.scouts105bentaya.features.special_member.specification.SpecialMemberSpecification;
+import org.scouts105bentaya.features.special_member.specification.SpecialMemberSpecificationFilter;
+import org.scouts105bentaya.shared.util.SecurityUtils;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -49,8 +53,9 @@ public class SpecialMemberService {
         this.specialMemberPersonRepository = specialMemberPersonRepository;
     }
 
-    public List<SpecialMember> findAll() {
-        return specialMemberRepository.findAll();
+    public Page<SpecialMember> findAll(SpecialMemberSpecificationFilter filter) {
+        log.info("findAll - {}{}", filter, SecurityUtils.getLoggedUserUsernameForLog());
+        return specialMemberRepository.findAll(new SpecialMemberSpecification(filter), filter.getPageable());
     }
 
     public SpecialMemberDetailDto findById(Integer id) {

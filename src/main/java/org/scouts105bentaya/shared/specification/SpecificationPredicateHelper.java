@@ -3,6 +3,7 @@ package org.scouts105bentaya.shared.specification;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
+import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -26,8 +27,27 @@ public class SpecificationPredicateHelper {
     }
 
     public void like(Expression<String> root, String filter) {
-        if (filter != null && !filter.isEmpty()) {
+        if (!StringUtils.isEmpty(filter)) {
             predicates.add(cb.like(root, "%" + filter + "%"));
+        }
+    }
+
+    public void castedLike(Expression<String> root, String filter) {
+        if (!StringUtils.isEmpty(filter)) {
+            predicates.add(cb.like(cb.function("CONCAT", String.class, cb.literal(""), root), "%" + filter + "%"));
+        }
+    }
+
+    @SafeVarargs
+    public final void likes(String filter, Expression<String>... roots) {
+        if (!StringUtils.isEmpty(filter)) {
+            List<Predicate> orPredicates = new ArrayList<>();
+
+            for (Expression<String> root : roots) {
+                orPredicates.add(cb.like(root, "%" + filter + "%"));
+            }
+
+            predicates.add(cb.or(orPredicates.toArray(new Predicate[]{})));
         }
     }
 

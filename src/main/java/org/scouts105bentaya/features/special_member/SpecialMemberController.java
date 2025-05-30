@@ -6,6 +6,9 @@ import org.scouts105bentaya.features.scout.dto.FilteredResultDto;
 import org.scouts105bentaya.features.special_member.dto.SpecialMemberBasicDataDto;
 import org.scouts105bentaya.features.special_member.dto.SpecialMemberDetailDto;
 import org.scouts105bentaya.features.special_member.dto.form.SpecialMemberFormDto;
+import org.scouts105bentaya.features.special_member.specification.SpecialMemberSpecificationFilter;
+import org.scouts105bentaya.shared.GenericConverter;
+import org.scouts105bentaya.shared.specification.PageDto;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,8 +34,8 @@ public class SpecialMemberController {
     }
 
     @GetMapping
-    public List<SpecialMemberBasicDataDto> getSpecialMembers() {
-        return specialMemberService.findAll().stream().map(SpecialMemberBasicDataDto::fromEntity).toList();
+    public PageDto<SpecialMemberBasicDataDto> getSpecialMembers(SpecialMemberSpecificationFilter filter) {
+        return GenericConverter.convertListToPageDto(specialMemberService.findAll(filter), SpecialMemberBasicDataDto::fromEntity);
     }
 
     @GetMapping("/{id}")

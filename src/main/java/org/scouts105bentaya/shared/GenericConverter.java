@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public abstract class GenericConverter<E, D> {
@@ -27,5 +28,9 @@ public abstract class GenericConverter<E, D> {
 
     public static <E> PageDto<E> convertListToPageDto(Page<E> entityPage) {
         return new PageDto<>(entityPage.getTotalElements(), entityPage.getContent());
+    }
+
+    public static <E, D> PageDto<D> convertListToPageDto(Page<E> entityPage, Function<E, D> converter) {
+        return new PageDto<>(entityPage.getTotalElements(), entityPage.getContent().stream().map(converter).toList());
     }
 }
