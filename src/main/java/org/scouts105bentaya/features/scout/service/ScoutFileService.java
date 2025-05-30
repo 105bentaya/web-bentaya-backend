@@ -2,8 +2,8 @@ package org.scouts105bentaya.features.scout.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
-import org.scouts105bentaya.features.scout.repository.ScoutFileRepository;
 import org.scouts105bentaya.features.scout.entity.ScoutFile;
+import org.scouts105bentaya.features.scout.repository.ScoutFileRepository;
 import org.scouts105bentaya.shared.service.BlobService;
 import org.scouts105bentaya.shared.util.dto.FileTransferDto;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +33,10 @@ public class ScoutFileService {
     }
 
     public ScoutFile createScoutFile(MultipartFile file) {
+        //todo validate here??
+
+        //todo merge all files into one method, or try
+
         ScoutFile scoutFile = new ScoutFile();
         scoutFile.setName(file.getOriginalFilename());
         scoutFile.setMimeType(file.getContentType());

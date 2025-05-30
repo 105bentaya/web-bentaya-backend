@@ -1,15 +1,14 @@
 package org.scouts105bentaya.features.scout.service;
 
-import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
-import org.scouts105bentaya.features.scout.repository.ScoutRepository;
 import org.scouts105bentaya.features.scout.ScoutUtils;
 import org.scouts105bentaya.features.scout.dto.form.ContactFormDto;
 import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.scout.entity.ScoutContact;
 import org.scouts105bentaya.features.scout.enums.PersonType;
+import org.scouts105bentaya.features.scout.repository.ScoutRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -30,10 +29,8 @@ public class ScoutContactDataService {
         this.scoutService = scoutService;
     }
 
-    public Scout updateScoutContactData(Integer id, @Valid List<ContactFormDto> contactList) {
-        if (contactList == null || contactList.isEmpty() || contactList.size() > 3) {
-            throw new WebBentayaBadRequestException("La lista de contactos debe contener entre 1 y 3 contactos");
-        }
+    public Scout updateScoutContactData(Integer id, List<ContactFormDto> contactList) {
+        this.validateContactList(contactList);
 
         Scout scout = scoutService.findById(id);
 
@@ -53,6 +50,16 @@ public class ScoutContactDataService {
         scout.getContactList().addAll(newContacts);
 
         return scoutRepository.save(scout);
+    }
+
+    private void validateContactList(List<ContactFormDto> contactList) {
+        if (contactList == null || contactList.isEmpty() || contactList.size() > 3) {
+            throw new WebBentayaBadRequestException("La lista de contactos debe contener entre 1 y 3 contactos");
+        }
+
+        if (contactList.stream().filter(ContactFormDto::donor).count() > 1) {
+            throw new WebBentayaBadRequestException("Sólo un contacto puede ser el donante");
+        }
     }
 
     private ScoutContact newContact(ContactFormDto contactFormDto, Scout scout) {

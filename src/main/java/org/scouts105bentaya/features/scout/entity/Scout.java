@@ -56,6 +56,9 @@ public class Scout {
     @OneToOne(mappedBy = "scout", optional = false)
     private MedicalData medicalData;
 
+    @OneToOne(mappedBy = "scout", optional = false)
+    private EconomicData economicData;
+
     @OneToMany(mappedBy = "scout", orphanRemoval = true, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<ScoutContact> contactList;
 

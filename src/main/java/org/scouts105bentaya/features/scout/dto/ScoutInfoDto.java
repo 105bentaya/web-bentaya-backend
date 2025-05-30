@@ -2,6 +2,7 @@ package org.scouts105bentaya.features.scout.dto;
 
 import org.scouts105bentaya.features.group.GroupBasicDataDto;
 import org.scouts105bentaya.features.scout.ScoutUtils;
+import org.scouts105bentaya.features.scout.entity.EconomicData;
 import org.scouts105bentaya.features.scout.entity.MedicalData;
 import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.scout.entity.ScoutContact;
@@ -23,6 +24,7 @@ public record ScoutInfoDto(
     List<ScoutContact> contactList,
     List<ScoutRecord> recordList,
     MedicalData medicalData,
+    EconomicData economicData,
     String section
 ) {
     public static ScoutInfoDto fromScout(Scout scout) {
@@ -37,6 +39,7 @@ public record ScoutInfoDto(
             scout.getContactList(),
             scout.getRecordList(),
             scout.getMedicalData(),
+            scout.getEconomicData(),
             ScoutUtils.getScoutSection(scout)
         );
     }
