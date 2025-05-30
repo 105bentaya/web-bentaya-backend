@@ -81,10 +81,10 @@ public class AuthLogic {
         return loggedUserGroup != null && Objects.equals(Objects.requireNonNull(eventGroup).getId(), loggedUserGroup.getId());
     }
 
-    public boolean scouterHasGroupId(int groupId) {
+    public boolean scouterHasGroupId(Integer groupId) {
         Group loggedUserGroup = authService.getLoggedUser().getGroup();
         if (loggedUserGroup == null) return false;
-        return loggedUserGroup.getId() == groupId;
+        return loggedUserGroup.getId().equals(groupId);
     }
 
     public boolean preScoutHasGroupId(int preScoutId, int groupId) {

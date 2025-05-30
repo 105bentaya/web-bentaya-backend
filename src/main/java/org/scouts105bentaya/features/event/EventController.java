@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.features.event.converter.EventCalendarConverter;
 import org.scouts105bentaya.features.event.converter.EventConverter;
 import org.scouts105bentaya.features.event.converter.EventFormConverter;
+import org.scouts105bentaya.features.event.dto.CalendarDto;
 import org.scouts105bentaya.features.event.dto.EventCalendarDto;
 import org.scouts105bentaya.features.event.dto.EventDateConflictsFormDto;
 import org.scouts105bentaya.features.event.dto.EventDto;
@@ -79,10 +80,12 @@ public class EventController {
     @GetMapping("/public/calendar")
     public ResponseEntity<byte[]> getCalendar(@RequestParam String token) {
         log.info("METHOD EventController.getCalendar");
-        return ResponseEntity.ok()
+        CalendarDto calendarDto = calendarService.getIcsCalendar(token);
+        return ResponseEntity
+            .status(calendarDto.status())
             .header("Content-Type", "text/calendar")
             .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=bentaya-calendar.ics")
-            .body(calendarService.getIcsCalendar(token));
+            .body(calendarDto.calendar());
     }
 
     @PreAuthorize("hasAnyRole('SCOUTER', 'GROUP_SCOUTER', 'USER')")
@@ -100,7 +103,7 @@ public class EventController {
         return eventFormConverter.convertFromEntity(eventService.findById(id));
     }
 
-    @PreAuthorize("(hasRole('SCOUTER') and (#event.forScouters or @authLogic.scouterHasGroupId(#event.groupId))) or (hasAnyRole('GROUP_SCOUTER') and #event.forEveryone)")
+    @PreAuthorize("(hasRole('SCOUTER') and (#event.forEveryone or @authLogic.scouterHasGroupId(#event.groupId))) or (hasRole('GROUP_SCOUTER') and #event.forEveryone)")
     @PostMapping
     public EventDto save(@RequestBody @Valid EventFormDto event) {
         log.info("METHOD EventController.save{}", SecurityUtils.getLoggedUserUsernameForLog());

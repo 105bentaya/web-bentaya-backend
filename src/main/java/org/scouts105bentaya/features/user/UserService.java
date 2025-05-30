@@ -143,7 +143,7 @@ public class UserService implements UserDetailsService {
         if (!userToUpdate.password().equals(GenericConstants.FAKE_PASSWORD)) userDB.setPassword(passwordEncoder.encode(userToUpdate.password()));
 
         updateUserBasicData(userDB, userToUpdate);
-        userDB.setEnabled(userToUpdate.enabled());
+        userDB.setEnabled(true);
 
         return this.userRepository.save(userDB);
     }

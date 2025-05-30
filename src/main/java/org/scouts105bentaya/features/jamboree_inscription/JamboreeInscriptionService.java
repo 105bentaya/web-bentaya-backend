@@ -181,7 +181,7 @@ public class JamboreeInscriptionService {
 
             for (int i = 0; i < JamboreeExcelConstants.HEADERS.length; i++) {
                 sheet.autoSizeColumn(i);
-                sheet.setColumnWidth(i, sheet.getColumnWidth(i) + 1000);
+                sheet.setColumnWidth(i, Math.min(65280, sheet.getColumnWidth(i) + 1000));
             }
 
             workbook.write(out);
