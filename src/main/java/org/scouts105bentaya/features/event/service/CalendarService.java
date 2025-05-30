@@ -22,12 +22,11 @@ import net.fortuna.ical4j.model.property.Url;
 import net.fortuna.ical4j.model.property.immutable.ImmutableCalScale;
 import net.fortuna.ical4j.model.property.immutable.ImmutableVersion;
 import org.apache.commons.lang3.StringUtils;
-import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
 import org.scouts105bentaya.core.exception.WebBentayaErrorException;
-import org.scouts105bentaya.core.exception.WebBentayaForbiddenException;
 import org.scouts105bentaya.core.exception.WebBentayaUnauthorizedException;
 import org.scouts105bentaya.core.security.InvalidJwtException;
 import org.scouts105bentaya.features.event.Event;
+import org.scouts105bentaya.features.event.dto.CalendarDto;
 import org.scouts105bentaya.features.group.Group;
 import org.scouts105bentaya.features.scout.Scout;
 import org.scouts105bentaya.features.user.User;
@@ -37,6 +36,7 @@ import org.scouts105bentaya.shared.GenericConstants;
 import org.scouts105bentaya.shared.service.AuthService;
 import org.scouts105bentaya.shared.util.JwtUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -73,41 +73,65 @@ public class CalendarService {
         this.authService = authService;
     }
 
-    public byte[] getIcsCalendar(String jwtToken) {
+    public CalendarDto getIcsCalendar(String jwtToken) {
         try {
             return this.getIcsCalendarAsByteArray(jwtToken);
-        } catch (InvalidJwtException e) {
-            throw new WebBentayaBadRequestException(CALENDAR_GENERATION_ERROR);
         } catch (IOException e) {
             throw new WebBentayaErrorException(CALENDAR_GENERATION_ERROR);
         }
     }
 
-    private byte[] getIcsCalendarAsByteArray(String jwtToken) throws InvalidJwtException, IOException {
-        Jws<Claims> parsedToken = JwtUtils.decodeJwtToken(jwtToken, secret);
+    private CalendarDto getIcsCalendarAsByteArray(String jwtToken) throws IOException {
+        Jws<Claims> parsedToken;
+        try {
+            parsedToken = JwtUtils.decodeJwtToken(jwtToken, secret);
+        } catch (InvalidJwtException e) {
+            return new CalendarDto(this.generateEmptyCalendar(), HttpStatus.BAD_REQUEST);
+        }
+
         if (parsedToken.getPayload().getIssuedAt() == null) {
             log.warn("getIcsCalendarAsByteArray - JWT token has no 'issued at' field");
-            throw new WebBentayaBadRequestException("Este link es inválido");
+            return new CalendarDto(this.generateEmptyCalendar(), HttpStatus.BAD_REQUEST);
         }
 
         User user = userService.findById(parsedToken.getPayload().get("usr", Integer.class));
         if (!user.isEnabled()) {
             log.warn("getIcsCalendarAsByteArray - user is not enabled");
-            throw new WebBentayaForbiddenException("Usuario deshabilitado");
+            return new CalendarDto(this.generateEmptyCalendar(), HttpStatus.FORBIDDEN);
         }
 
+        return new CalendarDto(this.generateValidCalendar(parsedToken, user), HttpStatus.OK);
+    }
+
+    private byte[] generateEmptyCalendar() throws IOException {
+        Calendar calendar = generateBasicCalendar();
+        calendar.add(new Description("El link del calendario ya no es válido, elimínelo y renuévelo desde la pestaña del calendario"));
+
+        return writeCalendar(calendar);
+    }
+
+    private byte[] generateValidCalendar(Jws<Claims> parsedToken, User user) throws IOException {
         log.info("getIcsCalendarAsByteArray - generating calendar for {}", user.getUsername());
-        Calendar calendar = new Calendar();
-        calendar.add(ImmutableVersion.VERSION_2_0);
-        calendar.add(ImmutableCalScale.GREGORIAN);
-        calendar.add(new ProdId("-//Scouts 105 Bentaya//Calendario Web Bentaya//ES-es"));
-        calendar.add(new Name("Calendario Scouts 105 Bentaya"));
+        Calendar calendar = generateBasicCalendar();
 
         TokenGroups tokenGroups = getTokenGroups(user, parsedToken.getPayload());
         List<Event> events = getEvents(tokenGroups);
 
         events.forEach(event -> calendar.add(this.generateICSEvent(event)));
 
+        return writeCalendar(calendar);
+    }
+
+    private Calendar generateBasicCalendar() {
+        Calendar calendar = new Calendar();
+        calendar.add(ImmutableVersion.VERSION_2_0);
+        calendar.add(ImmutableCalScale.GREGORIAN);
+        calendar.add(new ProdId("-//Scouts 105 Bentaya//Calendario Web Bentaya//ES-es"));
+        calendar.add(new Name("Calendario Scouts 105 Bentaya"));
+        return calendar;
+    }
+
+    private byte[] writeCalendar(Calendar calendar) throws IOException {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         CalendarOutputter outputWriter = new CalendarOutputter();
         outputWriter.setValidating(false);
