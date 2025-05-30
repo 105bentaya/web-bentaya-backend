@@ -5,11 +5,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.features.scout.dto.FilteredResultDto;
 import org.scouts105bentaya.features.special_member.dto.SpecialMemberBasicDataDto;
 import org.scouts105bentaya.features.special_member.dto.SpecialMemberDetailDto;
+import org.scouts105bentaya.features.special_member.dto.form.SpecialMemberDonationFormDto;
 import org.scouts105bentaya.features.special_member.dto.form.SpecialMemberFormDto;
+import org.scouts105bentaya.features.special_member.entity.SpecialMemberDonation;
 import org.scouts105bentaya.features.special_member.specification.SpecialMemberSpecificationFilter;
 import org.scouts105bentaya.shared.GenericConverter;
 import org.scouts105bentaya.shared.specification.PageDto;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -40,7 +43,7 @@ public class SpecialMemberController {
 
     @GetMapping("/{id}")
     public SpecialMemberDetailDto getSpecialMember(@PathVariable Integer id) {
-        return specialMemberService.findById(id);
+        return specialMemberService.findDetailsById(id);
     }
 
     @GetMapping("/last-census/{role}")
@@ -66,5 +69,27 @@ public class SpecialMemberController {
     @PutMapping("/{id}")
     public SpecialMemberDetailDto updateSpecialMember(@PathVariable Integer id, @RequestBody @Valid SpecialMemberFormDto specialMemberFormDto) {
         return specialMemberService.updatedSpecialMember(id, specialMemberFormDto);
+    }
+
+    @PostMapping("/donation/{memberId}")
+    public SpecialMemberDonation addScoutRecord(
+        @PathVariable Integer memberId,
+        @RequestBody @Valid SpecialMemberDonationFormDto form
+    ) {
+        return specialMemberService.addDonation(memberId, form);
+    }
+
+    @PutMapping("/donation/{memberId}/{donationId}")
+    public SpecialMemberDonation updateScoutRecord(
+        @PathVariable Integer donationId,
+        @PathVariable Integer memberId,
+        @RequestBody @Valid SpecialMemberDonationFormDto form
+    ) {
+        return specialMemberService.updateDonation(memberId, donationId, form);
+    }
+
+    @DeleteMapping("/donation/{memberId}/{donationId}")
+    public void deleteScoutRecord(@PathVariable Integer donationId, @PathVariable Integer memberId) {
+        specialMemberService.deleteDonation(memberId, donationId);
     }
 }

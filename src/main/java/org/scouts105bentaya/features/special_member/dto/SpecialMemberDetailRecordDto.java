@@ -1,9 +1,11 @@
 package org.scouts105bentaya.features.special_member.dto;
 
-import org.scouts105bentaya.features.special_member.entity.SpecialMember;
 import org.scouts105bentaya.features.special_member.SpecialMemberRole;
+import org.scouts105bentaya.features.special_member.entity.SpecialMember;
+import org.scouts105bentaya.features.special_member.entity.SpecialMemberDonation;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public record SpecialMemberDetailRecordDto(
     int id,
@@ -12,7 +14,8 @@ public record SpecialMemberDetailRecordDto(
     LocalDate awardDate,
     LocalDate agreementDate,
     String details,
-    String observations
+    String observations,
+    List<SpecialMemberDonation> donations
 ) {
     public static SpecialMemberDetailRecordDto fromEntity(SpecialMember entity) {
         return new SpecialMemberDetailRecordDto(
@@ -22,7 +25,8 @@ public record SpecialMemberDetailRecordDto(
             entity.getAwardDate(),
             entity.getAgreementDate(),
             entity.getDetails(),
-            entity.getObservations()
+            entity.getObservations(),
+            entity.getDonations()
         );
     }
 }

@@ -14,9 +14,11 @@ import org.scouts105bentaya.features.scout.service.ScoutService;
 import org.scouts105bentaya.features.setting.SettingService;
 import org.scouts105bentaya.features.setting.enums.SettingEnum;
 import org.scouts105bentaya.features.special_member.dto.SpecialMemberDetailDto;
+import org.scouts105bentaya.features.special_member.dto.form.SpecialMemberDonationFormDto;
 import org.scouts105bentaya.features.special_member.dto.form.SpecialMemberFormDto;
 import org.scouts105bentaya.features.special_member.dto.form.SpecialMemberPersonFormDto;
 import org.scouts105bentaya.features.special_member.entity.SpecialMember;
+import org.scouts105bentaya.features.special_member.entity.SpecialMemberDonation;
 import org.scouts105bentaya.features.special_member.entity.SpecialMemberPerson;
 import org.scouts105bentaya.features.special_member.repository.SpecialMemberPersonRepository;
 import org.scouts105bentaya.features.special_member.repository.SpecialMemberRepository;
@@ -39,18 +41,21 @@ public class SpecialMemberService {
     private final SettingService settingService;
     private final ScoutRepository scoutRepository;
     private final SpecialMemberPersonRepository specialMemberPersonRepository;
+    private final SpecialMemberDonationRepository specialMemberDonationRepository;
 
     public SpecialMemberService(
         ScoutService scoutService,
         SpecialMemberRepository specialMemberRepository,
         SettingService settingService, ScoutRepository scoutRepository,
-        SpecialMemberPersonRepository specialMemberPersonRepository
+        SpecialMemberPersonRepository specialMemberPersonRepository,
+        SpecialMemberDonationRepository specialMemberDonationRepository
     ) {
         this.scoutService = scoutService;
         this.specialMemberRepository = specialMemberRepository;
         this.settingService = settingService;
         this.scoutRepository = scoutRepository;
         this.specialMemberPersonRepository = specialMemberPersonRepository;
+        this.specialMemberDonationRepository = specialMemberDonationRepository;
     }
 
     public Page<SpecialMember> findAll(SpecialMemberSpecificationFilter filter) {
@@ -58,9 +63,12 @@ public class SpecialMemberService {
         return specialMemberRepository.findAll(new SpecialMemberSpecification(filter), filter.getPageable());
     }
 
-    public SpecialMemberDetailDto findById(Integer id) {
-        SpecialMember specialMember = this.specialMemberRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
-        return specialMemberDetails(specialMember);
+    private SpecialMember findById(Integer id) {
+        return this.specialMemberRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
+    }
+
+    public SpecialMemberDetailDto findDetailsById(Integer id) {
+        return specialMemberDetails(this.findById(id));
     }
 
     private SpecialMemberDetailDto specialMemberDetails(SpecialMember specialMember) {
@@ -224,4 +232,65 @@ public class SpecialMemberService {
 
         return result;
     }
+
+    public SpecialMemberDonation addDonation(Integer memberId, SpecialMemberDonationFormDto form) {
+        this.validateDonationForm(form);
+
+        SpecialMember specialMember = this.findById(memberId);
+        SpecialMemberDonation donation = new SpecialMemberDonation();
+        this.updateDonationFromForm(donation, form);
+        donation.setSpecialMember(specialMember);
+
+        return specialMemberDonationRepository.save(donation);
+    }
+
+    private void validateDonationForm(SpecialMemberDonationFormDto form) {
+        if (form.type() == DonationType.ECONOMIC && (form.amount() == null || form.bankAccount() == null || form.paymentType() == null)) {
+            throw new WebBentayaBadRequestException("Debe especificar la cantidad, forma de pago y cuenta bancaria en una donación económica");
+        } else if (form.type() == DonationType.IN_KIND && form.inKindDonationType() == null) {
+            throw new WebBentayaBadRequestException("Debe especificar el tipo de especies");
+        }
+    }
+
+    public SpecialMemberDonation updateDonation(Integer memberId, Integer donationId, SpecialMemberDonationFormDto form) {
+        SpecialMember specialMember = this.findById(memberId);
+        this.validateDonationForm(form);
+
+        SpecialMemberDonation donation = specialMember.getDonations().stream()
+            .filter(d -> d.getId().equals(donationId))
+            .findFirst().orElseThrow(WebBentayaNotFoundException::new);
+
+        this.updateDonationFromForm(donation, form);
+
+        return specialMemberDonationRepository.save(donation);
+    }
+
+    private void updateDonationFromForm(SpecialMemberDonation donation, SpecialMemberDonationFormDto form) {
+        donation
+            .setDate(form.date())
+            .setType(form.type())
+            .setNotes(form.notes());
+
+        if (donation.getType() == DonationType.ECONOMIC) {
+            donation.setAmount(form.amount())
+                .setPaymentType(form.paymentType())
+                .setBankAccount(form.bankAccount())
+                .setInKindDonationType(null);
+        } else {
+            donation.setAmount(null)
+                .setPaymentType(null)
+                .setBankAccount(null)
+                .setInKindDonationType(form.inKindDonationType());
+        }
+    }
+
+    public void deleteDonation(Integer memberId, Integer donationId) {
+        this.findById(memberId)
+            .getDonations().stream()
+            .filter(d -> d.getId().equals(donationId))
+            .findFirst().orElseThrow(WebBentayaNotFoundException::new);
+
+        specialMemberDonationRepository.deleteById(donationId);
+    }
+
 }
