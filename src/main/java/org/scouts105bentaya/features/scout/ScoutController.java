@@ -18,6 +18,7 @@ import org.scouts105bentaya.features.scout.dto.form.ScoutRecordFormDto;
 import org.scouts105bentaya.features.scout.entity.EconomicEntry;
 import org.scouts105bentaya.features.scout.entity.ScoutFile;
 import org.scouts105bentaya.features.scout.entity.ScoutRecord;
+import org.scouts105bentaya.features.scout.enums.ScoutFileType;
 import org.scouts105bentaya.features.scout.service.ScoutContactDataService;
 import org.scouts105bentaya.features.scout.service.ScoutEconomicDataService;
 import org.scouts105bentaya.features.scout.service.ScoutFileService;
@@ -188,34 +189,24 @@ public class ScoutController {
         return scoutFileService.downloadScoutFile(id);
     }
 
+    @PostMapping("/document/{entityId}/{fileType}")
+    public ScoutFile uploadMedicalDocument(@PathVariable Integer entityId, @PathVariable ScoutFileType fileType, @RequestParam("file") MultipartFile file) {
+        return scoutFileService.createScoutFile(entityId, file, fileType);
+    }
+
+    @DeleteMapping("/document/{entityId}/{fileId}/{fileType}")
+    public void deletePersonalDocument(@PathVariable Integer entityId, @PathVariable Integer fileId, @PathVariable ScoutFileType fileType) {
+        scoutFileService.deleteScoutFile(entityId, fileId, fileType);
+    }
+
     @PatchMapping("/personal/{id}")
     public ScoutDto updatePersonalData(@PathVariable Integer id, @RequestBody @Valid PersonalDataFormDto personalDataFormDto) {
         return ScoutDto.fromScout(scoutPersonalDataService.updatePersonalData(id, personalDataFormDto));
     }
 
-    @PostMapping("/personal/docs/{id}")
-    public ScoutFile uploadPersonalDocument(@PathVariable Integer id, @RequestParam("file") MultipartFile file) {
-        return scoutPersonalDataService.uploadPersonalDataFile(id, file);
-    }
-
-    @DeleteMapping("/personal/docs/{scoutId}/{fileId}")
-    public void deletePersonalDocument(@PathVariable Integer scoutId, @PathVariable Integer fileId) {
-        scoutPersonalDataService.deletePersonalDataFile(scoutId, fileId);
-    }
-
     @PatchMapping("/medical/{id}")
     public ScoutDto updateMedicalData(@PathVariable Integer id, @RequestBody @Valid MedicalDataFormDto medicalDataFormDto) {
         return ScoutDto.fromScout(scoutMedicalDataService.updateMedicalData(id, medicalDataFormDto));
-    }
-
-    @PostMapping("/medical/docs/{id}")
-    public ScoutFile uploadMedicalDocument(@PathVariable Integer id, @RequestParam("file") MultipartFile file) {
-        return scoutMedicalDataService.uploadMedicalDataFile(id, file);
-    }
-
-    @DeleteMapping("/medical/docs/{scoutId}/{fileId}")
-    public void deleteMedicalDocument(@PathVariable Integer scoutId, @PathVariable Integer fileId) {
-        scoutMedicalDataService.deleteMedicalDataFile(scoutId, fileId);
     }
 
     @PatchMapping("/contact/{id}")
@@ -243,29 +234,9 @@ public class ScoutController {
         scoutGroupDataService.deleteScoutRecord(scoutId, recordId);
     }
 
-    @PostMapping("/scout-info/record-documents/{recordId}")
-    public ScoutFile uploadRecordDocument(@PathVariable Integer recordId, @RequestParam("file") MultipartFile file) {
-        return scoutGroupDataService.uploadRecordFile(recordId, file);
-    }
-
-    @DeleteMapping("/scout-info/record-documents/{recordId}/{fileId}")
-    public void deleteRecordDocument(@PathVariable Integer recordId, @PathVariable Integer fileId) {
-        scoutGroupDataService.deleteRecordFile(recordId, fileId);
-    }
-
     @PatchMapping("/economic/{id}")
     public ScoutDto updateEconomicData(@PathVariable Integer id, @RequestBody @Valid EconomicDataFormDto form) {
         return ScoutDto.fromScout(scoutEconomicDataService.updateEconomicData(id, form));
-    }
-
-    @PostMapping("/economic/docs/{id}")
-    public ScoutFile uploadEconomicDocument(@PathVariable Integer id, @RequestParam("file") MultipartFile file) {
-        return scoutEconomicDataService.uploadEconomicDataFile(id, file);
-    }
-
-    @DeleteMapping("/economic/docs/{scoutId}/{fileId}")
-    public void deleteEconomicDocument(@PathVariable Integer scoutId, @PathVariable Integer fileId) {
-        scoutEconomicDataService.deleteEconomicDataFile(scoutId, fileId);
     }
 
     @PostMapping("/economic/entry/{scoutId}")

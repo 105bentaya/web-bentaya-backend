@@ -25,22 +25,10 @@ import java.util.List;
 public class ScoutEconomicDataService {
 
     private final ScoutRepository scoutRepository;
-    private final BlobService blobService;
-    private final ScoutFileRepository scoutFileRepository;
-    private final ScoutFileService scoutFileService;
     private final EconomicEntryRepository economicEntryRepository;
 
-    public ScoutEconomicDataService(
-        ScoutRepository scoutRepository,
-        BlobService blobService,
-        ScoutFileRepository scoutFileRepository,
-        ScoutFileService scoutFileService,
-        EconomicEntryRepository economicEntryRepository
-    ) {
+    public ScoutEconomicDataService(ScoutRepository scoutRepository, EconomicEntryRepository economicEntryRepository) {
         this.scoutRepository = scoutRepository;
-        this.blobService = blobService;
-        this.scoutFileRepository = scoutFileRepository;
-        this.scoutFileService = scoutFileService;
         this.economicEntryRepository = economicEntryRepository;
     }
 
@@ -60,34 +48,6 @@ public class ScoutEconomicDataService {
         data.setBank(form.bank());
 
         return scoutRepository.save(scout);
-    }
-
-    @Synchronized
-    public ScoutFile uploadEconomicDataFile(Integer id, MultipartFile file) {
-        FileUtils.validateFileIsPdf(file); //todo check
-        Scout scout = scoutRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
-
-        ScoutFile scoutFile = scoutFileService.createScoutFile(file);
-        scout.getEconomicData().getDocuments().add(scoutFile);
-
-        scoutRepository.save(scout);
-        return scoutFile;
-    }
-
-    public void deleteEconomicDataFile(Integer scoutId, Integer fileId) {
-        Scout scout = scoutRepository.findById(scoutId).orElseThrow(WebBentayaNotFoundException::new);
-        List<ScoutFile> scoutFiles = scout.getEconomicData().getDocuments();
-
-        ScoutFile scoutFile = scoutFiles.stream()
-            .filter(document -> document.getId().equals(fileId))
-            .findFirst().orElseThrow(WebBentayaNotFoundException::new);
-
-        blobService.deleteBlob(scoutFile.getUuid());
-
-        scoutFiles.remove(scoutFile);
-        scoutRepository.save(scout);
-
-        scoutFileRepository.deleteById(fileId);
     }
 
 

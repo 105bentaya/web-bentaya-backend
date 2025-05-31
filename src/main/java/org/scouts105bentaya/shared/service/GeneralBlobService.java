@@ -4,6 +4,7 @@ import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.models.BlobStorageException;
 import org.scouts105bentaya.core.exception.WebBentayaErrorException;
+import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.slf4j.Logger;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -67,7 +68,7 @@ public abstract class GeneralBlobService {
             return outputStream.toByteArray();
         } catch (IOException | BlobStorageException e) {
             log.error("Error while reading blob {}: {}", uuid, e.getMessage());
-            throw new WebBentayaErrorException("No se ha podido obtener el archivo");
+            throw new WebBentayaNotFoundException("No se ha podido obtener el archivo");
         }
     }
 

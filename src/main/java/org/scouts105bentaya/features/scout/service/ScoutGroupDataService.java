@@ -1,6 +1,5 @@
 package org.scouts105bentaya.features.scout.service;
 
-import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.Interval;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
@@ -8,21 +7,17 @@ import org.scouts105bentaya.core.exception.WebBentayaConflictException;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.booking.util.IntervalUtils;
 import org.scouts105bentaya.features.group.GroupRepository;
-import org.scouts105bentaya.features.scout.repository.ScoutFileRepository;
-import org.scouts105bentaya.features.scout.repository.ScoutRecordRepository;
-import org.scouts105bentaya.features.scout.repository.ScoutRepository;
 import org.scouts105bentaya.features.scout.dto.form.ScoutInfoFormDto;
 import org.scouts105bentaya.features.scout.dto.form.ScoutRecordFormDto;
 import org.scouts105bentaya.features.scout.dto.form.ScoutRegistrationDateFormDto;
 import org.scouts105bentaya.features.scout.entity.Scout;
-import org.scouts105bentaya.features.scout.entity.ScoutFile;
 import org.scouts105bentaya.features.scout.entity.ScoutRecord;
 import org.scouts105bentaya.features.scout.entity.ScoutRegistrationDates;
 import org.scouts105bentaya.features.scout.enums.ScoutType;
+import org.scouts105bentaya.features.scout.repository.ScoutRecordRepository;
+import org.scouts105bentaya.features.scout.repository.ScoutRepository;
 import org.scouts105bentaya.shared.service.BlobService;
-import org.scouts105bentaya.shared.util.FileUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,28 +29,22 @@ public class ScoutGroupDataService {
 
     private final ScoutRepository scoutRepository;
     private final BlobService blobService;
-    private final ScoutFileRepository scoutFileRepository;
     private final GroupRepository groupRepository;
     private final ScoutService scoutService;
     private final ScoutRecordRepository scoutRecordRepository;
-    private final ScoutFileService scoutFileService;
 
     public ScoutGroupDataService(
         ScoutRepository scoutRepository,
         BlobService blobService,
-        ScoutFileRepository scoutFileRepository,
         GroupRepository groupRepository,
         ScoutService scoutService,
-        ScoutRecordRepository scoutRecordRepository,
-        ScoutFileService scoutFileService
+        ScoutRecordRepository scoutRecordRepository
     ) {
         this.scoutRepository = scoutRepository;
         this.blobService = blobService;
-        this.scoutFileRepository = scoutFileRepository;
         this.groupRepository = groupRepository;
         this.scoutService = scoutService;
         this.scoutRecordRepository = scoutRecordRepository;
-        this.scoutFileService = scoutFileService;
     }
 
     public Scout updateScoutInfo(Integer id, ScoutInfoFormDto form) {
@@ -192,35 +181,6 @@ public class ScoutGroupDataService {
             .setObservations(recordForm.observations());
 
         return scoutRecordRepository.save(scoutRecord);
-    }
-
-    @Synchronized
-    public ScoutFile uploadRecordFile(Integer recordId, MultipartFile file) {
-        FileUtils.validateFileIsPdf(file); //todo check
-        ScoutRecord scoutRecord = scoutRecordRepository.findById(recordId).orElseThrow(WebBentayaNotFoundException::new);
-
-        ScoutFile scoutFile = scoutFileService.createScoutFile(file);
-
-        scoutFile = scoutFileRepository.save(scoutFile);
-        scoutRecord.getFiles().add(scoutFile);
-        scoutRecordRepository.save(scoutRecord);
-        return scoutFile;
-    }
-
-    public void deleteRecordFile(Integer recordId, Integer fileId) {
-        ScoutRecord scoutRecord = scoutRecordRepository.findById(recordId).orElseThrow(WebBentayaNotFoundException::new);
-        List<ScoutFile> recordFiles = scoutRecord.getFiles();
-
-        ScoutFile scoutFile = recordFiles.stream()
-            .filter(document -> document.getId().equals(fileId))
-            .findFirst().orElseThrow(WebBentayaNotFoundException::new);
-
-        blobService.deleteBlob(scoutFile.getUuid());
-
-        recordFiles.remove(scoutFile);
-        scoutRecordRepository.save(scoutRecord);
-
-        scoutFileRepository.deleteById(fileId);
     }
 
     public void deleteScoutRecord(Integer scoutId, Integer recordId) {

@@ -1,24 +1,17 @@
 package org.scouts105bentaya.features.scout.service;
 
 import jakarta.validation.constraints.NotNull;
-import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
-import org.scouts105bentaya.features.scout.repository.ScoutFileRepository;
-import org.scouts105bentaya.features.scout.repository.ScoutRepository;
 import org.scouts105bentaya.features.scout.ScoutUtils;
 import org.scouts105bentaya.features.scout.dto.form.InsuranceHolderForm;
 import org.scouts105bentaya.features.scout.dto.form.MedicalDataFormDto;
 import org.scouts105bentaya.features.scout.entity.InsuranceHolder;
 import org.scouts105bentaya.features.scout.entity.MedicalData;
 import org.scouts105bentaya.features.scout.entity.Scout;
-import org.scouts105bentaya.features.scout.entity.ScoutFile;
-import org.scouts105bentaya.shared.service.BlobService;
-import org.scouts105bentaya.shared.util.FileUtils;
+import org.scouts105bentaya.features.scout.repository.ScoutRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
 import java.util.Objects;
 
 @Slf4j
@@ -26,20 +19,9 @@ import java.util.Objects;
 public class ScoutMedicalDataService {
 
     private final ScoutRepository scoutRepository;
-    private final BlobService blobService;
-    private final ScoutFileRepository scoutFileRepository;
-    private final ScoutFileService scoutFileService;
 
-    public ScoutMedicalDataService(
-        ScoutRepository scoutRepository,
-        BlobService blobService,
-        ScoutFileRepository scoutFileRepository,
-        ScoutFileService scoutFileService
-    ) {
+    public ScoutMedicalDataService(ScoutRepository scoutRepository) {
         this.scoutRepository = scoutRepository;
-        this.blobService = blobService;
-        this.scoutFileRepository = scoutFileRepository;
-        this.scoutFileService = scoutFileService;
     }
 
     public Scout updateMedicalData(Integer id, MedicalDataFormDto form) {
@@ -115,34 +97,5 @@ public class ScoutMedicalDataService {
             .setEmail(form.email())
             .setPhone(form.phone())
             .setIdDocument(ScoutUtils.updateIdDocument(insuranceHolder.getIdDocument(), form.idDocument()));
-    }
-
-    @Synchronized
-    public ScoutFile uploadMedicalDataFile(Integer id, MultipartFile file) {
-        FileUtils.validateFileIsPdf(file); //todo check
-        Scout scout = scoutRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
-
-        ScoutFile scoutFile = scoutFileService.createScoutFile(file);
-
-        scout.getMedicalData().getDocuments().add(scoutFile);
-
-        scoutRepository.save(scout);
-        return scoutFile;
-    }
-
-    public void deleteMedicalDataFile(Integer scoutId, Integer fileId) {
-        Scout scout = scoutRepository.findById(scoutId).orElseThrow(WebBentayaNotFoundException::new);
-        List<ScoutFile> medicalFiles = scout.getMedicalData().getDocuments();
-
-        ScoutFile scoutFile = medicalFiles.stream()
-            .filter(document -> document.getId().equals(fileId))
-            .findFirst().orElseThrow(WebBentayaNotFoundException::new);
-
-        blobService.deleteBlob(scoutFile.getUuid());
-
-        medicalFiles.remove(scoutFile);
-        scoutRepository.save(scout);
-
-        scoutFileRepository.deleteById(fileId);
     }
 }
