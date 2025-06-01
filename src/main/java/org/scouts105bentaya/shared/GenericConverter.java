@@ -36,6 +36,6 @@ public abstract class GenericConverter<E, D> {
     }
 
     public static <E, D> List<D> convertEntityCollectionToDtoList(Collection<E> entityList, Function<E, D> converter) {
-        return Collections.isEmpty(entityList) ? entityList.stream().map(converter).collect(Collectors.toList()) : Collections.emptyList();
+        return Collections.isEmpty(entityList) ? Collections.emptyList() : entityList.stream().map(converter).collect(Collectors.toList());
     }
 }
