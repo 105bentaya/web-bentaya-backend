@@ -17,7 +17,7 @@ public interface ScoutRepository extends JpaRepository<Scout, Integer> {
 
     List<Scout> findAllByGroupAndActiveIsTrue(Group group);
 
-    List<Scout> findAllByImageAuthorizationAndActiveIsTrue(boolean imageAuthorization);
+    List<Scout> findAllByPersonalDataImageAuthorizationAndActiveIsTrue(boolean imageAuthorization);
 
     Optional<Scout> findFirstByPersonalDataIdDocumentNumber(String idNumber);
 

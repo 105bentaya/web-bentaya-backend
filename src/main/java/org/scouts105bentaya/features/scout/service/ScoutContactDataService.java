@@ -6,7 +6,7 @@ import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.scout.ScoutUtils;
 import org.scouts105bentaya.features.scout.dto.form.ContactFormDto;
 import org.scouts105bentaya.features.scout.entity.Scout;
-import org.scouts105bentaya.features.scout.entity.ScoutContact;
+import org.scouts105bentaya.features.scout.entity.Contact;
 import org.scouts105bentaya.features.scout.enums.PersonType;
 import org.scouts105bentaya.features.scout.repository.ScoutRepository;
 import org.springframework.stereotype.Service;
@@ -34,10 +34,10 @@ public class ScoutContactDataService {
 
         Scout scout = scoutService.findById(id);
 
-        List<ScoutContact> newContacts = new ArrayList<>();
+        List<Contact> newContacts = new ArrayList<>();
         contactList.forEach(contactFormDto -> {
             if (contactFormDto.id() != null) {
-                ScoutContact existingContact = scout.getContactList().stream()
+                Contact existingContact = scout.getContactList().stream()
                     .filter(contact -> contact.getId().equals(contactFormDto.id()))
                     .findFirst().orElseThrow(WebBentayaNotFoundException::new);
                 this.updateExistingContact(existingContact, contactFormDto);
@@ -62,18 +62,18 @@ public class ScoutContactDataService {
         }
     }
 
-    private ScoutContact newContact(ContactFormDto contactFormDto, Scout scout) {
-        ScoutContact newContact = new ScoutContact();
+    private Contact newContact(ContactFormDto contactFormDto, Scout scout) {
+        Contact newContact = new Contact();
         updateContact(contactFormDto, newContact);
         newContact.setScout(scout);
         return newContact;
     }
 
-    private void updateExistingContact(ScoutContact existingContact, ContactFormDto contactFormDto) {
+    private void updateExistingContact(Contact existingContact, ContactFormDto contactFormDto) {
         updateContact(contactFormDto, existingContact);
     }
 
-    private void updateContact(ContactFormDto contactFormDto, ScoutContact contact) {
+    private void updateContact(ContactFormDto contactFormDto, Contact contact) {
         contact.setPersonType(contactFormDto.personType());
         if (contact.getPersonType() == PersonType.REAL) {
             contact.setCompanyName(null);

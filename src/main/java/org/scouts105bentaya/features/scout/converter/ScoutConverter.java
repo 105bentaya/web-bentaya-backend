@@ -43,24 +43,25 @@ public class ScoutConverter extends GenericConverter<Scout, OldScoutDto> {
 
     @Override
     public OldScoutDto convertFromEntity(Scout entity) {
-        return new OldScoutDto(
-            entity.getId(),
-            GroupBasicDataDto.fromGroup(entity.getGroup()),
-            entity.getPersonalData().getName(),
-            entity.getPersonalData().getSurname(),
-            Optional.ofNullable(entity.getPersonalData().getIdDocument()).map(IdentificationDocument::getNumber).orElse(null),
-            entity.getPersonalData().getBirthday(),
-            entity.getMedicalData().getMedicalDiagnoses(),
-            entity.getPersonalData().getGender(),
-            entity.isImageAuthorization(),
-            entity.getPersonalData().getShirtSize(),
-            entity.getPersonalData().getResidenceMunicipality(),
-            entity.getCensus(),
-            entity.getProgressionsOld(),
-            entity.getObservations(),
-            entity.getContactList(),
-            entity.isActive(),
-            entity.getUserList() != null && !entity.getUserList().isEmpty()
-        );
+        return null;
+//        return new OldScoutDto(
+//            entity.getId(),
+//            GroupBasicDataDto.fromGroup(entity.getGroup()),
+//            entity.getPersonalData().getName(),
+//            entity.getPersonalData().getSurname(),
+//            Optional.ofNullable(entity.getPersonalData().getIdDocument()).map(IdentificationDocument::getNumber).orElse(null),
+//            entity.getPersonalData().getBirthday(),
+//            entity.getMedicalData().getMedicalDiagnoses(),
+//            entity.getPersonalData().getGender(),
+//            entity.isImageAuthorization(),
+//            entity.getPersonalData().getShirtSize(),
+//            entity.getPersonalData().getResidenceMunicipality(),
+//            entity.getCensus(),
+//            entity.getProgressionsOld(),
+//            entity.getObservations(),
+//            entity.getContactList(),
+//            entity.isActive(),
+//            entity.getUserList() != null && !entity.getUserList().isEmpty()
+//        );
     }
 }

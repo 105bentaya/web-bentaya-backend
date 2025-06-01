@@ -22,23 +22,19 @@ CREATE TABLE scout_file
     CONSTRAINT PK_SCOUT_FILE PRIMARY KEY (id)
 );
 
-
-
 CREATE TABLE scout
 (
-    id                  INT AUTO_INCREMENT NOT NULL,
-    observations        TEXT               NULL,
-    scout_type          VARCHAR(255)       NOT NULL,
-    active              BIT(1)             NOT NULL,
-    federated           BIT(1)             NOT NULL,
-    census              INT                NULL,
-    image_authorization BIT(1)             NOT NULL,
-    progressions_old    TEXT               NULL,
-    observations_old    TEXT               NULL,
-    group_id            INT                NULL,
+    id           INT AUTO_INCREMENT NOT NULL,
+    scout_type   VARCHAR(255)       NOT NULL,
+    active       BIT(1)             NOT NULL,
+    federated    BIT(1)             NOT NULL,
+    census       INT                NULL,
+    group_id     INT                NULL,
+    observations TEXT               NULL,
     CONSTRAINT PK_SCOUT PRIMARY KEY (id),
     CONSTRAINT FK_SCOUT_ON_GROUP FOREIGN KEY (group_id) REFERENCES bentaya_group (id)
 );
+
 
 CREATE TABLE scout_registration_dates
 (
@@ -47,9 +43,29 @@ CREATE TABLE scout_registration_dates
     unregistration_date date               NULL,
     scout_id            INT                NOT NULL,
     CONSTRAINT PK_SCOUT_REGISTRATION_DATES PRIMARY KEY (id),
-    CONSTRAINT FK_SCOUT_REGISTRATION_DATE_ON_SCOUT FOREIGN KEY (scout_id) REFERENCES scout (id)
+    CONSTRAINT FK_SCOUT_REGISTRATION_DATE_ON_ORGANIZATIONAL_DATA FOREIGN KEY (scout_id) REFERENCES scout (id)
 );
 
+CREATE TABLE scout_record
+(
+    id           INT AUTO_INCREMENT NOT NULL,
+    record_type  VARCHAR(255)       NULL,
+    start_date   date               NULL,
+    end_date     date               NULL,
+    observations TEXT               NULL,
+    scout_id     INT                NOT NULL,
+    CONSTRAINT PK_SCOUT_RECORD PRIMARY KEY (id),
+    CONSTRAINT FK_SCOUT_RECORD_ON_SCOUT FOREIGN KEY (scout_id) REFERENCES scout (id)
+);
+
+CREATE TABLE scout_record_files
+(
+    scout_record_id INT NOT NULL,
+    files_id        INT NOT NULL,
+    CONSTRAINT UC_SCOUT_RECORD_FILES_FILES UNIQUE (files_id),
+    CONSTRAINT FK_SCOUT_RECORD_FILE_ON_SCOUT_FILE FOREIGN KEY (files_id) REFERENCES scout_file (id),
+    CONSTRAINT FK_SCOUT_RECORD_FILE_ON_SCOUT_RECORD FOREIGN KEY (scout_record_id) REFERENCES scout_record (id)
+);
 
 CREATE TABLE scout_extra_files
 (
@@ -76,7 +92,7 @@ CREATE TABLE personal_data
     surname                VARCHAR(255) NOT NULL,
     name                   VARCHAR(255) NOT NULL,
     felt_name              VARCHAR(255) NULL,
-    birthday               date         NOT NULL,
+    birthday               DATE         NOT NULL,
     birthplace             VARCHAR(255) NULL,
     birth_province         VARCHAR(255) NULL,
     nationality            VARCHAR(255) NULL,
@@ -89,6 +105,7 @@ CREATE TABLE personal_data
     shirt_size             VARCHAR(255) NULL,
     residence_municipality VARCHAR(255) NULL,
     gender                 VARCHAR(255) NOT NULL,
+    image_authorization    BIT(1)       NOT NULL,
     observations           TEXT         NULL,
     CONSTRAINT PK_PERSONAL_DATA PRIMARY KEY (scout_id),
     CONSTRAINT FK_PERSONAL_DATA_ON_SCOUT FOREIGN KEY (scout_id) REFERENCES scout (id),
@@ -105,7 +122,8 @@ CREATE TABLE personal_data_documents
     CONSTRAINT UC_PERSONAL_DATA_DOCUMENTS_DOCUMENTS UNIQUE (documents_id)
 );
 
-CREATE TABLE scout_contact
+ALTER TABLE contact RENAME old_contact;
+CREATE TABLE contact
 (
     id             INT AUTO_INCREMENT NOT NULL,
     person_type    VARCHAR(255)       NOT NULL,
@@ -121,11 +139,10 @@ CREATE TABLE scout_contact
     company_name   VARCHAR(255)       NULL,
     observations   TEXT               NULL,
     scout_id       INT                NOT NULL,
-    CONSTRAINT PK_SCOUT_CONTACT PRIMARY KEY (id),
-    CONSTRAINT FK_SCOUT_CONTACT_ON_ID_DOCUMENT FOREIGN KEY (id_document_id) REFERENCES identification_document (id),
-    CONSTRAINT FK_SCOUT_CONTACT_ON_SCOUT FOREIGN KEY (scout_id) REFERENCES scout (id)
+    CONSTRAINT PK_CONTACT PRIMARY KEY (id),
+    CONSTRAINT FK_CONTACT_ON_ID_DOCUMENT FOREIGN KEY (id_document_id) REFERENCES identification_document (id),
+    CONSTRAINT FK_CONTACT_ON_SCOUT FOREIGN KEY (scout_id) REFERENCES scout (id)
 );
-
 
 CREATE TABLE insurance_holder
 (
@@ -137,7 +154,7 @@ CREATE TABLE insurance_holder
     phone          VARCHAR(255)       NULL,
     email          VARCHAR(255)       NULL,
     CONSTRAINT PK_INSURANCE_HOLDER PRIMARY KEY (id),
-    CONSTRAINT FK_INSURANCE_HOLDER_ON_CONTACT FOREIGN KEY (contact_id) REFERENCES scout_contact (id),
+    CONSTRAINT FK_INSURANCE_HOLDER_ON_CONTACT FOREIGN KEY (contact_id) REFERENCES contact (id),
     CONSTRAINT FK_INSURANCE_HOLDER_ON_ID_DOCUMENT FOREIGN KEY (id_document_id) REFERENCES identification_document (id)
 );
 
@@ -180,74 +197,61 @@ CREATE TABLE medical_data_documents
     CONSTRAINT FK_MEDICAL_DATA_DOCUMENTS_ON_SCOUT_FILE FOREIGN KEY (documents_id) REFERENCES scout_file (id)
 );
 
-CREATE TABLE special_member
+CREATE TABLE economic_data
 (
-    id             INT AUTO_INCREMENT NOT NULL,
-    `role`         VARCHAR(255)       NULL,
-    role_census    INT                NOT NULL,
-    agreement_date date               NULL,
-    award_date     date               NULL,
-    details        VARCHAR(255)       NULL,
-    observations   TEXT               NULL,
-    scout_id       INT                NULL,
-    type           VARCHAR(255)       NOT NULL,
-    name           VARCHAR(255)       NULL,
-    surname        VARCHAR(255)       NULL,
-    company_name   VARCHAR(255)       NULL,
-    id_document_id INT                NOT NULL,
-    phone          VARCHAR(255)       NULL,
-    email          VARCHAR(255)       NULL,
-    CONSTRAINT PK_SPECIAL_MEMBER PRIMARY KEY (id),
-    CONSTRAINT FK_SPECIAL_MEMBER_ON_ID_DOCUMENT FOREIGN KEY (id_document_id) REFERENCES identification_document (id),
-    CONSTRAINT FK_SPECIAL_MEMBER_ON_SCOUT FOREIGN KEY (scout_id) REFERENCES scout (id)
+    scout_id INT          NOT NULL,
+    iban     VARCHAR(255) NULL,
+    bank     VARCHAR(255) NULL,
+    CONSTRAINT PK_ECONOMIC_DATA PRIMARY KEY (scout_id),
+    CONSTRAINT FK_ECONOMIC_DATA_ON_SCOUT FOREIGN KEY (scout_id) REFERENCES scout (id)
 );
 
-CREATE TABLE donor
+CREATE TABLE economic_data_documents
 (
-    id             INT AUTO_INCREMENT NOT NULL,
-    role_census    INT                NOT NULL,
-    scout_id       INT                NULL,
-    type           VARCHAR(255)       NOT NULL,
-    name           VARCHAR(255)       NULL,
-    surname        VARCHAR(255)       NULL,
-    company_name   VARCHAR(255)       NULL,
-    id_document_id INT                NOT NULL,
-    phone          VARCHAR(255)       NULL,
-    email          VARCHAR(255)       NULL,
-    address        VARCHAR(511)       NOT NULL,
-    CONSTRAINT PK_DONOR PRIMARY KEY (id),
-    CONSTRAINT FK_DONOR_ON_ID_DOCUMENT FOREIGN KEY (id_document_id) REFERENCES identification_document (id),
-    CONSTRAINT FK_DONOR_ON_SCOUT FOREIGN KEY (scout_id) REFERENCES scout (id)
+    economic_data_scout_id INT NOT NULL,
+    documents_id           INT NOT NULL,
+    CONSTRAINT UC_ECONOMIC_DATA_DOCUMENTS_DOCUMENTS UNIQUE (documents_id),
+    CONSTRAINT FK_ECONOMIC_DATA_ON_ECONOMIC_DATA FOREIGN KEY (economic_data_scout_id) REFERENCES economic_data (scout_id),
+    CONSTRAINT FK_ECONOMIC_DATA_ON_SCOUT_FILE FOREIGN KEY (documents_id) REFERENCES scout_file (id)
 );
 
-CREATE TABLE donor_donation
+CREATE TABLE economic_entry
 (
-    id       INT AUTO_INCREMENT NOT NULL,
-    date     datetime           NOT NULL,
-    donor_id INT                NOT NULL,
-    amount   INT                NOT NULL,
-    CONSTRAINT PK_DONOR_DONATION PRIMARY KEY (id),
-    CONSTRAINT FK_DONOR_DONATION_ON_DONOR FOREIGN KEY (donor_id) REFERENCES donor (id)
+    id                     INT AUTO_INCREMENT NOT NULL,
+    date                   date               NOT NULL,
+    description            VARCHAR(255)       NOT NULL,
+    amount                 INT                NOT NULL,
+    income                 VARCHAR(255)       NULL,
+    spending               VARCHAR(255)       NULL,
+    account                VARCHAR(255)       NULL,
+    type                   VARCHAR(255)       NOT NULL,
+    observations           VARCHAR(511)       NULL,
+    economic_data_scout_id INT                NOT NULL,
+    CONSTRAINT FK_ECONOMIC_ENTRY_ON_ECONOMIC_DATA_SCOUT FOREIGN KEY (economic_data_scout_id) REFERENCES economic_data (scout_id),
+    CONSTRAINT PK_ECONOMIC_ENTRY PRIMARY KEY (id)
 );
 
-INSERT INTO scout (id, scout_type, active, federated, group_id, image_authorization, census,
-                   progressions_old, observations_old)
+CREATE TABLE scout_history
+(
+    scout_id     INT  NOT NULL,
+    progressions TEXT NULL,
+    observations TEXT NULL,
+    CONSTRAINT PK_SCOUT_HISTORY PRIMARY KEY (scout_id),
+    CONSTRAINT FK_SCOUT_HISTORY_ON_SCOUT FOREIGN KEY (scout_id) REFERENCES scout (id)
+);
+
+INSERT INTO scout (id, scout_type, active, federated, group_id, census)
 SELECT id,
-       IF(enabled, 'PARTICIPANT', 'INACTIVE'),
+       IF(enabled, 'SCOUT', 'INACTIVE'),
        enabled,
        enabled,
        IF(enabled, group_id, null),
-#        medical_data,
-       image_authorization,
-       census,
-       progressions,
-       observations
+       census
 FROM old_scout;
 
-INSERT INTO personal_data(scout_id, surname, name, birthday, gender, shirt_size, residence_municipality)
-SELECT id, surname, name, IFNULL(birthday, NOW()), gender, shirt_size, municipality
+INSERT INTO personal_data(scout_id, surname, name, birthday, gender, shirt_size, residence_municipality, image_authorization)
+SELECT id, surname, name, IFNULL(birthday, NOW()), gender, shirt_size, municipality, image_authorization
 FROM old_scout;
-
 
 ALTER TABLE identification_document
     ADD temp_scout_id INT;
@@ -264,8 +268,7 @@ SET personal_data.id_document_id = identification_document.id;
 ALTER TABLE identification_document
     DROP temp_scout_id;
 
-
-INSERT INTO scout_contact(person_type, name, relationship, donor, phone, email, scout_id)
+INSERT INTO contact(person_type, name, relationship, donor, phone, email, scout_id)
 SELECT 'REAL',
        name,
        relationship,
@@ -273,13 +276,22 @@ SELECT 'REAL',
        phone,
        email,
        scout_id
-FROM contact;
+FROM old_contact;
 
-DROP TABLE contact;
+DROP TABLE old_contact;
 
 INSERT INTO medical_data(scout_id, blood_type, medical_diagnoses)
 SELECT id, 'NA', medical_data
 FROM old_scout;
+
+INSERT INTO economic_data(scout_id)
+SELECT id
+FROM scout;
+
+INSERT INTO scout_history
+SELECT id, progressions, observations
+FROM old_scout;
+
 
 DROP TABLE old_scout;
 

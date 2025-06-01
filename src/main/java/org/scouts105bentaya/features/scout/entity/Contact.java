@@ -18,7 +18,7 @@ import org.scouts105bentaya.features.scout.enums.PersonType;
 @Entity
 @Getter
 @Setter
-public class ScoutContact {
+public class Contact {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;

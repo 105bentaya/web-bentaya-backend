@@ -1,7 +1,7 @@
 package org.scouts105bentaya.features.scout.dto;
 
 import org.scouts105bentaya.features.group.GroupBasicDataDto;
-import org.scouts105bentaya.features.scout.entity.ScoutContact;
+import org.scouts105bentaya.features.scout.entity.Contact;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -19,6 +19,6 @@ public record ScoutUserDto(
     String shirtSize,
     String municipality,
     Integer census,
-    List<ScoutContact> contactList
+    List<Contact> contactList
 ) {
 }

@@ -32,6 +32,10 @@ public class Scout {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    // GROUP DATA
+
+    private Integer census;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ScoutType scoutType;
@@ -39,16 +43,20 @@ public class Scout {
     @ManyToOne
     private Group group;
 
-    @OneToMany(mappedBy = "scout", orphanRemoval = true, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    private List<ScoutRegistrationDates> registrationDates;
-
     private boolean active;
 
     private boolean federated;
 
-    private Integer census;
+    @OneToMany(mappedBy = "scout", orphanRemoval = true, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<ScoutRegistrationDates> registrationDates;
 
-    private boolean imageAuthorization;
+    @OneToMany(mappedBy = "scout")
+    private List<SpecialMember> specialRoles;
+
+    @OneToMany(mappedBy = "scout", cascade = CascadeType.MERGE)
+    private List<ScoutRecord> recordList;
+
+    // GENERAL DATA
 
     @OneToOne(mappedBy = "scout", optional = false)
     private PersonalData personalData;
@@ -59,26 +67,13 @@ public class Scout {
     @OneToOne(mappedBy = "scout", optional = false)
     private EconomicData economicData;
 
+    @OneToOne(mappedBy = "scout", optional = false)
+    private ScoutHistory scoutHistory;
+
     @OneToMany(mappedBy = "scout", orphanRemoval = true, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    private List<ScoutContact> contactList;
+    private List<Contact> contactList;
 
-    @OneToMany(mappedBy = "scout", cascade = CascadeType.REMOVE)
-    private List<Confirmation> confirmationList;
-
-    @OneToMany(mappedBy = "scout", cascade = CascadeType.MERGE)
-    private List<ScoutRecord> recordList;
-
-    @ManyToMany(mappedBy = "scoutList", fetch = FetchType.LAZY)
-    private Set<User> userList;
-
-    @Column(columnDefinition = "text")
-    private String progressionsOld;
-
-    @Column(columnDefinition = "text")
-    private String observationsOld;
-
-    @OneToMany(mappedBy = "scout")
-    private List<SpecialMember> specialRoles;
+    // OTHER DATA
 
     @Column(columnDefinition = "text")
     private String observations;
@@ -88,4 +83,12 @@ public class Scout {
 
     @OneToMany
     private List<ScoutFile> images;
+
+    // RELATIONS
+
+    @OneToMany(mappedBy = "scout", cascade = CascadeType.REMOVE)
+    private List<Confirmation> confirmationList;
+
+    @ManyToMany(mappedBy = "scoutList", fetch = FetchType.LAZY)
+    private Set<User> userList;
 }

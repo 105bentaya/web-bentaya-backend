@@ -10,7 +10,6 @@ import org.scouts105bentaya.features.event.service.EventService;
 import org.scouts105bentaya.features.pre_scout.service.PreScoutService;
 import org.scouts105bentaya.features.scout.repository.ScoutRepository;
 import org.scouts105bentaya.features.scout.dto.OldScoutDto;
-import org.scouts105bentaya.features.scout.dto.ScoutDto;
 import org.scouts105bentaya.features.scout.dto.ScoutFormUserUpdateDto;
 import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.user.User;
@@ -59,7 +58,7 @@ public class ScoutService {
     }
 
     public List<Scout> findAllWithFalseImageAuthorization() {
-        return scoutRepository.findAllByImageAuthorizationAndActiveIsTrue(false);
+        return scoutRepository.findAllByPersonalDataImageAuthorizationAndActiveIsTrue(false);
     }
 
     public List<Scout> findAllByLoggedScouterGroupId() {

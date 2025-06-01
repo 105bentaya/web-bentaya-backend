@@ -23,7 +23,7 @@ public class InsuranceHolder {
     private Integer id;
 
     @ManyToOne
-    private ScoutContact contact;
+    private Contact contact;
 
     private String name;
     private String surname;
