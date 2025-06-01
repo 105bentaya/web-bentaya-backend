@@ -2,12 +2,8 @@ package org.scouts105bentaya.features.scout;
 
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.scouts105bentaya.features.scout.converter.ScoutConverter;
-import org.scouts105bentaya.features.scout.converter.ScoutUserConverter;
-import org.scouts105bentaya.features.scout.dto.OldScoutDto;
 import org.scouts105bentaya.features.scout.dto.ScoutDto;
-import org.scouts105bentaya.features.scout.dto.ScoutFormUserUpdateDto;
-import org.scouts105bentaya.features.scout.dto.ScoutUserDto;
+import org.scouts105bentaya.features.scout.dto.UserScoutDto;
 import org.scouts105bentaya.features.scout.dto.form.ContactListFormDto;
 import org.scouts105bentaya.features.scout.dto.form.EconomicDataFormDto;
 import org.scouts105bentaya.features.scout.dto.form.EconomicEntryFormDto;
@@ -26,6 +22,7 @@ import org.scouts105bentaya.features.scout.service.ScoutGroupDataService;
 import org.scouts105bentaya.features.scout.service.ScoutMedicalDataService;
 import org.scouts105bentaya.features.scout.service.ScoutPersonalDataService;
 import org.scouts105bentaya.features.scout.service.ScoutService;
+import org.scouts105bentaya.shared.GenericConverter;
 import org.scouts105bentaya.shared.util.SecurityUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -41,7 +38,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -50,8 +46,6 @@ import java.util.List;
 public class ScoutController {
 
     private final ScoutService scoutService;
-    private final ScoutConverter scoutConverter;
-    private final ScoutUserConverter scoutUserConverter;
     private final ScoutFileService scoutFileService;
     private final ScoutPersonalDataService scoutPersonalDataService;
     private final ScoutMedicalDataService scoutMedicalDataService;
@@ -61,8 +55,6 @@ public class ScoutController {
 
     public ScoutController(
         ScoutService scoutService,
-        ScoutConverter scoutConverter,
-        ScoutUserConverter scoutUserConverter,
         ScoutFileService scoutFileService,
         ScoutPersonalDataService scoutPersonalDataService,
         ScoutMedicalDataService scoutMedicalDataService,
@@ -71,8 +63,6 @@ public class ScoutController {
         ScoutEconomicDataService scoutEconomicDataService
     ) {
         this.scoutService = scoutService;
-        this.scoutConverter = scoutConverter;
-        this.scoutUserConverter = scoutUserConverter;
         this.scoutFileService = scoutFileService;
         this.scoutPersonalDataService = scoutPersonalDataService;
         this.scoutMedicalDataService = scoutMedicalDataService;
@@ -83,16 +73,9 @@ public class ScoutController {
 
     @PreAuthorize("hasAnyRole('ADMIN', 'SCOUTER', 'GROUP_SCOUTER')")
     @GetMapping
-    public List<OldScoutDto> findAll() {
+    public List<ScoutDto> findAll() {
         log.info("METHOD ScoutController.findAll{}", SecurityUtils.getLoggedUserUsernameForLog());
-        return scoutConverter.convertEntityCollectionToDtoList(scoutService.findAll());
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/all")
-    public List<OldScoutDto> findAllAndDisabled() {
-        log.info("METHOD ScoutController.findAllAndDisabled{}", SecurityUtils.getLoggedUserUsernameForLog());
-        return scoutConverter.convertEntityCollectionToDtoList(scoutService.adminFindAll());
+        return GenericConverter.convertEntityCollectionToDtoList(scoutService.findAll(), ScoutDto::fromScout);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'SCOUTER', 'GROUP_SCOUTER')")
@@ -102,84 +85,11 @@ public class ScoutController {
         return ScoutDto.fromScout(scoutService.findById(id));
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'SCOUTER', 'GROUP_SCOUTER')")
-    @GetMapping("/image")
-    public List<OldScoutDto> findAllWithoutImageAuthorization() {
-        log.info("METHOD ScoutController.findAllWithoutImageAuthorization{}", SecurityUtils.getLoggedUserUsernameForLog());
-        return scoutConverter.convertEntityCollectionToDtoList(scoutService.findAllWithFalseImageAuthorization());
-    }
-
-    @PreAuthorize("hasRole('SCOUTER')")
-    @GetMapping("/group")
-    public List<OldScoutDto> findAllByUserGroup() {
-        log.info("METHOD ScoutController.findAllByUserGroup{}", SecurityUtils.getLoggedUserUsernameForLog());
-        return scoutConverter.convertEntityCollectionToDtoList(scoutService.findAllByLoggedScouterGroupId());
-    }
-
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SCOUTER') and @authLogic.userHasSameGroupIdAsScout(#id)")
-    @GetMapping("/scout-form/{id}")
-    public List<String> findScoutUsernames(@PathVariable Integer id) {
-        log.info("METHOD ScoutController.findScoutUsernames --- PARAMS id: {}{}", id, SecurityUtils.getLoggedUserUsernameForLog());
-        return scoutService.findScoutUsernames(id);
-    }
-
-    @PreAuthorize("#scoutId == null ? hasAnyRole('ADMIN', 'SCOUTER') : hasRole('ADMIN') or hasRole('SCOUTER') and @authLogic.userHasSameGroupIdAsScout(#scoutId)")
-    @GetMapping("/scout-form-usernames")
-    public ScoutFormUserUpdateDto getScoutUsernamesUpdateDto(
-        @RequestParam(name = "scoutId", required = false) Integer scoutId,
-        @RequestParam(name = "usernames", required = false) List<String> newUsernames
-    ) {
-        log.info("METHOD ScoutController.getScoutUsernamesUpdateDto --- PARAMS scoutId: {}{}", scoutId, SecurityUtils.getLoggedUserUsernameForLog());
-        return scoutService.getScoutFormUpdateUserMessage(scoutId, newUsernames == null ? Collections.emptyList() : newUsernames);
-    }
-
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/user")
-    public List<ScoutUserDto> findCurrentByUser() {
+    public List<UserScoutDto> findCurrentByUser() { //todo check
         log.info("METHOD ScoutController.findCurrentByUser{}", SecurityUtils.getLoggedUserUsernameForLog());
-        return scoutUserConverter.convertEntityCollectionToDtoList(scoutService.findCurrentByUser());
-    }
-
-    @PreAuthorize("hasRole('ADMIN') and #oldScoutDto.id == null")
-    @PostMapping
-    public OldScoutDto save(@RequestBody OldScoutDto oldScoutDto) {
-        log.info("METHOD ScoutController.save{}", SecurityUtils.getLoggedUserUsernameForLog());
-        return scoutConverter.convertFromEntity(scoutService.save(oldScoutDto));
-    }
-
-    @PreAuthorize("hasRole('SCOUTER') and @authLogic.scouterHasGroupId(#oldScoutDto.group.id) and @authLogic.preScoutHasGroupId(#preScoutId, #oldScoutDto.group.id)")
-    @PostMapping("/{preScoutId}")
-    public OldScoutDto saveFromPreScout(@RequestBody OldScoutDto oldScoutDto, @PathVariable Integer preScoutId) {
-        log.info("METHOD ScoutController.saveFromPreScout --- PARAMS preScoutId: {}{}", preScoutId, SecurityUtils.getLoggedUserUsernameForLog());
-        return scoutConverter.convertFromEntity(scoutService.saveFromPreScoutAndDelete(oldScoutDto, preScoutId));
-    }
-
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SCOUTER') and @authLogic.userHasSameGroupIdAsScout(#oldScoutDto.id)")
-    @PutMapping
-    public OldScoutDto update(@RequestBody OldScoutDto oldScoutDto) {
-        log.info("METHOD ScoutController.update --- PARAMS id: {}{}", oldScoutDto.id(), SecurityUtils.getLoggedUserUsernameForLog());
-        return scoutConverter.convertFromEntity(scoutService.update(oldScoutDto));
-    }
-
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SCOUTER') and @authLogic.userHasSameGroupIdAsScout(#id)")
-    @PutMapping("/scout-form/{id}")
-    public void updateScoutUsers(@PathVariable Integer id, @RequestBody List<String> scoutUsers) {
-        log.info("METHOD ScoutController.updateScoutUsers --- PARAMS id: {}{}", id, SecurityUtils.getLoggedUserUsernameForLog());
-        scoutService.updateScoutUsers(id, scoutUsers);
-    }
-
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SCOUTER') and @authLogic.userHasSameGroupIdAsScout(#id)")
-    @DeleteMapping("/disable/{id}")
-    public void disable(@PathVariable Integer id) {
-        log.info("METHOD ScoutController.disable --- PARAMS id: {}{}", id, SecurityUtils.getLoggedUserUsernameForLog());
-        scoutService.disable(id);
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/delete/{id}")
-    public void delete(@PathVariable Integer id) {
-        log.info("METHOD ScoutController.delete --- PARAMS id: {}{}", id, SecurityUtils.getLoggedUserUsernameForLog());
-        scoutService.delete(id);
+        return GenericConverter.convertEntityCollectionToDtoList(scoutService.findCurrentByUser(), UserScoutDto::fromScout);
     }
 
     //NEW - TODO AUTH, LOGS

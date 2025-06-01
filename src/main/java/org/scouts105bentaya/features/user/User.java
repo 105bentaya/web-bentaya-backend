@@ -57,6 +57,7 @@ public class User {
         inverseJoinColumns = @JoinColumn(name = "scout_id")
     )
     private Set<Scout> scoutList;
+
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<GeneralBooking> bookingList;
 

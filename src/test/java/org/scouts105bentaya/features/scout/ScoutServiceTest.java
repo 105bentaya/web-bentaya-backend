@@ -9,7 +9,6 @@ import org.scouts105bentaya.features.confirmation.service.ConfirmationService;
 import org.scouts105bentaya.features.group.GroupBasicDataDto;
 import org.scouts105bentaya.features.group.GroupService;
 import org.scouts105bentaya.features.scout.converter.ScoutConverter;
-import org.scouts105bentaya.features.scout.dto.OldScoutDto;
 import org.scouts105bentaya.features.scout.repository.ScoutRepository;
 import org.scouts105bentaya.features.scout.service.ScoutService;
 import org.scouts105bentaya.features.scout_contact.Contact;

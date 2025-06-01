@@ -1,5 +1,6 @@
 package org.scouts105bentaya.shared;
 
+import io.jsonwebtoken.lang.Collections;
 import org.scouts105bentaya.shared.specification.PageDto;
 import org.springframework.data.domain.Page;
 
@@ -19,7 +20,7 @@ public abstract class GenericConverter<E, D> {
     }
 
     public List<D> convertEntityCollectionToDtoList(Collection<E> entityList) {
-        return entityList.stream().map(this::convertFromEntity).collect(Collectors.toList());
+        return convertEntityCollectionToDtoList(entityList, this::convertFromEntity);
     }
 
     public PageDto<D> convertEntityPageToPageDto(Page<E> entityPage) {
@@ -31,6 +32,10 @@ public abstract class GenericConverter<E, D> {
     }
 
     public static <E, D> PageDto<D> convertListToPageDto(Page<E> entityPage, Function<E, D> converter) {
-        return new PageDto<>(entityPage.getTotalElements(), entityPage.getContent().stream().map(converter).toList());
+        return new PageDto<>(entityPage.getTotalElements(), convertEntityCollectionToDtoList(entityPage.getContent(), converter));
+    }
+
+    public static <E, D> List<D> convertEntityCollectionToDtoList(Collection<E> entityList, Function<E, D> converter) {
+        return Collections.isEmpty(entityList) ? entityList.stream().map(converter).collect(Collectors.toList()) : Collections.emptyList();
     }
 }

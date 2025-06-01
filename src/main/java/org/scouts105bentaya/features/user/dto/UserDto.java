@@ -1,6 +1,6 @@
 package org.scouts105bentaya.features.user.dto;
 
-import org.scouts105bentaya.features.scout.dto.ScoutUserDto;
+import org.scouts105bentaya.features.scout.dto.UserScoutDto;
 import org.scouts105bentaya.features.user.role.RoleEnum;
 
 import java.util.List;
@@ -12,6 +12,6 @@ public record UserDto(
     List<RoleEnum> roles,
     boolean enabled,
     String groupName,
-    List<ScoutUserDto> scoutList
+    List<UserScoutDto> scoutList
 ) {
 }

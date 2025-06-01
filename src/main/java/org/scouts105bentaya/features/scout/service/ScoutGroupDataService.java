@@ -1,5 +1,6 @@
 package org.scouts105bentaya.features.scout.service;
 
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.Interval;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
@@ -77,10 +78,18 @@ public class ScoutGroupDataService {
         //            this.deleteFutureConfirmations(savedScout);
         //            this.createConfirmationForFutureEvents(scoutDB);
         //        }
-
+        //    @Transactional
+        //    public void disable(Integer id) {
+        //        Scout scout = this.findActiveById(id);
+        //        scout.getUserList().forEach(user -> userService.removeScoutFromUser(user, scout));
+        //        this.deleteFutureConfirmations(scout);
+        //        scout.setActive(false);
+        //        scoutRepository.save(scout);
+        //    }
 
         return scoutRepository.save(scout);
     }
+
 
     private void updateScoutRegistrationDates(Scout scout, ScoutInfoFormDto form) {
         List<ScoutRegistrationDates> registrationDates = scout.getRegistrationDates();

@@ -1,7 +1,7 @@
 package org.scouts105bentaya.features.user.converter;
 
 import org.scouts105bentaya.features.group.Group;
-import org.scouts105bentaya.features.scout.converter.ScoutUserConverter;
+import org.scouts105bentaya.features.scout.dto.UserScoutDto;
 import org.scouts105bentaya.features.user.User;
 import org.scouts105bentaya.features.user.dto.UserDto;
 import org.scouts105bentaya.features.user.role.Role;
@@ -14,12 +14,6 @@ import java.util.stream.Collectors;
 
 @Component
 public class UserConverter extends GenericConverter<User, UserDto> {
-
-    private final ScoutUserConverter scoutUserConverter;
-
-    public UserConverter(ScoutUserConverter scoutUserConverter) {
-        this.scoutUserConverter = scoutUserConverter;
-    }
 
     @Override
     public User convertFromDto(UserDto dto) {
@@ -35,7 +29,7 @@ public class UserConverter extends GenericConverter<User, UserDto> {
             user.getRoles().stream().map(Role::getName).collect(Collectors.toList()),
             user.isEnabled(),
             Optional.ofNullable(user.getGroup()).map(Group::getName).orElse(null),
-            user.getScoutList() != null ? user.getScoutList().stream().map(scoutUserConverter::convertFromEntity).collect(Collectors.toList()) : null
+            GenericConverter.convertEntityCollectionToDtoList(user.getScoutList(), UserScoutDto::fromScout)
         );
     }
 }
