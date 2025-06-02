@@ -9,6 +9,7 @@ import org.scouts105bentaya.features.scout.dto.form.EconomicDataFormDto;
 import org.scouts105bentaya.features.scout.dto.form.EconomicEntryFormDto;
 import org.scouts105bentaya.features.scout.dto.form.MedicalDataFormDto;
 import org.scouts105bentaya.features.scout.dto.form.PersonalDataFormDto;
+import org.scouts105bentaya.features.scout.dto.form.ScoutHistoryFormDto;
 import org.scouts105bentaya.features.scout.dto.form.ScoutInfoFormDto;
 import org.scouts105bentaya.features.scout.dto.form.ScoutRecordFormDto;
 import org.scouts105bentaya.features.scout.entity.EconomicEntry;
@@ -19,10 +20,10 @@ import org.scouts105bentaya.features.scout.service.ScoutContactDataService;
 import org.scouts105bentaya.features.scout.service.ScoutEconomicDataService;
 import org.scouts105bentaya.features.scout.service.ScoutFileService;
 import org.scouts105bentaya.features.scout.service.ScoutGroupDataService;
+import org.scouts105bentaya.features.scout.service.ScoutHistoryService;
 import org.scouts105bentaya.features.scout.service.ScoutMedicalDataService;
 import org.scouts105bentaya.features.scout.service.ScoutPersonalDataService;
 import org.scouts105bentaya.features.scout.service.ScoutService;
-import org.scouts105bentaya.features.scout.specification.ScoutSpecification;
 import org.scouts105bentaya.features.scout.specification.ScoutSpecificationFilter;
 import org.scouts105bentaya.shared.GenericConverter;
 import org.scouts105bentaya.shared.specification.PageDto;
@@ -55,6 +56,7 @@ public class ScoutController {
     private final ScoutContactDataService scoutContactDataService;
     private final ScoutGroupDataService scoutGroupDataService;
     private final ScoutEconomicDataService scoutEconomicDataService;
+    private final ScoutHistoryService scoutHistoryService;
 
     public ScoutController(
         ScoutService scoutService,
@@ -63,7 +65,8 @@ public class ScoutController {
         ScoutMedicalDataService scoutMedicalDataService,
         ScoutContactDataService scoutContactDataService,
         ScoutGroupDataService scoutGroupDataService,
-        ScoutEconomicDataService scoutEconomicDataService
+        ScoutEconomicDataService scoutEconomicDataService,
+        ScoutHistoryService scoutHistoryService
     ) {
         this.scoutService = scoutService;
         this.scoutFileService = scoutFileService;
@@ -72,6 +75,7 @@ public class ScoutController {
         this.scoutContactDataService = scoutContactDataService;
         this.scoutGroupDataService = scoutGroupDataService;
         this.scoutEconomicDataService = scoutEconomicDataService;
+        this.scoutHistoryService = scoutHistoryService;
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'SCOUTER', 'GROUP_SCOUTER')")
@@ -172,5 +176,10 @@ public class ScoutController {
     @DeleteMapping("/economic/entry/{scoutId}/{entryId}")
     public void deleteDonation(@PathVariable Integer entryId, @PathVariable Integer scoutId) {
         scoutEconomicDataService.deleteEntry(scoutId, entryId);
+    }
+
+    @PatchMapping("/scout-history/{id}")
+    public ScoutDto updateEconomicData(@PathVariable Integer id, @RequestBody @Valid ScoutHistoryFormDto form) {
+        return ScoutDto.fromScout(scoutHistoryService.updateScoutHistory(id, form));
     }
 }
