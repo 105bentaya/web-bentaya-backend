@@ -3,6 +3,7 @@ package org.scouts105bentaya.features.scout.repository;
 import org.scouts105bentaya.features.group.Group;
 import org.scouts105bentaya.features.scout.entity.Scout;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -10,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ScoutRepository extends JpaRepository<Scout, Integer> {
+public interface ScoutRepository extends JpaRepository<Scout, Integer>, JpaSpecificationExecutor<Scout> {
     List<Scout> findAllByActiveIsTrue();
 
     Optional<Scout> findByIdAndActiveIsTrue(Integer id);

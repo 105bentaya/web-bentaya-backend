@@ -1,6 +1,5 @@
 package org.scouts105bentaya.features.scout.service;
 
-import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.Interval;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
@@ -118,9 +117,11 @@ public class ScoutGroupDataService {
     }
 
     private void validateCensus(ScoutInfoFormDto form, Integer scoutId) {
-        Optional<Scout> existingCensus = scoutRepository.findFirstByCensus(form.census());
-        if (existingCensus.isPresent() && !existingCensus.get().getId().equals(scoutId)) {
-            throw new WebBentayaConflictException("Este censo ya está asignado");
+        if (form.census() != null) {
+            Optional<Scout> existingCensus = scoutRepository.findFirstByCensus(form.census());
+            if (existingCensus.isPresent() && !existingCensus.get().getId().equals(scoutId)) {
+                throw new WebBentayaConflictException("Este censo ya está asignado");
+            }
         }
     }
 

@@ -26,6 +26,12 @@ public class SpecificationPredicateHelper {
         }
     }
 
+    public void isNotEqual(Expression<String> root, Object filter) {
+        if (filter != null) {
+            predicates.add(cb.equal(root, filter).not());
+        }
+    }
+
     public void like(Expression<String> root, String filter) {
         if (!StringUtils.isEmpty(filter)) {
             predicates.add(cb.like(root, "%" + filter + "%"));

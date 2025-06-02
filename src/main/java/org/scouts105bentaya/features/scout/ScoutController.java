@@ -22,7 +22,10 @@ import org.scouts105bentaya.features.scout.service.ScoutGroupDataService;
 import org.scouts105bentaya.features.scout.service.ScoutMedicalDataService;
 import org.scouts105bentaya.features.scout.service.ScoutPersonalDataService;
 import org.scouts105bentaya.features.scout.service.ScoutService;
+import org.scouts105bentaya.features.scout.specification.ScoutSpecification;
+import org.scouts105bentaya.features.scout.specification.ScoutSpecificationFilter;
 import org.scouts105bentaya.shared.GenericConverter;
+import org.scouts105bentaya.shared.specification.PageDto;
 import org.scouts105bentaya.shared.util.SecurityUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -73,9 +76,9 @@ public class ScoutController {
 
     @PreAuthorize("hasAnyRole('ADMIN', 'SCOUTER', 'GROUP_SCOUTER')")
     @GetMapping
-    public List<ScoutDto> findAll() {
-        log.info("METHOD ScoutController.findAll{}", SecurityUtils.getLoggedUserUsernameForLog());
-        return GenericConverter.convertEntityCollectionToDtoList(scoutService.findAll(), ScoutDto::fromScout);
+    public PageDto<ScoutDto> findAll(ScoutSpecificationFilter filter) {
+        log.info("findAll - filter:{}{}", filter, SecurityUtils.getLoggedUserUsernameForLog());
+        return GenericConverter.convertListToPageDto(scoutService.findAll(filter), ScoutDto::fromScout);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'SCOUTER', 'GROUP_SCOUTER')")

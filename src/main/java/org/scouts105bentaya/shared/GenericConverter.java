@@ -1,10 +1,11 @@
 package org.scouts105bentaya.shared;
 
-import io.jsonwebtoken.lang.Collections;
 import org.scouts105bentaya.shared.specification.PageDto;
 import org.springframework.data.domain.Page;
+import org.springframework.util.CollectionUtils;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -36,6 +37,6 @@ public abstract class GenericConverter<E, D> {
     }
 
     public static <E, D> List<D> convertEntityCollectionToDtoList(Collection<E> entityList, Function<E, D> converter) {
-        return Collections.isEmpty(entityList) ? Collections.emptyList() : entityList.stream().map(converter).collect(Collectors.toList());
+        return CollectionUtils.isEmpty(entityList) ? Collections.emptyList() : entityList.stream().map(converter).collect(Collectors.toList());
     }
 }

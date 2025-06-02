@@ -10,10 +10,14 @@ import org.scouts105bentaya.features.pre_scout.service.PreScoutService;
 import org.scouts105bentaya.features.scout.dto.ScoutFormUserUpdateDto;
 import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.scout.repository.ScoutRepository;
+import org.scouts105bentaya.features.scout.specification.ScoutSpecification;
+import org.scouts105bentaya.features.scout.specification.ScoutSpecificationFilter;
 import org.scouts105bentaya.features.user.User;
 import org.scouts105bentaya.features.user.UserService;
 import org.scouts105bentaya.shared.service.AuthService;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -47,8 +51,8 @@ public class ScoutService {
         this.preScoutService = preScoutService;
     }
 
-    public List<Scout> findAll() {
-        return scoutRepository.findAll();
+    public Page<Scout> findAll(ScoutSpecificationFilter filter) {
+        return scoutRepository.findAll(new ScoutSpecification(filter), filter.getPageable());
     }
 
     public List<Scout> findAllByLoggedScouterGroupId() {
