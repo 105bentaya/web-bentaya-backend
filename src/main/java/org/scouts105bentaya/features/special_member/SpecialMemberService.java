@@ -2,6 +2,7 @@ package org.scouts105bentaya.features.special_member;
 
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
 import org.scouts105bentaya.core.exception.WebBentayaConflictException;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
@@ -195,6 +196,10 @@ public class SpecialMemberService {
     }
 
     public List<FilteredResultDto> searchScout(String filter) {
+        if (StringUtils.isNumeric(filter)) {
+            filter = Integer.valueOf(filter).toString();
+        }
+
         return scoutRepository.findByBasicFields("%%%s%%".formatted(filter)).stream().map(scout -> new FilteredResultDto(
             scout.getId(), generateScoutLabel(scout)
         )).toList();

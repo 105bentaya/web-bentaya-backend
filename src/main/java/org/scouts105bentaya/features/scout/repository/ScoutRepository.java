@@ -24,6 +24,13 @@ public interface ScoutRepository extends JpaRepository<Scout, Integer>, JpaSpeci
 
     Optional<Scout> findFirstByCensus(Integer census);
 
-    @Query("SELECT s FROM Scout s WHERE s.personalData.name LIKE :filter OR s.personalData.surname LIKE :filter or CONCAT('', s.census) LIKE :filter or s.personalData.idDocument.number LIKE :filter")
+    @Query("""
+        SELECT s FROM Scout s
+        LEFT JOIN s.personalData.idDocument d
+           WHERE s.personalData.name LIKE :filter
+              OR s.personalData.surname LIKE :filter
+              OR CONCAT('', s.census) LIKE :filter
+              OR d.number LIKE :filter
+        """)
     List<Scout> findByBasicFields(String filter);
 }
