@@ -5,8 +5,8 @@ import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.scout.ScoutUtils;
 import org.scouts105bentaya.features.scout.dto.form.ContactFormDto;
-import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.scout.entity.Contact;
+import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.scout.enums.PersonType;
 import org.scouts105bentaya.features.scout.repository.ScoutRepository;
 import org.springframework.stereotype.Service;
@@ -16,12 +16,12 @@ import java.util.List;
 
 @Slf4j
 @Service
-public class ScoutContactDataService {
+public class ScoutContactService {
 
     private final ScoutRepository scoutRepository;
     private final ScoutService scoutService;
 
-    public ScoutContactDataService(
+    public ScoutContactService(
         ScoutRepository scoutRepository,
         ScoutService scoutService
     ) {
@@ -62,7 +62,7 @@ public class ScoutContactDataService {
         }
     }
 
-    private Contact newContact(ContactFormDto contactFormDto, Scout scout) {
+    public Contact newContact(ContactFormDto contactFormDto, Scout scout) {
         Contact newContact = new Contact();
         updateContact(contactFormDto, newContact);
         newContact.setScout(scout);

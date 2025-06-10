@@ -12,13 +12,8 @@ import java.util.Optional;
 
 @Repository
 public interface ScoutRepository extends JpaRepository<Scout, Integer>, JpaSpecificationExecutor<Scout> {
-    List<Scout> findAllByActiveIsTrue();
-
-    Optional<Scout> findByIdAndActiveIsTrue(Integer id);
-
-    List<Scout> findAllByGroupAndActiveIsTrue(Group group);
-
-    List<Scout> findAllByPersonalDataImageAuthorizationAndActiveIsTrue(boolean imageAuthorization);
+    @Query("SELECT s FROM Scout s WHERE s.group = :group AND s.status <> 'INACTIVE'")
+    List<Scout> findAllNotInactiveActiveByGroup(Group group); //todo check if works
 
     Optional<Scout> findFirstByPersonalDataIdDocumentNumber(String idNumber);
 

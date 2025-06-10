@@ -10,11 +10,12 @@ import org.scouts105bentaya.core.security.service.LoginAttemptService;
 import org.scouts105bentaya.core.security.service.RequestService;
 import org.scouts105bentaya.features.group.GroupBasicDataDto;
 import org.scouts105bentaya.features.group.GroupService;
-import org.scouts105bentaya.features.scout.repository.ScoutRepository;
 import org.scouts105bentaya.features.scout.entity.Scout;
+import org.scouts105bentaya.features.scout.repository.ScoutRepository;
 import org.scouts105bentaya.features.setting.enums.SettingEnum;
 import org.scouts105bentaya.features.user.dto.ChangePasswordDto;
 import org.scouts105bentaya.features.user.dto.UserFormDto;
+import org.scouts105bentaya.features.user.dto.UserPasswordDto;
 import org.scouts105bentaya.features.user.dto.UserProfileDto;
 import org.scouts105bentaya.features.user.dto.UserScoutDto;
 import org.scouts105bentaya.features.user.role.Role;
@@ -149,19 +150,19 @@ public class UserService implements UserDetailsService {
     }
 
 
-    public void addNewUserRoleUser(String username, Scout scout) {
+    public void addScoutToNewUser(String username, Scout scout, RoleEnum role) {
         userRepository.findByUsername(username).ifPresent(this::handleUserAlreadyExists);
 
         User newUser = new User();
         newUser.setUsername(username);
         String password = PasswordHelper.generatePassword();
         newUser.setPassword(passwordEncoder.encode(password));
-        newUser.setRoles(Collections.singletonList(roleRepository.findByName(RoleEnum.ROLE_USER).orElse(null)));
+        newUser.setRoles(Collections.singletonList(roleRepository.findByName(role).orElse(null)));
         newUser.setScoutList(Collections.singleton(scout));
 
         userRepository.save(newUser);
 
-        //todo WB-245
+        //todo improve
         emailService.sendSimpleEmail(
             "Alta de usuario en la web de Asociación Scouts Exploradores Bentaya",
             String.format(
@@ -177,7 +178,7 @@ public class UserService implements UserDetailsService {
         );
     }
 
-    public String addNewScoutCenterUser(String username) {
+    public UserPasswordDto addNewScoutCenterUser(String username) {
         Optional<User> usernameUser = userRepository.findByUsername(username);
 
         if (usernameUser.isPresent()) {
@@ -187,7 +188,7 @@ public class UserService implements UserDetailsService {
                     .orElseThrow(WebBentayaRoleNotFoundException::new)
                 );
             }
-            return null;
+            return new UserPasswordDto(existingUser, null);
         }
 
         User newUser = new User();
@@ -195,31 +196,29 @@ public class UserService implements UserDetailsService {
         String password = PasswordHelper.generatePassword();
         newUser.setPassword(passwordEncoder.encode(password));
         newUser.setRoles(Collections.singletonList(roleRepository.findByName(RoleEnum.ROLE_SCOUT_CENTER_REQUESTER).orElse(null)));
-        userRepository.save(newUser);
 
-        return password;
+        return new UserPasswordDto(userRepository.save(newUser), password);
     }
 
-    public void addScoutToUser(User user, Scout scout) {
+    public void addScoutToExistingUser(User user, Scout scout, RoleEnum userRole) {
         if (!user.getScoutList().contains(scout)) {
             if (!user.isEnabled()) {
-                user.getRoles().removeIf(role -> role.getName() != RoleEnum.ROLE_USER);
+                user.getRoles().removeIf(role -> role.getName() != userRole);
                 user.setEnabled(true);
             }
-            if (!user.hasRole(RoleEnum.ROLE_USER)) {
-                user.getRoles().add(roleRepository.findByName(RoleEnum.ROLE_USER).orElseThrow(WebBentayaRoleNotFoundException::new));
+            if (!user.hasRole(userRole)) {
+                user.getRoles().add(roleRepository.findByName(userRole).orElseThrow(WebBentayaRoleNotFoundException::new));
             }
             user.getScoutList().add(scout);
             userRepository.save(user);
-            emailService.sendSimpleEmail(
-                "Nueva Persona Educanda Añadida a tu usuario",
+            emailService.sendSimpleEmail(//todo improve
+                "CAMBIAR - Nueva Persona Educanda Añadida a tu usuario",
                 """
                     Se ha añadido a la persona educanda %s %s a tu usuario %s de la web de la Asociación Scouts Exploradores Bentaya.
                     Si cree que esto es un error, por favor avísenos enviando un correo a %s
                     """.formatted(scout.getPersonalData().getName(), scout.getPersonalData().getSurname(), user.getUsername(), this.emailService.getSettingEmails(SettingEnum.ADMINISTRATION_MAIL)[0]),
                 user.getUsername()
             );
-
         }
     }
 

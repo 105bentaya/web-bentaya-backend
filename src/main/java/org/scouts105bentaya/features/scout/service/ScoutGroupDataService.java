@@ -1,9 +1,11 @@
 package org.scouts105bentaya.features.scout.service;
 
+import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.Interval;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
 import org.scouts105bentaya.core.exception.WebBentayaConflictException;
+import org.scouts105bentaya.core.exception.WebBentayaForbiddenException;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.booking.util.IntervalUtils;
 import org.scouts105bentaya.features.group.GroupRepository;
@@ -13,9 +15,14 @@ import org.scouts105bentaya.features.scout.dto.form.ScoutRegistrationDateFormDto
 import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.scout.entity.ScoutRecord;
 import org.scouts105bentaya.features.scout.entity.ScoutRegistrationDates;
+import org.scouts105bentaya.features.scout.enums.ScoutStatus;
 import org.scouts105bentaya.features.scout.enums.ScoutType;
 import org.scouts105bentaya.features.scout.repository.ScoutRecordRepository;
 import org.scouts105bentaya.features.scout.repository.ScoutRepository;
+import org.scouts105bentaya.features.setting.SettingService;
+import org.scouts105bentaya.features.setting.enums.SettingEnum;
+import org.scouts105bentaya.features.user.role.RoleEnum;
+import org.scouts105bentaya.shared.service.AuthService;
 import org.scouts105bentaya.shared.service.BlobService;
 import org.springframework.stereotype.Service;
 
@@ -32,19 +39,39 @@ public class ScoutGroupDataService {
     private final GroupRepository groupRepository;
     private final ScoutService scoutService;
     private final ScoutRecordRepository scoutRecordRepository;
+    private final SettingService settingService;
+    private final AuthService authService;
 
     public ScoutGroupDataService(
         ScoutRepository scoutRepository,
         BlobService blobService,
         GroupRepository groupRepository,
         ScoutService scoutService,
-        ScoutRecordRepository scoutRecordRepository
-    ) {
+        ScoutRecordRepository scoutRecordRepository,
+        SettingService settingService,
+        AuthService authService) {
         this.scoutRepository = scoutRepository;
         this.blobService = blobService;
         this.groupRepository = groupRepository;
         this.scoutService = scoutService;
         this.scoutRecordRepository = scoutRecordRepository;
+        this.settingService = settingService;
+        this.authService = authService;
+    }
+
+    public int findLastScoutCensus() {
+        return Integer.parseInt(settingService.findByName(SettingEnum.LAST_CENSUS_SCOUT).getValue());
+    }
+
+    public void updateScoutCensus(Scout scout, @Nullable Integer census) {
+        if (authService.getLoggedUser().hasRole(RoleEnum.ROLE_ADMIN)) {
+            scout.setCensus(census);
+            if (scout.getCensus() != null && scout.getCensus() > findLastScoutCensus()) {
+                this.settingService.updateValue(scout.getCensus(), SettingEnum.LAST_CENSUS_SCOUT);
+            }
+        } else if (census != null) {
+            throw new WebBentayaForbiddenException("No tiene permiso para cambiar el censo de una scout");
+        }
     }
 
     public Scout updateScoutInfo(Integer id, ScoutInfoFormDto form) {
@@ -54,18 +81,18 @@ public class ScoutGroupDataService {
 
         Scout scout = scoutRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
 
-        scout.setCensus(form.census());
-        scout.setScoutType(form.scoutType());
+        this.updateScoutCensus(scout, form.census());
 
+        scout.setScoutType(form.scoutType());
         if (scout.getScoutType() == ScoutType.INACTIVE) {
-            scout.setActive(false);
+            scout.setStatus(ScoutStatus.INACTIVE);
             scout.setFederated(false);
         } else {
-            scout.setActive(true);
+            scout.setStatus(ScoutStatus.ACTIVE);
             scout.setFederated(form.federated());
         }
 
-        scout.setGroup(scout.getScoutType().hasGroup() && form.groupId() != 0 ?
+        scout.setGroup(scout.getScoutType().isScoutOrScouter() && form.groupId() != 0 ?
             groupRepository.findById(form.groupId()).orElseThrow(WebBentayaNotFoundException::new) :
             null
         );

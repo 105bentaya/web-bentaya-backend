@@ -1,6 +1,7 @@
 package org.scouts105bentaya.features.scout.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -17,7 +18,9 @@ public class ScoutHistory {
     @JsonIgnore
     private Integer scoutId;
 
+    @Column(columnDefinition = "text")
     private String observations;
+    @Column(columnDefinition = "text")
     private String progressions;
 
     @MapsId

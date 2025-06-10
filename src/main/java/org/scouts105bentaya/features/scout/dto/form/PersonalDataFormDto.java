@@ -25,6 +25,30 @@ public record PersonalDataFormDto(
     @Email @Length(max = 255) String email,
     @Length(max = 255) String shirtSize,
     @Length(max = 255) String residenceMunicipality,
-    @NotNull @Length(max = 255) String gender
+    @NotNull @Length(max = 255) String gender,
+    @NotNull Boolean imageAuthorization
 ) {
+    public static PersonalDataFormDto fromNewScoutForm(NewScoutFormDto form) {
+        return new PersonalDataFormDto(
+            form.idDocument(),
+            null,
+            form.surname(),
+            form.name(),
+            form.feltName(),
+            form.birthday(),
+            null,
+            null,
+            null,
+            form.address(),
+            form.city(),
+            form.province(),
+            form.phone(),
+            form.landline(),
+            form.email(),
+            form.shirtSize(),
+            form.residenceMunicipality(),
+            form.gender(),
+            form.imageAuthorization()
+        );
+    }
 }

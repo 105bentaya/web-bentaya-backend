@@ -17,6 +17,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.scouts105bentaya.features.confirmation.Confirmation;
 import org.scouts105bentaya.features.group.Group;
+import org.scouts105bentaya.features.scout.enums.ScoutStatus;
 import org.scouts105bentaya.features.scout.enums.ScoutType;
 import org.scouts105bentaya.features.special_member.entity.SpecialMember;
 import org.scouts105bentaya.features.user.User;
@@ -43,7 +44,9 @@ public class Scout {
     @ManyToOne
     private Group group;
 
-    private boolean active;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ScoutStatus status;
 
     private boolean federated;
 
@@ -58,16 +61,16 @@ public class Scout {
 
     // GENERAL DATA
 
-    @OneToOne(mappedBy = "scout", optional = false)
+    @OneToOne(mappedBy = "scout", optional = false, cascade = CascadeType.PERSIST)
     private PersonalData personalData;
 
-    @OneToOne(mappedBy = "scout", optional = false)
+    @OneToOne(mappedBy = "scout", optional = false, cascade = CascadeType.PERSIST)
     private MedicalData medicalData;
 
-    @OneToOne(mappedBy = "scout", optional = false)
+    @OneToOne(mappedBy = "scout", optional = false, cascade = CascadeType.PERSIST)
     private EconomicData economicData;
 
-    @OneToOne(mappedBy = "scout", optional = false)
+    @OneToOne(mappedBy = "scout", optional = false, cascade = CascadeType.PERSIST)
     private ScoutHistory scoutHistory;
 
     @OneToMany(mappedBy = "scout", orphanRemoval = true, cascade = {CascadeType.PERSIST, CascadeType.MERGE})

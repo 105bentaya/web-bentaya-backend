@@ -8,6 +8,7 @@ import org.scouts105bentaya.features.scout.dto.form.ContactListFormDto;
 import org.scouts105bentaya.features.scout.dto.form.EconomicDataFormDto;
 import org.scouts105bentaya.features.scout.dto.form.EconomicEntryFormDto;
 import org.scouts105bentaya.features.scout.dto.form.MedicalDataFormDto;
+import org.scouts105bentaya.features.scout.dto.form.NewScoutFormDto;
 import org.scouts105bentaya.features.scout.dto.form.PersonalDataFormDto;
 import org.scouts105bentaya.features.scout.dto.form.ScoutHistoryFormDto;
 import org.scouts105bentaya.features.scout.dto.form.ScoutInfoFormDto;
@@ -16,7 +17,8 @@ import org.scouts105bentaya.features.scout.entity.EconomicEntry;
 import org.scouts105bentaya.features.scout.entity.ScoutFile;
 import org.scouts105bentaya.features.scout.entity.ScoutRecord;
 import org.scouts105bentaya.features.scout.enums.ScoutFileType;
-import org.scouts105bentaya.features.scout.service.ScoutContactDataService;
+import org.scouts105bentaya.features.scout.service.ScoutContactService;
+import org.scouts105bentaya.features.scout.service.ScoutCreationService;
 import org.scouts105bentaya.features.scout.service.ScoutEconomicDataService;
 import org.scouts105bentaya.features.scout.service.ScoutFileService;
 import org.scouts105bentaya.features.scout.service.ScoutGroupDataService;
@@ -53,29 +55,31 @@ public class ScoutController {
     private final ScoutFileService scoutFileService;
     private final ScoutPersonalDataService scoutPersonalDataService;
     private final ScoutMedicalDataService scoutMedicalDataService;
-    private final ScoutContactDataService scoutContactDataService;
+    private final ScoutContactService scoutContactService;
     private final ScoutGroupDataService scoutGroupDataService;
     private final ScoutEconomicDataService scoutEconomicDataService;
     private final ScoutHistoryService scoutHistoryService;
+    private final ScoutCreationService scoutCreationService;
 
     public ScoutController(
         ScoutService scoutService,
         ScoutFileService scoutFileService,
         ScoutPersonalDataService scoutPersonalDataService,
         ScoutMedicalDataService scoutMedicalDataService,
-        ScoutContactDataService scoutContactDataService,
+        ScoutContactService scoutContactService,
         ScoutGroupDataService scoutGroupDataService,
         ScoutEconomicDataService scoutEconomicDataService,
-        ScoutHistoryService scoutHistoryService
-    ) {
+        ScoutHistoryService scoutHistoryService,
+        ScoutCreationService scoutCreationService) {
         this.scoutService = scoutService;
         this.scoutFileService = scoutFileService;
         this.scoutPersonalDataService = scoutPersonalDataService;
         this.scoutMedicalDataService = scoutMedicalDataService;
-        this.scoutContactDataService = scoutContactDataService;
+        this.scoutContactService = scoutContactService;
         this.scoutGroupDataService = scoutGroupDataService;
         this.scoutEconomicDataService = scoutEconomicDataService;
         this.scoutHistoryService = scoutHistoryService;
+        this.scoutCreationService = scoutCreationService;
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'SCOUTER', 'GROUP_SCOUTER')")
@@ -107,8 +111,13 @@ public class ScoutController {
     }
 
     @PostMapping("/document/{entityId}/{fileType}")
-    public ScoutFile uploadMedicalDocument(@PathVariable Integer entityId, @PathVariable ScoutFileType fileType, @RequestParam("file") MultipartFile file) {
-        return scoutFileService.createScoutFile(entityId, file, fileType);
+    public ScoutFile uploadMedicalDocument(
+        @PathVariable Integer entityId,
+        @PathVariable ScoutFileType fileType,
+        @RequestParam("file") MultipartFile file,
+        @RequestParam(value = "customName", defaultValue = "") String customName
+    ) {
+        return scoutFileService.createScoutFile(entityId, file, fileType, customName);
     }
 
     @DeleteMapping("/document/{entityId}/{fileId}/{fileType}")
@@ -116,9 +125,14 @@ public class ScoutController {
         scoutFileService.deleteScoutFile(entityId, fileId, fileType);
     }
 
+    @PostMapping("/new")
+    public ScoutDto addNewScout(@RequestBody @Valid NewScoutFormDto newScoutFormDto) {
+        return ScoutDto.fromScout(scoutCreationService.addNewScout(newScoutFormDto));
+    }
+
     @PatchMapping("/personal/{id}")
     public ScoutDto updatePersonalData(@PathVariable Integer id, @RequestBody @Valid PersonalDataFormDto personalDataFormDto) {
-        return ScoutDto.fromScout(scoutPersonalDataService.updatePersonalData(id, personalDataFormDto));
+        return ScoutDto.fromScout(scoutPersonalDataService.updateScoutPersonalData(id, personalDataFormDto));
     }
 
     @PatchMapping("/medical/{id}")
@@ -128,7 +142,7 @@ public class ScoutController {
 
     @PatchMapping("/contact/{id}")
     public ScoutDto updateContactData(@PathVariable Integer id, @RequestBody @Valid ContactListFormDto contactList) {
-        return ScoutDto.fromScout(scoutContactDataService.updateScoutContactData(id, contactList.contactList()));
+        return ScoutDto.fromScout(scoutContactService.updateScoutContactData(id, contactList.contactList()));
     }
 
     @PatchMapping("/scout-info/{id}")

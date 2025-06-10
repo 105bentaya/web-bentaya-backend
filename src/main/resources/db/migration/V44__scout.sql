@@ -26,7 +26,7 @@ CREATE TABLE scout
 (
     id           INT AUTO_INCREMENT NOT NULL,
     scout_type   VARCHAR(255)       NOT NULL,
-    active       BIT(1)             NOT NULL,
+    status       VARCHAR(255)       NOT NULL,
     federated    BIT(1)             NOT NULL,
     census       INT                NULL,
     group_id     INT                NULL,
@@ -240,17 +240,25 @@ CREATE TABLE scout_history
     CONSTRAINT FK_SCOUT_HISTORY_ON_SCOUT FOREIGN KEY (scout_id) REFERENCES scout (id)
 );
 
-INSERT INTO scout (id, scout_type, active, federated, group_id, census)
+INSERT INTO scout (id, scout_type, status, federated, group_id, census)
 SELECT id,
        IF(enabled, 'SCOUT', 'INACTIVE'),
-       enabled,
+       IF(enabled, 'ACTIVE', 'INACTIVE'),
        enabled,
        IF(enabled, group_id, null),
        census
 FROM old_scout;
 
-INSERT INTO personal_data(scout_id, surname, name, birthday, gender, shirt_size, residence_municipality, image_authorization)
-SELECT id, surname, name, IFNULL(birthday, NOW()), gender, shirt_size, municipality, image_authorization
+INSERT INTO personal_data(scout_id, surname, name, birthday, gender, shirt_size, residence_municipality,
+                          image_authorization)
+SELECT id,
+       surname,
+       name,
+       IFNULL(birthday, NOW()),
+       gender,
+       shirt_size,
+       municipality,
+       image_authorization
 FROM old_scout;
 
 ALTER TABLE identification_document

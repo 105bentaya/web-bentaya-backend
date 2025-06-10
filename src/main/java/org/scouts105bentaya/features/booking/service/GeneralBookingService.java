@@ -22,6 +22,7 @@ import org.scouts105bentaya.features.booking.repository.GeneralBookingRepository
 import org.scouts105bentaya.features.scout_center.ScoutCenterService;
 import org.scouts105bentaya.features.setting.enums.SettingEnum;
 import org.scouts105bentaya.features.user.UserService;
+import org.scouts105bentaya.features.user.dto.UserPasswordDto;
 import org.scouts105bentaya.shared.service.AuthService;
 import org.scouts105bentaya.shared.service.BlobService;
 import org.scouts105bentaya.shared.service.EmailService;
@@ -96,13 +97,13 @@ public class GeneralBookingService {
         booking.setCreationDate(ZonedDateTime.now());
         booking.setExclusiveReservation(booking.isExclusiveReservation() || booking.getScoutCenter().isAlwaysExclusive());
 
-        String password = this.userService.addNewScoutCenterUser(booking.getContactMail());
-        booking.setUser(userService.findByUsername(booking.getContactMail()));
+        UserPasswordDto userPassword = this.userService.addNewScoutCenterUser(booking.getContactMail());
+        booking.setUser(userPassword.user());
 
         GeneralBooking savedBooking = generalBookingRepository.save(booking);
 
         this.setBookingDocuments(savedBooking);
-        this.sendNewBookingMails(savedBooking, password);
+        this.sendNewBookingMails(savedBooking, userPassword.password());
     }
 
     private void setBookingDocuments(GeneralBooking booking) {
@@ -120,7 +121,7 @@ public class GeneralBookingService {
         bookingDocumentRepository.saveAll(documents);
     }
 
-    private void sendNewBookingMails(GeneralBooking booking, String newUserPassword) {
+    private void sendNewBookingMails(GeneralBooking booking, @Nullable String newUserPassword) {
         String userSubject = "Solicitud de Reserva nº %d - %s".formatted(booking.getId(), booking.getScoutCenter().getName());
         String managementSubject = "%s - %d - Nueva Solicitud de Reserva".formatted(booking.getScoutCenter().getName(), booking.getId());
 

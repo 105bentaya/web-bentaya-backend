@@ -5,6 +5,7 @@ import org.scouts105bentaya.features.scout.ScoutUtils;
 import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.scout.entity.ScoutRecord;
 import org.scouts105bentaya.features.scout.entity.ScoutRegistrationDates;
+import org.scouts105bentaya.features.scout.enums.ScoutStatus;
 import org.scouts105bentaya.features.scout.enums.ScoutType;
 
 import java.util.Comparator;
@@ -24,7 +25,7 @@ public record ScoutInfoDto(
         return new ScoutInfoDto(
             scout.getScoutType(),
             scout.getRegistrationDates().stream().sorted(Comparator.comparing(ScoutRegistrationDates::getRegistrationDate)).toList(),
-            scout.isActive(),
+            scout.getStatus() == ScoutStatus.ACTIVE,
             scout.isFederated(),
             scout.getCensus(),
             GroupBasicDataDto.fromGroup(scout.getGroup()),

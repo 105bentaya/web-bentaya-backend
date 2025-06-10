@@ -57,7 +57,8 @@ public class PreScoutService {
         AuthService authService,
         PreScoutPdfService preScoutPdfService,
         TemplateEngine templateEngine,
-        GroupService groupService) {
+        GroupService groupService
+    ) {
         this.emailService = emailService;
         this.preScoutRepository = preScoutRepository;
         this.preScoutAssignationRepository = preScoutAssignationRepository;

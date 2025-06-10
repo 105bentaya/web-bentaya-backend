@@ -46,12 +46,13 @@ public class AuthLogic {
         this.ownBookingRepository = ownBookingRepository;
     }
 
-    public boolean userHasSameGroupIdAsScout(int scoutId) {
-        Group loggedUserGroup = authService.getLoggedUser().getGroup();
-        if (loggedUserGroup == null) return false;
-        Group scoutGroup = scoutService.findActiveById(scoutId).getGroup();
-        return loggedUserGroup.getId().equals(scoutGroup.getId());
-    }
+    //todo maybe reuse
+//    public boolean userHasSameGroupIdAsScout(int scoutId) {
+//        Group loggedUserGroup = authService.getLoggedUser().getGroup();
+//        if (loggedUserGroup == null) return false;
+//        Group scoutGroup = scoutService.findActiveById(scoutId).getGroup();
+//        return loggedUserGroup.getId().equals(scoutGroup.getId());
+//    }
 
     public boolean eventIsEditableByScouter(EventFormDto eventFormDto) {
         Event event;

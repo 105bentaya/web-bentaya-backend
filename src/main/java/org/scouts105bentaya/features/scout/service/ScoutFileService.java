@@ -2,6 +2,7 @@ package org.scouts105bentaya.features.scout.service;
 
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.scout.entity.Scout;
@@ -46,9 +47,9 @@ public class ScoutFileService {
     }
 
     @Synchronized
-    public ScoutFile createScoutFile(Integer entityId, MultipartFile file, ScoutFileType fileType) {
+    public ScoutFile createScoutFile(Integer entityId, MultipartFile file, ScoutFileType fileType, String customName) {
         FileUtils.validateFileIsPdf(file);
-        ScoutFile scoutFile = buildScoutFile(file);
+        ScoutFile scoutFile = buildScoutFile(file, customName);
 
         if (fileType == ScoutFileType.RECORD) {
             attachFileToScoutRecord(scoutFile, entityId);
@@ -59,12 +60,13 @@ public class ScoutFileService {
         return scoutFile;
     }
 
-    private ScoutFile buildScoutFile(MultipartFile file) {
+    private ScoutFile buildScoutFile(MultipartFile file, String customName) {
         ScoutFile scoutFile = new ScoutFile();
         scoutFile.setName(file.getOriginalFilename());
         scoutFile.setMimeType(file.getContentType());
         scoutFile.setUuid(blobService.createBlob(file));
         scoutFile.setUploadDate(ZonedDateTime.now());
+        scoutFile.setCustomName(StringUtils.isBlank(customName) ? null : customName);
         return scoutFileRepository.save(scoutFile);
     }
 

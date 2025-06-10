@@ -50,6 +50,13 @@ public class PreScoutController {
         return this.preScoutConverter.convertEntityCollectionToDtoList(this.preScoutService.findAllAssignedByLoggedScouter());
     }
 
+    @PreAuthorize("hasRole('SCOUTER') and @authLogic.scouterHasPreScoutGroupId(#id)")
+    @GetMapping("/assignation/{id}")
+    public PreScoutDto findById(@PathVariable Integer id) {
+        log.info("METHOD PreScoutController.findById --- PARAMS id:{}{}", id, SecurityUtils.getLoggedUserUsernameForLog());
+        return this.preScoutConverter.convertFromEntity(this.preScoutService.findById(id));
+    }
+
     @PreAuthorize("hasRole('FORM')")
     @PostMapping("/assignation")
     public void saveAssignation(@RequestBody PreScoutAssignationDto preScoutAssignationDto) {

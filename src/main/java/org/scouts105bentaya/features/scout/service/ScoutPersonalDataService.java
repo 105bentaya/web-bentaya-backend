@@ -19,9 +19,14 @@ public class ScoutPersonalDataService {
         this.scoutRepository = scoutRepository;
     }
 
-    public Scout updatePersonalData(Integer id, PersonalDataFormDto form) {
+    public Scout updateScoutPersonalData(Integer id, PersonalDataFormDto form) {
         Scout scout = scoutRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
         PersonalData data = scout.getPersonalData();
+        this.updatePersonalData(form, data);
+        return scoutRepository.save(scout);
+    }
+
+    public void updatePersonalData(PersonalDataFormDto form, PersonalData data) {
         data.setSurname(form.surname());
         data.setName(form.name());
         data.setFeltName(form.feltName());
@@ -38,10 +43,9 @@ public class ScoutPersonalDataService {
         data.setShirtSize(form.shirtSize());
         data.setResidenceMunicipality(form.residenceMunicipality());
         data.setGender(form.gender());
+        data.setImageAuthorization(form.imageAuthorization());
 
         data.setIdDocument(ScoutUtils.updateIdDocument(data.getIdDocument(), form.idDocument()));
         data.setObservations(form.observations());
-
-        return scoutRepository.save(scout);
     }
 }
