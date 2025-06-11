@@ -67,7 +67,7 @@ public class ScoutGroupDataService {
         if (authService.getLoggedUser().hasRole(RoleEnum.ROLE_SECRETARY)) {
             scout.setCensus(census);
             if (census != null) {
-                scoutRepository.findFirstByCensus(census).ifPresent(exisitngScout -> {
+                scoutRepository.findByCensus(census).ifPresent(exisitngScout -> {
                     if (!exisitngScout.getId().equals(scout.getId())) {
                         throw new WebBentayaConflictException("Ya existe un scout con este censo");
                     }
@@ -159,7 +159,7 @@ public class ScoutGroupDataService {
 
     private void validateCensus(ScoutInfoFormDto form, Integer scoutId) {
         if (form.census() != null) {
-            Optional<Scout> existingCensus = scoutRepository.findFirstByCensus(form.census());
+            Optional<Scout> existingCensus = scoutRepository.findByCensus(form.census());
             if (existingCensus.isPresent() && !existingCensus.get().getId().equals(scoutId)) {
                 throw new WebBentayaConflictException("Este censo ya está asignado");
             }

@@ -99,7 +99,9 @@ public class JamboreeInscriptionService {
             ).toList()
         );
 
-        String census = scoutRepository.findByPersonalDataIdDocumentNumber(inscription.getDni()).flatMap(scout -> Optional.ofNullable(scout.getCensus()).map(String::valueOf)).orElse(null);
+        String census = scoutRepository.findFirstByPersonalDataIdDocumentNumber(inscription.getDni())
+            .flatMap(scout -> Optional.ofNullable(scout.getCensus()).map(String::valueOf))
+            .orElse(null);
         inscription.setCensus(census);
 
         jamboreeInscriptionRepository.save(inscription);

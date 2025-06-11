@@ -174,7 +174,7 @@ public class ScoutService {
             throw new WebBentayaBadRequestException("La persona del formulario no ha estado antes en el grupo");
         }
 
-        return scoutRepository.findByPersonalDataIdDocumentNumber(preScout.getDni())
+        return scoutRepository.findFirstByPersonalDataIdDocumentNumber(preScout.getDni())
             .filter(scout -> scout.getStatus() == ScoutStatus.INACTIVE)
             .orElse(null);
     }

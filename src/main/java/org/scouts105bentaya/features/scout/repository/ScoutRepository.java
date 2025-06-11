@@ -15,9 +15,9 @@ public interface ScoutRepository extends JpaRepository<Scout, Integer>, JpaSpeci
     @Query("SELECT s FROM Scout s WHERE s.group = :group AND s.status <> 'INACTIVE'")
     List<Scout> findAllNotInactiveActiveByGroup(Group group); //todo check if works
 
-    Optional<Scout> findByPersonalDataIdDocumentNumber(String idNumber);
+    Optional<Scout> findFirstByPersonalDataIdDocumentNumber(String idNumber);
 
-    Optional<Scout> findFirstByCensus(int census);
+    Optional<Scout> findByCensus(int census);
 
     @Query("""
         SELECT s FROM Scout s
