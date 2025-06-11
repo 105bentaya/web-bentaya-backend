@@ -27,7 +27,6 @@ import org.scouts105bentaya.features.scout.service.ScoutMedicalDataService;
 import org.scouts105bentaya.features.scout.service.ScoutPersonalDataService;
 import org.scouts105bentaya.features.scout.service.ScoutService;
 import org.scouts105bentaya.features.scout.specification.ScoutSpecificationFilter;
-import org.scouts105bentaya.features.special_member.enums.SpecialMemberRole;
 import org.scouts105bentaya.shared.GenericConverter;
 import org.scouts105bentaya.shared.specification.PageDto;
 import org.scouts105bentaya.shared.util.SecurityUtils;
@@ -46,6 +45,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -128,12 +128,17 @@ public class ScoutController {
 
     @PostMapping("/new")
     public ScoutDto addNewScout(@RequestBody @Valid NewScoutFormDto newScoutFormDto) {
-        return ScoutDto.fromScout(scoutCreationService.addNewScout(newScoutFormDto));
+        return ScoutDto.fromScout(scoutCreationService.registerScout(newScoutFormDto));
     }
 
     @GetMapping("/last-census")
     public int getSpecialMemberLastCensus() {
         return scoutGroupDataService.findLastScoutCensus();
+    }
+
+    @GetMapping("/previous-scout/{preScoutId}")
+    public ScoutDto findScoutsLikeHasBeenInGroup(@PathVariable Integer preScoutId) {
+        return Optional.ofNullable(scoutService.getPossibleInactiveScoutsFromPreScout(preScoutId)).map(ScoutDto::fromScout).orElse(null);
     }
 
     @PatchMapping("/personal/{id}")

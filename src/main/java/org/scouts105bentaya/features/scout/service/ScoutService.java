@@ -8,7 +8,10 @@ import org.scouts105bentaya.core.exception.WebBentayaUserNotFoundException;
 import org.scouts105bentaya.features.confirmation.Confirmation;
 import org.scouts105bentaya.features.confirmation.service.ConfirmationService;
 import org.scouts105bentaya.features.event.service.EventService;
+import org.scouts105bentaya.features.pre_scout.entity.PreScout;
+import org.scouts105bentaya.features.pre_scout.service.PreScoutService;
 import org.scouts105bentaya.features.scout.entity.Scout;
+import org.scouts105bentaya.features.scout.enums.ScoutStatus;
 import org.scouts105bentaya.features.scout.enums.ScoutType;
 import org.scouts105bentaya.features.scout.repository.ScoutRepository;
 import org.scouts105bentaya.features.scout.specification.ScoutSpecification;
@@ -34,19 +37,22 @@ public class ScoutService {
     private final UserService userService;
     private final EventService eventService;
     private final ConfirmationService confirmationService;
+    private final PreScoutService preScoutService;
 
     public ScoutService(
         ScoutRepository scoutRepository,
         AuthService authService,
         UserService userService,
         @Lazy EventService eventService,
-        ConfirmationService confirmationService
+        ConfirmationService confirmationService,
+        PreScoutService preScoutService
     ) {
         this.scoutRepository = scoutRepository;
         this.authService = authService;
         this.userService = userService;
         this.eventService = eventService;
         this.confirmationService = confirmationService;
+        this.preScoutService = preScoutService;
     }
 
     public Page<Scout> findAll(ScoutSpecificationFilter filter) {
@@ -114,9 +120,9 @@ public class ScoutService {
 
     private RoleEnum getScoutRole(ScoutType scoutType) {
         return switch (scoutType) {
-            case SCOUTER -> RoleEnum.ROLE_SCOUTER;
-            case SCOUT ->  RoleEnum.ROLE_USER;
-            default -> throw new WebBentayaForbiddenException("El tipo de scout %s no puede tener usuarios asignados".formatted(scoutType));
+            case SCOUT -> RoleEnum.ROLE_USER;
+            case SCOUTER, COMMITTEE, MANAGER -> RoleEnum.ROLE_SCOUTER;
+            case INACTIVE -> throw new WebBentayaForbiddenException("Las scouts de baja no pueden tener usuarios");
         };
     }
 
@@ -160,5 +166,16 @@ public class ScoutService {
             return true;
         }
         return false;
+    }
+
+    public Scout getPossibleInactiveScoutsFromPreScout(Integer preScoutId) {
+        PreScout preScout = preScoutService.findById(preScoutId);
+        if (!preScout.isHasBeenInGroup()) {
+            throw new WebBentayaBadRequestException("La persona del formulario no ha estado antes en el grupo");
+        }
+
+        return scoutRepository.findByPersonalDataIdDocumentNumber(preScout.getDni())
+            .filter(scout -> scout.getStatus() == ScoutStatus.INACTIVE)
+            .orElse(null);
     }
 }

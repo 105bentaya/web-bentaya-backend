@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.group.GroupRepository;
+import org.scouts105bentaya.features.pre_scout.entity.PreScout;
 import org.scouts105bentaya.features.pre_scout.service.PreScoutService;
 import org.scouts105bentaya.features.scout.dto.form.NewScoutFormDto;
 import org.scouts105bentaya.features.scout.dto.form.PersonalDataFormDto;
@@ -51,14 +52,48 @@ public class ScoutCreationService {
     }
 
     @Transactional
-    public Scout addNewScout(NewScoutFormDto form) {
+    public Scout registerScout(NewScoutFormDto form) {
         this.validate(form);
+        Scout scout = form.preScoutId() != null ?
+            this.addNewScoutFromPreScout(form) :
+            this.createNewScout(form);
 
-        checkForPreScout(form);
+        Scout savedScout = scoutRepository.save(scout);
+        scoutService.addUsersToNewScout(savedScout, form.scoutUsers());
+        return savedScout;
+    }
 
+    private Scout addNewScoutFromPreScout(NewScoutFormDto form) {
+        PreScout preScout = this.preScoutService.findById(form.preScoutId());
+
+        if (preScout.isHasBeenInGroup() && !form.hasBeenBefore()) {
+            throw new WebBentayaBadRequestException("Error al mandar la preinscripción, contacte con informática");
+        }
+
+        Scout scout = preScout.isHasBeenInGroup() && form.existingScoutId() != null ?
+            reactivateExistingScout(form) :
+            createNewScout(form);
+
+        preScoutService.saveAsAssigned(form.preScoutId());
+
+        return scout;
+    }
+
+    private Scout reactivateExistingScout(NewScoutFormDto form) {
+        Scout scout = scoutService.findById(form.existingScoutId());
+        scoutPersonalDataService.updatePersonalData(PersonalDataFormDto.fromNewScoutForm(form), scout.getPersonalData());
+        scout.getContactList().clear();
+        scout.getContactList().add(scoutContactService.newContact(form.contact(), scout));
+        scout.getEconomicData().setBank(form.bank());
+        scout.getEconomicData().setBank(form.iban());
+        this.setExistingGroupData(scout, form);
+        return scout;
+    }
+
+    private Scout createNewScout(NewScoutFormDto form) {
         Scout scout = new Scout();
 
-        this.setGroupData(scout, form);
+        this.setNewGroupData(scout, form);
 
         PersonalData personalData = new PersonalData();
         personalData.setScout(scout);
@@ -86,9 +121,7 @@ public class ScoutCreationService {
         scout.setMedicalData(medicalData);
         medicalData.setBloodType(BloodType.NA);
 
-        Scout savedScout = scoutRepository.save(scout);
-        scoutService.addUsersToNewScout(savedScout, form.scoutUsers());
-        return savedScout;
+        return scout;
     }
 
     private void validate(NewScoutFormDto form) {
@@ -112,13 +145,25 @@ public class ScoutCreationService {
         }
     }
 
-    private void checkForPreScout(NewScoutFormDto form) {
-        if (form.preScoutId() != null) {
-            preScoutService.saveAsAssigned(form.preScoutId());
-        }
+    private void setNewGroupData(Scout scout, NewScoutFormDto form) {
+        this.setGroupData(scout, form, ScoutStatus.PENDING_NEW);
+        scout.setRegistrationDates(List.of(
+            new ScoutRegistrationDates().setRegistrationDate(form.firstActivityDate()).setScout(scout)
+        ));
     }
 
-    private void setGroupData(Scout scout, NewScoutFormDto form) {
+    private void setExistingGroupData(Scout scout, NewScoutFormDto form) {
+        this.setGroupData(scout, form, ScoutStatus.PENDING_EXISTING);
+        List<ScoutRegistrationDates> registrationDates = scout.getRegistrationDates();
+
+        ScoutRegistrationDates scoutRegistrationDates = new ScoutRegistrationDates()
+            .setRegistrationDate(form.firstActivityDate())
+            .setScout(scout);
+
+        registrationDates.add(scoutRegistrationDates);
+    }
+
+    private void setGroupData(Scout scout, NewScoutFormDto form, ScoutStatus scoutStatus) {
         scoutGroupDataService.updateScoutCensus(scout, form.census());
 
         scout.setScoutType(form.scoutType());
@@ -126,7 +171,7 @@ public class ScoutCreationService {
             scout.setStatus(ScoutStatus.INACTIVE);
             scout.setFederated(false);
         } else if (scout.getCensus() == null) {
-            scout.setStatus(ScoutStatus.PENDING);
+            scout.setStatus(scoutStatus);
             scout.setFederated(false);
         } else {
             scout.setStatus(ScoutStatus.ACTIVE);
@@ -137,9 +182,5 @@ public class ScoutCreationService {
             groupRepository.findById(form.groupId()).orElseThrow(WebBentayaNotFoundException::new) :
             null
         );
-
-        scout.setRegistrationDates(List.of(
-            new ScoutRegistrationDates().setRegistrationDate(form.firstActivityDate()).setScout(scout)
-        ));
     }
 }

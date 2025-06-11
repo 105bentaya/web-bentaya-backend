@@ -65,14 +65,16 @@ public class ScoutGroupDataService {
 
     public void updateScoutCensus(Scout scout, @Nullable Integer census) {
         if (authService.getLoggedUser().hasRole(RoleEnum.ROLE_ADMIN)) {
-            scoutRepository.findFirstByCensus(census).ifPresent(exisitngScout -> {
-                if (!exisitngScout.getId().equals(scout.getId())) {
-                    throw new WebBentayaConflictException("Ya existe un scout con este censo");
-                }
-            });
             scout.setCensus(census);
-            if (scout.getCensus() != null && scout.getCensus() > findLastScoutCensus()) {
-                this.settingService.updateValue(scout.getCensus(), SettingEnum.LAST_CENSUS_SCOUT);
+            if (census != null) {
+                scoutRepository.findFirstByCensus(census).ifPresent(exisitngScout -> {
+                    if (!exisitngScout.getId().equals(scout.getId())) {
+                        throw new WebBentayaConflictException("Ya existe un scout con este censo");
+                    }
+                });
+                if (scout.getCensus() > findLastScoutCensus()) {
+                    this.settingService.updateValue(scout.getCensus(), SettingEnum.LAST_CENSUS_SCOUT);
+                }
             }
         } else if (census != null) {
             throw new WebBentayaForbiddenException("No tiene permiso para cambiar el censo de una scout");

@@ -33,6 +33,8 @@ public record NewScoutFormDto(
     Integer census,
     @NotNull LocalDate firstActivityDate,
     @NotNull List<String> scoutUsers,
-    Integer preScoutId
+    Integer preScoutId,
+    Integer existingScoutId,
+    @NotNull boolean hasBeenBefore
 ) {
 }
