@@ -52,14 +52,9 @@ public class ScoutCreationService {
 
     @Transactional
     public Scout addNewScout(NewScoutFormDto form) {
-        checkForPreScout(form);
+        this.validate(form);
 
-        boolean contactIsDonor = form.contact().donor();
-        if (contactIsDonor && form.contact().idDocument() == null) {
-            throw new WebBentayaBadRequestException("Debe especificar el documento de identidad del contacto por su condición de donante");
-        } else if (!contactIsDonor && form.idDocument() == null) {
-            throw new WebBentayaBadRequestException("Debe especificar el documento de identidad de la persona educanda por su condición de donante");
-        }
+        checkForPreScout(form);
 
         Scout scout = new Scout();
 
@@ -70,13 +65,17 @@ public class ScoutCreationService {
         scout.setPersonalData(personalData);
         scoutPersonalDataService.updatePersonalData(PersonalDataFormDto.fromNewScoutForm(form), personalData);
 
-        scout.setContactList(List.of(scoutContactService.newContact(form.contact(), scout)));
+        if (scout.getScoutType() == ScoutType.SCOUT) {
+            scout.setContactList(List.of(scoutContactService.newContact(form.contact(), scout)));
+        }
 
         EconomicData economicData = new EconomicData();
         economicData.setScout(scout);
         scout.setEconomicData(economicData);
-        economicData.setIban(form.iban());
-        economicData.setBank(form.bank());
+        if (scout.getScoutType() == ScoutType.SCOUT) {
+            economicData.setIban(form.iban());
+            economicData.setBank(form.bank());
+        }
 
         ScoutHistory scoutHistory = new ScoutHistory();
         scoutHistory.setScout(scout);
@@ -90,6 +89,27 @@ public class ScoutCreationService {
         Scout savedScout = scoutRepository.save(scout);
         scoutService.addUsersToNewScout(savedScout, form.scoutUsers());
         return savedScout;
+    }
+
+    private void validate(NewScoutFormDto form) {
+        if (form.scoutType() == ScoutType.SCOUT) {
+            if (form.contact() == null) {
+                throw new WebBentayaBadRequestException("Debe especificar un contacto a la persona educanda");
+            }
+            boolean contactIsDonor = form.contact().donor();
+            if (contactIsDonor && form.contact().idDocument() == null) {
+                throw new WebBentayaBadRequestException("Debe especificar el documento de identidad del contacto por su condición de donante");
+            } else if (!contactIsDonor && form.idDocument() == null) {
+                throw new WebBentayaBadRequestException("Debe especificar el documento de identidad de la persona educanda por su condición de donante");
+            }
+        } else if (form.scoutType() != ScoutType.INACTIVE) {
+            if (form.email() == null) {
+                throw new WebBentayaBadRequestException("Debe especificar el correo de la scout");
+            }
+            if (form.phone() == null) {
+                throw new WebBentayaBadRequestException("Debe especificar el teléfono móvil de la scout");
+            }
+        }
     }
 
     private void checkForPreScout(NewScoutFormDto form) {
