@@ -97,18 +97,19 @@ public class ScoutService {
             // todo if user is already scouter, you cannot add another scouter
         }
 
-
-        RoleEnum userRole = getScoutRole(scout.getScoutType());
-        scoutUsers.forEach(username -> {
-            try {
-                User user = userService.findByUsername(username.toLowerCase());
-                log.info("addUsersToNewScout - adding scout to user {}", username);
-                userService.addScoutToExistingUser(user, scout, userRole);
-            } catch (WebBentayaUserNotFoundException ex) {
-                log.info("addUsersToNewScout - user {} does not exist, creating new user", username);
-                userService.addScoutToNewUser(username.toLowerCase(), scout, userRole);
-            }
-        });
+        if (!scoutUsers.isEmpty()) {
+            RoleEnum userRole = getScoutRole(scout.getScoutType());
+            scoutUsers.forEach(username -> {
+                try {
+                    User user = userService.findByUsername(username.toLowerCase());
+                    log.info("addUsersToNewScout - adding scout to user {}", username);
+                    userService.addScoutToExistingUser(user, scout, userRole);
+                } catch (WebBentayaUserNotFoundException ex) {
+                    log.info("addUsersToNewScout - user {} does not exist, creating new user", username);
+                    userService.addScoutToNewUser(username.toLowerCase(), scout, userRole);
+                }
+            });
+        }
     }
 
     private RoleEnum getScoutRole(ScoutType scoutType) {

@@ -31,6 +31,7 @@ CREATE TABLE scout
     census       INT                NULL,
     group_id     INT                NULL,
     observations TEXT               NULL,
+    CONSTRAINT UC_SCOUT_CENSUS UNIQUE (census),
     CONSTRAINT PK_SCOUT PRIMARY KEY (id),
     CONSTRAINT FK_SCOUT_ON_GROUP FOREIGN KEY (group_id) REFERENCES bentaya_group (id)
 );

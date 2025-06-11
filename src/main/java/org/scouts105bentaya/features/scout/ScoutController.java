@@ -27,6 +27,7 @@ import org.scouts105bentaya.features.scout.service.ScoutMedicalDataService;
 import org.scouts105bentaya.features.scout.service.ScoutPersonalDataService;
 import org.scouts105bentaya.features.scout.service.ScoutService;
 import org.scouts105bentaya.features.scout.specification.ScoutSpecificationFilter;
+import org.scouts105bentaya.features.special_member.enums.SpecialMemberRole;
 import org.scouts105bentaya.shared.GenericConverter;
 import org.scouts105bentaya.shared.specification.PageDto;
 import org.scouts105bentaya.shared.util.SecurityUtils;
@@ -128,6 +129,11 @@ public class ScoutController {
     @PostMapping("/new")
     public ScoutDto addNewScout(@RequestBody @Valid NewScoutFormDto newScoutFormDto) {
         return ScoutDto.fromScout(scoutCreationService.addNewScout(newScoutFormDto));
+    }
+
+    @GetMapping("/last-census")
+    public int getSpecialMemberLastCensus() {
+        return scoutGroupDataService.findLastScoutCensus();
     }
 
     @PatchMapping("/personal/{id}")
