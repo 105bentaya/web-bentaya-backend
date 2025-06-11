@@ -64,7 +64,7 @@ public class ScoutGroupDataService {
     }
 
     public void updateScoutCensus(Scout scout, @Nullable Integer census) {
-        if (authService.getLoggedUser().hasRole(RoleEnum.ROLE_ADMIN)) {
+        if (authService.getLoggedUser().hasRole(RoleEnum.ROLE_SECRETARY)) {
             scout.setCensus(census);
             if (census != null) {
                 scoutRepository.findFirstByCensus(census).ifPresent(exisitngScout -> {
@@ -88,11 +88,18 @@ public class ScoutGroupDataService {
 
         Scout scout = scoutRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
 
+        if (form.census() == null && scout.getCensus() != null) {
+            throw new WebBentayaBadRequestException("No puede quitar el censo a una asociada que ya ha estado censada");
+        }
+
         this.updateScoutCensus(scout, form.census());
 
         scout.setScoutType(form.scoutType());
         if (scout.getScoutType() == ScoutType.INACTIVE) {
             scout.setStatus(ScoutStatus.INACTIVE);
+            scout.setFederated(false);
+        } else if (form.census() == null) {
+            scout.setStatus(ScoutStatus.PENDING_NEW);
             scout.setFederated(false);
         } else {
             scout.setStatus(ScoutStatus.ACTIVE);

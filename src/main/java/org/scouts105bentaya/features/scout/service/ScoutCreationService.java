@@ -170,7 +170,7 @@ public class ScoutCreationService {
         if (scout.getScoutType() == ScoutType.INACTIVE) {
             scout.setStatus(ScoutStatus.INACTIVE);
             scout.setFederated(false);
-        } else if (scout.getCensus() == null) {
+        } else if (scout.getCensus() == null || form.preScoutId() != null) {
             scout.setStatus(scoutStatus);
             scout.setFederated(false);
         } else {
@@ -182,5 +182,17 @@ public class ScoutCreationService {
             groupRepository.findById(form.groupId()).orElseThrow(WebBentayaNotFoundException::new) :
             null
         );
+    }
+
+    public void deletePendingScout(Integer scoutId) {
+        Scout scout = this.scoutRepository.findById(scoutId).orElseThrow(WebBentayaNotFoundException::new);
+        if (scout.getStatus() != ScoutStatus.PENDING_NEW) {
+            throw new WebBentayaBadRequestException("No se puede eliminar una asociada que ya ha estado censada en el grupo");
+        }
+        if (!scout.getSpecialRoles().isEmpty()) {
+            throw new WebBentayaBadRequestException("No se puede eliminar una asociada que tiene un registro asociado");
+        }
+        scoutRepository.delete(scout);
+        //todo eliminar de eventos, usuarios y demás, como si se diese de baja, files
     }
 }

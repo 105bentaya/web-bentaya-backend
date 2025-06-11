@@ -178,4 +178,11 @@ public class ScoutService {
             .filter(scout -> scout.getStatus() == ScoutStatus.INACTIVE)
             .orElse(null);
     }
+
+    public long totalPendingRegistrations() {
+        ScoutSpecificationFilter scoutSpecificationFilter = new ScoutSpecificationFilter();
+        scoutSpecificationFilter.setCountPerPage(0);
+        scoutSpecificationFilter.setStatuses(List.of(ScoutStatus.PENDING_EXISTING, ScoutStatus.PENDING_NEW));
+        return this.findAll(scoutSpecificationFilter).getTotalElements();
+    }
 }

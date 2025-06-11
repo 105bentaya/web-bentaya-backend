@@ -61,16 +61,16 @@ public class Scout {
 
     // GENERAL DATA
 
-    @OneToOne(mappedBy = "scout", optional = false, cascade = CascadeType.PERSIST)
+    @OneToOne(mappedBy = "scout", optional = false, orphanRemoval = true, cascade = CascadeType.PERSIST)
     private PersonalData personalData;
 
-    @OneToOne(mappedBy = "scout", optional = false, cascade = CascadeType.PERSIST)
+    @OneToOne(mappedBy = "scout", optional = false, orphanRemoval = true, cascade = CascadeType.PERSIST)
     private MedicalData medicalData;
 
-    @OneToOne(mappedBy = "scout", optional = false, cascade = CascadeType.PERSIST)
+    @OneToOne(mappedBy = "scout", optional = false, orphanRemoval = true, cascade = CascadeType.PERSIST)
     private EconomicData economicData;
 
-    @OneToOne(mappedBy = "scout", optional = false, cascade = CascadeType.PERSIST)
+    @OneToOne(mappedBy = "scout", optional = false, orphanRemoval = true, cascade = CascadeType.PERSIST)
     private ScoutHistory scoutHistory;
 
     @OneToMany(mappedBy = "scout", orphanRemoval = true, cascade = {CascadeType.PERSIST, CascadeType.MERGE})

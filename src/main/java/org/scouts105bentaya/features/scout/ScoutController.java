@@ -51,7 +51,6 @@ import java.util.Optional;
 @RestController
 @RequestMapping("api/scout")
 public class ScoutController {
-
     private final ScoutService scoutService;
     private final ScoutFileService scoutFileService;
     private final ScoutPersonalDataService scoutPersonalDataService;
@@ -71,7 +70,8 @@ public class ScoutController {
         ScoutGroupDataService scoutGroupDataService,
         ScoutEconomicDataService scoutEconomicDataService,
         ScoutHistoryService scoutHistoryService,
-        ScoutCreationService scoutCreationService) {
+        ScoutCreationService scoutCreationService
+    ) {
         this.scoutService = scoutService;
         this.scoutFileService = scoutFileService;
         this.scoutPersonalDataService = scoutPersonalDataService;
@@ -88,6 +88,13 @@ public class ScoutController {
     public PageDto<ScoutDto> findAll(ScoutSpecificationFilter filter) {
         log.info("findAll - filter:{}{}", filter, SecurityUtils.getLoggedUserUsernameForLog());
         return GenericConverter.convertListToPageDto(scoutService.findAll(filter), ScoutDto::fromScout);
+    }
+
+    @PreAuthorize("hasRole('SECRETARY')")
+    @GetMapping("any-pending-registrations")
+    public long getTotalPendingRegistrations() {
+        log.info("getTotalPendingRegistrations{}", SecurityUtils.getLoggedUserUsernameForLog());
+        return scoutService.totalPendingRegistrations();
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'SCOUTER', 'GROUP_SCOUTER')")
@@ -131,6 +138,11 @@ public class ScoutController {
         return ScoutDto.fromScout(scoutCreationService.registerScout(newScoutFormDto));
     }
 
+    @DeleteMapping("/pending/{scoutId}")
+    public void deletePendingScout(@PathVariable Integer scoutId) {
+        scoutCreationService.deletePendingScout(scoutId);
+    }
+
     @GetMapping("/last-census")
     public int getSpecialMemberLastCensus() {
         return scoutGroupDataService.findLastScoutCensus();
@@ -156,6 +168,7 @@ public class ScoutController {
         return ScoutDto.fromScout(scoutContactService.updateScoutContactData(id, contactList.contactList()));
     }
 
+    @PreAuthorize("hasRole('SECRETARY')")
     @PatchMapping("/scout-info/{id}")
     public ScoutDto updateScoutInfo(@PathVariable Integer id, @RequestBody @Valid ScoutInfoFormDto scoutInfoFormDto) {
         return ScoutDto.fromScout(scoutGroupDataService.updateScoutInfo(id, scoutInfoFormDto));

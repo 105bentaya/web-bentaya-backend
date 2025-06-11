@@ -62,6 +62,7 @@ public class ScoutSpecification implements Specification<Scout> {
         predicates.inList(personalData.get("gender"), filter.getGenders());
         predicates.like(personalData.get("idDocument").get("number"), filter.getIdDocument());
         predicates.isEqual(personalData.get("imageAuthorization"), filter.getImageAuthorization());
+        predicates.inList(root.get("status"), filter.getStatuses());
 
         return predicates.getPredicatesAnd();
     }

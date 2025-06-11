@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.scouts105bentaya.features.group.Section;
+import org.scouts105bentaya.features.scout.enums.ScoutStatus;
 import org.scouts105bentaya.features.scout.enums.ScoutType;
 import org.scouts105bentaya.shared.specification.SpecificationFilter;
 
@@ -22,4 +23,5 @@ public class ScoutSpecificationFilter extends SpecificationFilter {
     private List<String> genders;
     private String idDocument;
     private Boolean imageAuthorization;
+    private List<ScoutStatus> statuses;
 }

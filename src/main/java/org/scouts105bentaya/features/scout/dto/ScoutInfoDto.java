@@ -14,7 +14,7 @@ import java.util.List;
 public record ScoutInfoDto(
     ScoutType scoutType,
     List<ScoutRegistrationDates> registrationDates,
-    boolean active,
+    ScoutStatus status,
     boolean federated,
     Integer census,
     GroupBasicDataDto group,
@@ -25,7 +25,7 @@ public record ScoutInfoDto(
         return new ScoutInfoDto(
             scout.getScoutType(),
             scout.getRegistrationDates().stream().sorted(Comparator.comparing(ScoutRegistrationDates::getRegistrationDate)).toList(),
-            scout.getStatus() == ScoutStatus.ACTIVE,
+            scout.getStatus(),
             scout.isFederated(),
             scout.getCensus(),
             GroupBasicDataDto.fromGroup(scout.getGroup()),
