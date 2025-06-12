@@ -51,7 +51,7 @@ public class PersonalData {
     @Column(columnDefinition = "text")
     private String observations;
 
-    @OneToMany(cascade = CascadeType.PERSIST)
+    @OneToMany(cascade = CascadeType.PERSIST, orphanRemoval = true)
     private List<ScoutFile> documents;
 
     @MapsId

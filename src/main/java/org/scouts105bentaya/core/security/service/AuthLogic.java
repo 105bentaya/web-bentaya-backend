@@ -1,5 +1,6 @@
 package org.scouts105bentaya.core.security.service;
 
+import jakarta.annotation.Nullable;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.booking.entity.BookingDocument;
 import org.scouts105bentaya.features.booking.entity.OwnBooking;
@@ -13,12 +14,14 @@ import org.scouts105bentaya.features.event.service.EventService;
 import org.scouts105bentaya.features.group.Group;
 import org.scouts105bentaya.features.pre_scout.entity.PreScoutAssignation;
 import org.scouts105bentaya.features.pre_scout.service.PreScoutService;
+import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.scout.service.ScoutService;
 import org.scouts105bentaya.shared.service.AuthService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 public class AuthLogic {
@@ -54,6 +57,10 @@ public class AuthLogic {
 //        return loggedUserGroup.getId().equals(scoutGroup.getId());
 //    }
 
+    private @Nullable Group getLoggedUserScouterGroup() {
+        return Optional.ofNullable(authService.getLoggedUser().getScouter()).map(Scout::getGroup).orElse(null);
+    }
+
     public boolean eventIsEditableByScouter(EventFormDto eventFormDto) {
         Event event;
         try {
@@ -61,7 +68,7 @@ public class AuthLogic {
         } catch (WebBentayaNotFoundException e) {
             return false;
         }
-        Group loggedUserGroup = authService.getLoggedUser().getGroup();
+        Group loggedUserGroup = getLoggedUserScouterGroup();
         if (!event.isForEveryone() && (loggedUserGroup == null || !Objects.equals(loggedUserGroup.getId(), Objects.requireNonNull(event.getGroup()).getId()))) return false;
         return eventFormDto.forEveryone() || (loggedUserGroup != null && Objects.equals(loggedUserGroup.getId(), eventFormDto.groupId()));
     }
@@ -70,7 +77,7 @@ public class AuthLogic {
         Event event = eventService.findById(eventId);
         if (event.isForEveryone()) return true;
         Group eventGroup = event.getGroup();
-        Group loggedUserGroup = authService.getLoggedUser().getGroup();
+        Group loggedUserGroup = getLoggedUserScouterGroup();
         return loggedUserGroup != null && Objects.equals(Objects.requireNonNull(eventGroup).getId(), loggedUserGroup.getId());
     }
 
@@ -78,12 +85,12 @@ public class AuthLogic {
         OwnBooking booking = ownBookingRepository.get(bookingId);
         if (booking.getGroup() == null) return true;
         Group eventGroup = booking.getGroup();
-        Group loggedUserGroup = authService.getLoggedUser().getGroup();
+        Group loggedUserGroup = getLoggedUserScouterGroup();
         return loggedUserGroup != null && Objects.equals(Objects.requireNonNull(eventGroup).getId(), loggedUserGroup.getId());
     }
 
     public boolean scouterHasGroupId(Integer groupId) {
-        Group loggedUserGroup = authService.getLoggedUser().getGroup();
+        Group loggedUserGroup = getLoggedUserScouterGroup();
         if (loggedUserGroup == null) return false;
         return loggedUserGroup.getId().equals(groupId);
     }
@@ -96,7 +103,7 @@ public class AuthLogic {
 
     public boolean scouterHasPreScoutGroupId(int preScoutId) {
         PreScoutAssignation preScoutAssignation = preScoutService.findById(preScoutId).getPreScoutAssignation();
-        Group loggedUserGroup = authService.getLoggedUser().getGroup();
+        Group loggedUserGroup = getLoggedUserScouterGroup();
         if (preScoutAssignation == null || loggedUserGroup == null) return false;
         return Objects.equals(loggedUserGroup.getId(), Objects.requireNonNull(preScoutAssignation.getGroup()).getId());
     }

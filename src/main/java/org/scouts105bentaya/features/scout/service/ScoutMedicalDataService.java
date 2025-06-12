@@ -25,7 +25,7 @@ public class ScoutMedicalDataService {
     }
 
     public Scout updateMedicalData(Integer id, MedicalDataFormDto form) {
-        Scout scout = scoutRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
+        Scout scout = scoutRepository.get(id);
 
         MedicalData medicalData = scout.getMedicalData();
         medicalData.setFoodIntolerances(form.foodIntolerances());

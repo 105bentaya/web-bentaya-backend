@@ -1,6 +1,7 @@
 package org.scouts105bentaya.features.confirmation.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
 import org.scouts105bentaya.core.exception.WebBentayaForbiddenException;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.confirmation.Confirmation;
@@ -12,12 +13,11 @@ import org.scouts105bentaya.features.confirmation.dto.AttendanceScoutEventInfo;
 import org.scouts105bentaya.features.confirmation.dto.AttendanceScoutInfoDto;
 import org.scouts105bentaya.features.confirmation.dto.ConfirmationDto;
 import org.scouts105bentaya.features.event.Event;
-import org.scouts105bentaya.features.event.service.EventService;
+import org.scouts105bentaya.features.event.EventRepository;
 import org.scouts105bentaya.features.group.Group;
 import org.scouts105bentaya.features.scout.entity.Scout;
-import org.scouts105bentaya.features.user.User;
+import org.scouts105bentaya.features.scout.enums.ScoutType;
 import org.scouts105bentaya.shared.service.AuthService;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.time.ZonedDateTime;
@@ -30,16 +30,16 @@ import java.util.Optional;
 public class ConfirmationService {
 
     private final ConfirmationRepository confirmationRepository;
-    private final EventService eventService;
+    private final EventRepository eventRepository;
     private final AuthService authService;
 
     public ConfirmationService(
         ConfirmationRepository confirmationRepository,
         AuthService authService,
-        @Lazy EventService eventService
+        EventRepository eventRepository
     ) {
         this.confirmationRepository = confirmationRepository;
-        this.eventService = eventService;
+        this.eventRepository = eventRepository;
         this.authService = authService;
     }
 
@@ -71,7 +71,7 @@ public class ConfirmationService {
     }
 
     public List<AttendanceListBasicDto> findScouterAttendanceList() {
-        return eventService.findAllByGroupIdAndActivatedAttendance(Objects.requireNonNull(authService.getLoggedUser().getGroup())).stream()
+        return eventRepository.findAllByGroupAndActiveAttendanceListIsTrue(authService.getLoggedScouterGroupOrUnauthorized()).stream()
             .map(this::getAttendanceListBasicDtoFromEvent)
             .toList();
     }
@@ -165,9 +165,7 @@ public class ConfirmationService {
     }
 
     private void validateScouterScoutAccess(Confirmation confirmation) {
-        User loggedUser = this.authService.getLoggedUser();
-
-        Group scouterGroup = loggedUser.getGroup();
+        Group scouterGroup = this.authService.getLoggedScouterGroupOrUnauthorized();
         Group eventGroup = confirmation.getEvent().getGroup();
         Group scoutGroup = confirmation.getScout().getGroup();
 
@@ -190,5 +188,29 @@ public class ConfirmationService {
                 .filter(confirmation -> !confirmation.getEvent().eventAttendanceIsClosed())
                 .anyMatch(confirmation -> confirmation.getAttending() == null)
             );
+    }
+
+    public void deleteFutureConfirmations(Scout scout) {
+        this.deleteAll(scout.getConfirmationList().stream()
+            .filter(confirmation -> !confirmation.getEvent().eventHasEnded())
+            .toList()
+        );
+    }
+
+    public void createConfirmationForFutureEvents(Scout scout) {
+        if (scout.getScoutType() != ScoutType.SCOUT) {
+            throw new WebBentayaBadRequestException("No se pueden añadir asistencias a asociadas que no sean educandas");
+        }
+        eventRepository.findAllByGroup(scout.getGroup()).stream()
+            .filter(event -> !event.isForScouters() && event.isActiveAttendanceList() && !event.eventHasEnded())
+            .forEach(e -> {
+                Confirmation confirmation = new Confirmation();
+                confirmation.setScout(scout);
+                confirmation.setEvent(e);
+                if (e.isActiveAttendancePayment()) {
+                    confirmation.setPayed(false);
+                }
+                this.save(confirmation);
+            });
     }
 }

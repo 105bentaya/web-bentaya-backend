@@ -13,6 +13,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.Setter;
 import org.scouts105bentaya.features.confirmation.Confirmation;
@@ -22,6 +23,8 @@ import org.scouts105bentaya.features.scout.enums.ScoutType;
 import org.scouts105bentaya.features.special_member.entity.SpecialMember;
 import org.scouts105bentaya.features.user.User;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -76,22 +79,23 @@ public class Scout {
     @OneToMany(mappedBy = "scout", orphanRemoval = true, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<Contact> contactList;
 
-    // OTHER DATA
-
-    @Column(columnDefinition = "text")
-    private String observations;
-
-    @OneToMany
-    private List<ScoutFile> extraFiles;
-
-    @OneToMany
-    private List<ScoutFile> images;
-
     // RELATIONS
 
     @OneToMany(mappedBy = "scout", cascade = CascadeType.REMOVE)
     private List<Confirmation> confirmationList;
 
     @ManyToMany(mappedBy = "scoutList", fetch = FetchType.LAZY)
-    private Set<User> userList;
+    private Set<User> scoutUsers = new HashSet<>();
+
+    @OneToOne(mappedBy = "scouter")
+    private User scouterUser;
+
+    @Transient
+    public List<User> getAllUsers() {
+        List<User> relatedUsers = new ArrayList<>(scoutUsers);
+        if (scouterUser != null) {
+            relatedUsers.add(scouterUser);
+        }
+        return relatedUsers;
+    }
 }

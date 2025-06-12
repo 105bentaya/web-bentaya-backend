@@ -12,7 +12,7 @@ import org.scouts105bentaya.core.exception.WebBentayaConflictException;
 import org.scouts105bentaya.core.security.service.LoginAttemptService;
 import org.scouts105bentaya.core.security.service.RequestService;
 import org.scouts105bentaya.features.scout.repository.ScoutRepository;
-import org.scouts105bentaya.features.user.dto.UserFormDto;
+import org.scouts105bentaya.features.user.dto.form.UserFormDto;
 import org.scouts105bentaya.features.user.role.RoleRepository;
 import org.scouts105bentaya.shared.service.EmailService;
 import org.springframework.security.crypto.password.PasswordEncoder;

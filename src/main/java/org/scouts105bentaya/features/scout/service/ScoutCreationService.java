@@ -3,6 +3,7 @@ package org.scouts105bentaya.features.scout.service;
 import jakarta.transaction.Transactional;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
+import org.scouts105bentaya.features.confirmation.service.ConfirmationService;
 import org.scouts105bentaya.features.group.GroupRepository;
 import org.scouts105bentaya.features.pre_scout.entity.PreScout;
 import org.scouts105bentaya.features.pre_scout.service.PreScoutService;
@@ -17,7 +18,10 @@ import org.scouts105bentaya.features.scout.entity.ScoutRegistrationDates;
 import org.scouts105bentaya.features.scout.enums.BloodType;
 import org.scouts105bentaya.features.scout.enums.ScoutStatus;
 import org.scouts105bentaya.features.scout.enums.ScoutType;
+import org.scouts105bentaya.features.scout.repository.EconomicEntryRepository;
+import org.scouts105bentaya.features.scout.repository.ScoutRecordRepository;
 import org.scouts105bentaya.features.scout.repository.ScoutRepository;
+import org.scouts105bentaya.features.user.UserService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -32,6 +36,11 @@ public class ScoutCreationService {
     private final ScoutGroupDataService scoutGroupDataService;
     private final ScoutService scoutService;
     private final PreScoutService preScoutService;
+    private final ConfirmationService confirmationService;
+    private final UserService userService;
+    private final ScoutFileService scoutFileService;
+    private final EconomicEntryRepository economicEntryRepository;
+    private final ScoutRecordRepository scoutRecordRepository;
 
     public ScoutCreationService(
         ScoutRepository scoutRepository,
@@ -40,7 +49,12 @@ public class ScoutCreationService {
         ScoutPersonalDataService scoutPersonalDataService,
         ScoutGroupDataService scoutGroupDataService,
         ScoutService scoutService,
-        PreScoutService preScoutService
+        PreScoutService preScoutService,
+        ConfirmationService confirmationService,
+        UserService userService,
+        ScoutFileService scoutFileService,
+        EconomicEntryRepository economicEntryRepository,
+        ScoutRecordRepository scoutRecordRepository
     ) {
         this.scoutRepository = scoutRepository;
         this.groupRepository = groupRepository;
@@ -49,6 +63,11 @@ public class ScoutCreationService {
         this.scoutGroupDataService = scoutGroupDataService;
         this.scoutService = scoutService;
         this.preScoutService = preScoutService;
+        this.confirmationService = confirmationService;
+        this.userService = userService;
+        this.scoutFileService = scoutFileService;
+        this.economicEntryRepository = economicEntryRepository;
+        this.scoutRecordRepository = scoutRecordRepository;
     }
 
     @Transactional
@@ -60,6 +79,9 @@ public class ScoutCreationService {
 
         Scout savedScout = scoutRepository.save(scout);
         scoutService.addUsersToNewScout(savedScout, form.scoutUsers());
+        if (savedScout.getScoutType() == ScoutType.SCOUT) {
+            confirmationService.createConfirmationForFutureEvents(savedScout);
+        }
         return savedScout;
     }
 
@@ -80,7 +102,7 @@ public class ScoutCreationService {
     }
 
     private Scout reactivateExistingScout(NewScoutFormDto form) {
-        Scout scout = scoutService.findById(form.existingScoutId());
+        Scout scout = scoutRepository.get(form.existingScoutId());
         scoutPersonalDataService.updatePersonalData(PersonalDataFormDto.fromNewScoutForm(form), scout.getPersonalData());
         scout.getContactList().clear();
         scout.getContactList().add(scoutContactService.newContact(form.contact(), scout));
@@ -185,14 +207,21 @@ public class ScoutCreationService {
     }
 
     public void deletePendingScout(Integer scoutId) {
-        Scout scout = this.scoutRepository.findById(scoutId).orElseThrow(WebBentayaNotFoundException::new);
+        Scout scout = scoutRepository.get(scoutId);
         if (scout.getStatus() != ScoutStatus.PENDING_NEW) {
             throw new WebBentayaBadRequestException("No se puede eliminar una asociada que ya ha estado censada en el grupo");
         }
         if (!scout.getSpecialRoles().isEmpty()) {
             throw new WebBentayaBadRequestException("No se puede eliminar una asociada que tiene un registro asociado");
         }
+
+        economicEntryRepository.deleteAll(scout.getEconomicData().getEntries());
+        scoutRecordRepository.deleteAll(scout.getRecordList());
+
+        confirmationService.deleteAll(scout.getConfirmationList());
+        scout.getAllUsers().forEach(user -> userService.removeScoutFromUser(user, scout));
+
+        scoutFileService.deleteScoutFiles(scout);
         scoutRepository.delete(scout);
-        //todo eliminar de eventos, usuarios y demás, como si se diese de baja, files
     }
 }

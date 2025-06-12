@@ -1,6 +1,5 @@
 package org.scouts105bentaya.features.user;
 
-import jakarta.annotation.Nullable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -9,8 +8,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -18,7 +17,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.scouts105bentaya.features.booking.entity.GeneralBooking;
-import org.scouts105bentaya.features.group.Group;
 import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.user.role.Role;
 import org.scouts105bentaya.features.user.role.RoleEnum;
@@ -38,6 +36,8 @@ public class User {
     private String username;
     @NotNull
     private String password;
+    private boolean enabled = true;
+
     @NotEmpty(message = "The user must have a role assigned")
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -46,13 +46,18 @@ public class User {
         inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private List<Role> roles;
-    private boolean enabled = true;
-    @Nullable
-    @ManyToOne
-    private Group group;
+
+    @OneToOne
+    @JoinTable(
+        name = "user_scouter",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "scout_id")
+    )
+    private Scout scouter;
+
     @ManyToMany
     @JoinTable(
-        name = "scout_user",
+        name = "user_scouts",
         joinColumns = @JoinColumn(name = "user_id"),
         inverseJoinColumns = @JoinColumn(name = "scout_id")
     )
@@ -68,6 +73,6 @@ public class User {
 
     @Transient
     public boolean isMember() {
-        return hasRole(RoleEnum.ROLE_USER) || hasRole(RoleEnum.ROLE_SCOUTER) || hasRole(RoleEnum.ROLE_GROUP_SCOUTER);
+        return hasRole(RoleEnum.ROLE_USER) || hasRole(RoleEnum.ROLE_SCOUTER);
     }
 }

@@ -34,7 +34,6 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -78,8 +77,7 @@ public class PreScoutService {
     }
 
     public List<PreScout> findAllAssignedByLoggedScouter() {
-        Group group = Optional.ofNullable(this.authService.getLoggedUser().getGroup()).orElseThrow(WebBentayaNotFoundException::new);
-        return this.preScoutRepository.findAllByPreScoutAssignation_Group(group);
+        return this.preScoutRepository.findAllByPreScoutAssignation_Group(this.authService.getLoggedScouterGroupOrUnauthorized());
     }
 
     public void saveAndSendEmail(PreScoutFormDto preScoutDto) {

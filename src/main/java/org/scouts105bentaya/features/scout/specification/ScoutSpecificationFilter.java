@@ -22,6 +22,7 @@ public class ScoutSpecificationFilter extends SpecificationFilter {
     private String[] filterDates;
     private List<String> genders;
     private String idDocument;
+    private String email;
     private Boolean imageAuthorization;
     private List<ScoutStatus> statuses;
 }

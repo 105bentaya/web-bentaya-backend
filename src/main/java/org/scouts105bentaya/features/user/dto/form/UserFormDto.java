@@ -1,4 +1,4 @@
-package org.scouts105bentaya.features.user.dto;
+package org.scouts105bentaya.features.user.dto.form;
 
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotBlank;
@@ -14,7 +14,7 @@ public record UserFormDto(
     @NotBlank String password,
     @NotNull @NotEmpty List<RoleEnum> roles,
     @NotNull boolean enabled,
-    @Nullable Integer groupId,
+    @Nullable Integer scouterId,
     @Nullable List<Integer> scoutIds
 ) {
 }

@@ -9,7 +9,7 @@ public record UserProfileDto(
     Integer id,
     String username,
     List<RoleEnum> roles,
-    GroupBasicDataDto group,
+    GroupBasicDataDto scouterGroup,
     List<UserScoutDto> scoutList
 ) {
 }

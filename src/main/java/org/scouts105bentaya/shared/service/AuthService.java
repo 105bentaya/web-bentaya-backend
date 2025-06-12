@@ -1,7 +1,10 @@
 package org.scouts105bentaya.shared.service;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.core.exception.WebBentayaAuthServiceException;
+import org.scouts105bentaya.core.exception.WebBentayaScouterHasNoGroupException;
+import org.scouts105bentaya.features.group.Group;
 import org.scouts105bentaya.features.user.User;
 import org.scouts105bentaya.features.user.UserRepository;
 import org.scouts105bentaya.shared.util.SecurityUtils;
@@ -25,5 +28,9 @@ public class AuthService {
             log.error("getLoggedUser - error while getting current user info");
         }
         return user.orElseThrow(WebBentayaAuthServiceException::new);
+    }
+
+    public @NotNull Group getLoggedScouterGroupOrUnauthorized() {
+        return Optional.ofNullable(getLoggedUser().getScouter().getGroup()).orElseThrow(WebBentayaScouterHasNoGroupException::new);
     }
 }

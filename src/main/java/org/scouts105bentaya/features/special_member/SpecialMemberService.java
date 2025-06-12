@@ -11,7 +11,6 @@ import org.scouts105bentaya.features.scout.dto.FilteredResultDto;
 import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.scout.enums.PersonType;
 import org.scouts105bentaya.features.scout.repository.ScoutRepository;
-import org.scouts105bentaya.features.scout.service.ScoutService;
 import org.scouts105bentaya.features.setting.SettingService;
 import org.scouts105bentaya.features.setting.enums.SettingEnum;
 import org.scouts105bentaya.features.special_member.dto.SpecialMemberDetailDto;
@@ -40,7 +39,6 @@ import java.util.Optional;
 @Service
 public class SpecialMemberService {
 
-    private final ScoutService scoutService;
     private final SpecialMemberRepository specialMemberRepository;
     private final SettingService settingService;
     private final ScoutRepository scoutRepository;
@@ -48,13 +46,11 @@ public class SpecialMemberService {
     private final SpecialMemberDonationRepository specialMemberDonationRepository;
 
     public SpecialMemberService(
-        ScoutService scoutService,
         SpecialMemberRepository specialMemberRepository,
         SettingService settingService, ScoutRepository scoutRepository,
         SpecialMemberPersonRepository specialMemberPersonRepository,
         SpecialMemberDonationRepository specialMemberDonationRepository
     ) {
-        this.scoutService = scoutService;
         this.specialMemberRepository = specialMemberRepository;
         this.settingService = settingService;
         this.scoutRepository = scoutRepository;
@@ -97,7 +93,7 @@ public class SpecialMemberService {
         SpecialMember specialMember = new SpecialMember();
 
         if (form.scoutId() != null) {
-            specialMember.setScout(scoutService.findById(form.scoutId()));
+            specialMember.setScout(scoutRepository.get(form.scoutId()));
         } else if (form.personId() != null) {
             specialMember.setPerson(specialMemberPersonRepository.findById(form.personId()).orElseThrow(WebBentayaNotFoundException::new));
         } else {

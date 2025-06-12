@@ -1,5 +1,6 @@
 package org.scouts105bentaya.features.scout.repository;
 
+import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.group.Group;
 import org.scouts105bentaya.features.scout.entity.Scout;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,10 +13,17 @@ import java.util.Optional;
 
 @Repository
 public interface ScoutRepository extends JpaRepository<Scout, Integer>, JpaSpecificationExecutor<Scout> {
-    @Query("SELECT s FROM Scout s WHERE s.group = :group AND s.status <> 'INACTIVE'")
-    List<Scout> findAllNotInactiveActiveByGroup(Group group); //todo check if works
+
+    default Scout get(Integer id) {
+        return findById(id).orElseThrow(WebBentayaNotFoundException::new);
+    }
+
+    @Query("SELECT s FROM Scout s WHERE s.scoutType = 'SCOUT' AND s.group = :group")
+    List<Scout> findScoutsByGroup(Group group);
 
     Optional<Scout> findFirstByPersonalDataIdDocumentNumber(String idNumber);
+
+    Optional<Scout> findByPersonalDataEmail(String email);
 
     Optional<Scout> findByCensus(int census);
 
@@ -28,4 +36,12 @@ public interface ScoutRepository extends JpaRepository<Scout, Integer>, JpaSpeci
               OR d.number LIKE :filter
         """)
     List<Scout> findByBasicFields(String filter);
+
+    @Query(value = """
+        SELECT u.username
+        FROM user u
+        WHERE u.id IN (SELECT us.user_id FROM user_scouts us WHERE us.scout_id = :scoutId)
+            OR u.id IN (SELECT us.user_id FROM user_scouter us WHERE us.scout_id = :scoutId)
+        """, nativeQuery = true)
+    List<String> findScoutsUserNames(Integer scoutId);
 }

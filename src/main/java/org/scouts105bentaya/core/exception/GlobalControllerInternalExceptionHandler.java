@@ -102,6 +102,13 @@ public class GlobalControllerInternalExceptionHandler extends ResponseEntityExce
             .body(getExceptionMessage(ex, "El pago sobre el que se quiere realizar la operación no ha sido encontrado"));
     }
 
+    @ExceptionHandler(WebBentayaScouterHasNoGroupException.class)
+    public ResponseEntity<Map<String, String>> handleScouterHasNoGroupException(WebBentayaScouterHasNoGroupException ex) {
+        return ResponseEntity
+            .status(HttpStatus.UNAUTHORIZED)
+            .body(getExceptionMessage(ex, "El scouter no tiene ninguna unidad asignada, por lo que no puede realizar esta operación"));
+    }
+
     private Map<String, String> getExceptionMessage(RuntimeException ex) {
         return Map.of(WEB_BENTAYA_EXCEPTION, ex.getMessage());
     }

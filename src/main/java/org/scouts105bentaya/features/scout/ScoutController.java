@@ -34,6 +34,7 @@ import org.scouts105bentaya.shared.specification.PageDto;
 import org.scouts105bentaya.shared.util.SecurityUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -46,8 +47,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 @RestController
@@ -63,6 +67,7 @@ public class ScoutController {
     private final ScoutHistoryService scoutHistoryService;
     private final ScoutCreationService scoutCreationService;
     private final InvoiceService invoiceService;
+    private final ScoutConverter scoutConverter;
 
     public ScoutController(
         ScoutService scoutService,
@@ -74,7 +79,8 @@ public class ScoutController {
         ScoutEconomicDataService scoutEconomicDataService,
         ScoutHistoryService scoutHistoryService,
         ScoutCreationService scoutCreationService,
-        InvoiceService invoiceService
+        InvoiceService invoiceService,
+        ScoutConverter scoutConverter
     ) {
         this.scoutService = scoutService;
         this.scoutFileService = scoutFileService;
@@ -86,20 +92,21 @@ public class ScoutController {
         this.scoutHistoryService = scoutHistoryService;
         this.scoutCreationService = scoutCreationService;
         this.invoiceService = invoiceService;
+        this.scoutConverter = scoutConverter;
     }
 
     @PreAuthorize("hasAnyRole('SECRETARY', 'SCOUTER', 'GROUP_SCOUTER')")
     @GetMapping
     public PageDto<ScoutDto> findAll(ScoutSpecificationFilter filter) {
         log.info("findAll - filter:{}{}", filter, SecurityUtils.getLoggedUserUsernameForLog());
-        return GenericConverter.convertListToPageDto(scoutService.findAll(filter), ScoutDto::fromScout);
+        return GenericConverter.convertListToPageDto(scoutService.findAll(filter), scoutConverter::convertFromEntity);
     }
 
     @PreAuthorize("hasAnyRole('SECRETARY', 'SCOUTER', 'GROUP_SCOUTER')")
     @GetMapping("/{id}")
     public ScoutDto findById(@PathVariable Integer id) {
         log.info("findById{}", SecurityUtils.getLoggedUserUsernameForLog());
-        return ScoutDto.fromScout(scoutService.findById(id));
+        return scoutConverter.convertFromEntity(scoutService.getScoutInfo(id));
     }
 
     @PreAuthorize("hasRole('USER')")
@@ -116,10 +123,29 @@ public class ScoutController {
     }
 
     @PreAuthorize("hasRole('SECRETARY')")
-    @GetMapping("any-pending-registrations")
+    @GetMapping("/any-pending-registrations")
     public long getTotalPendingRegistrations() {
         log.info("getTotalPendingRegistrations{}", SecurityUtils.getLoggedUserUsernameForLog());
         return scoutService.totalPendingRegistrations();
+    }
+
+    @PreAuthorize("hasAnyRole('SECRETARY', 'SCOUTER')")
+    @GetMapping("/new-users")
+    public List<String> getScoutUsernamesUpdateDto(
+        @RequestParam(name = "usernames", required = false) List<String> newUsernames
+    ) {
+        log.info("getNewScoutUsernames{}", SecurityUtils.getLoggedUserUsernameForLog());
+        return scoutService.getUsersToUpdateInfo(newUsernames);
+    }
+
+    @PreAuthorize("hasAnyRole('SECRETARY', 'SCOUTER')")
+    @PostMapping("/update-scout-users/{scoutId}")
+    public List<String> updateScoutUsers(@PathVariable Integer scoutId, @RequestBody List<String> newUsernamesList) {
+        log.info("updateScoutUsers - scoutId:{}{}", scoutId, SecurityUtils.getLoggedUserUsernameForLog());
+        Set<String> newUsernames = CollectionUtils.isEmpty(newUsernamesList) ?
+            Collections.emptySet() :
+            new HashSet<>(newUsernamesList);
+        return scoutService.updateScoutUsers(scoutId, newUsernames);
     }
 
     //NEW - TODO AUTH, LOGS
@@ -146,7 +172,7 @@ public class ScoutController {
 
     @PostMapping("/new")
     public ScoutDto addNewScout(@RequestBody @Valid NewScoutFormDto newScoutFormDto) {
-        return ScoutDto.fromScout(scoutCreationService.registerScout(newScoutFormDto));
+        return scoutConverter.convertFromEntity(scoutCreationService.registerScout(newScoutFormDto));
     }
 
     @DeleteMapping("/pending/{scoutId}")
@@ -161,28 +187,28 @@ public class ScoutController {
 
     @GetMapping("/previous-scout/{preScoutId}")
     public ScoutDto findScoutsLikeHasBeenInGroup(@PathVariable Integer preScoutId) {
-        return Optional.ofNullable(scoutService.getPossibleInactiveScoutsFromPreScout(preScoutId)).map(ScoutDto::fromScout).orElse(null);
+        return Optional.ofNullable(scoutService.getPossibleInactiveScoutsFromPreScout(preScoutId)).map(scoutConverter::convertFromEntity).orElse(null);
     }
 
     @PatchMapping("/personal/{id}")
     public ScoutDto updatePersonalData(@PathVariable Integer id, @RequestBody @Valid PersonalDataFormDto personalDataFormDto) {
-        return ScoutDto.fromScout(scoutPersonalDataService.updateScoutPersonalData(id, personalDataFormDto));
+        return scoutConverter.convertFromEntity(scoutPersonalDataService.updateScoutPersonalData(id, personalDataFormDto));
     }
 
     @PatchMapping("/medical/{id}")
     public ScoutDto updateMedicalData(@PathVariable Integer id, @RequestBody @Valid MedicalDataFormDto medicalDataFormDto) {
-        return ScoutDto.fromScout(scoutMedicalDataService.updateMedicalData(id, medicalDataFormDto));
+        return scoutConverter.convertFromEntity(scoutMedicalDataService.updateMedicalData(id, medicalDataFormDto));
     }
 
     @PatchMapping("/contact/{id}")
     public ScoutDto updateContactData(@PathVariable Integer id, @RequestBody @Valid ContactListFormDto contactList) {
-        return ScoutDto.fromScout(scoutContactService.updateScoutContactData(id, contactList.contactList()));
+        return scoutConverter.convertFromEntity(scoutContactService.updateScoutContactData(id, contactList.contactList()));
     }
 
     @PreAuthorize("hasRole('SECRETARY')")
     @PatchMapping("/scout-info/{id}")
     public ScoutDto updateScoutInfo(@PathVariable Integer id, @RequestBody @Valid ScoutInfoFormDto scoutInfoFormDto) {
-        return ScoutDto.fromScout(scoutGroupDataService.updateScoutInfo(id, scoutInfoFormDto));
+        return scoutConverter.convertFromEntity(scoutGroupDataService.updateScoutInfo(id, scoutInfoFormDto));
     }
 
     @PostMapping("/scout-info/record/{scoutId}")
@@ -202,7 +228,7 @@ public class ScoutController {
 
     @PatchMapping("/economic/{id}")
     public ScoutDto updateEconomicData(@PathVariable Integer id, @RequestBody @Valid EconomicDataFormDto form) {
-        return ScoutDto.fromScout(scoutEconomicDataService.updateEconomicData(id, form));
+        return scoutConverter.convertFromEntity(scoutEconomicDataService.updateEconomicData(id, form));
     }
 
     @PostMapping("/economic/entry/{scoutId}")
@@ -229,6 +255,6 @@ public class ScoutController {
 
     @PatchMapping("/scout-history/{id}")
     public ScoutDto updateEconomicData(@PathVariable Integer id, @RequestBody @Valid ScoutHistoryFormDto form) {
-        return ScoutDto.fromScout(scoutHistoryService.updateScoutHistory(id, form));
+        return scoutConverter.convertFromEntity(scoutHistoryService.updateScoutHistory(id, form));
     }
 }

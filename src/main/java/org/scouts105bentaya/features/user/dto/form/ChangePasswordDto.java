@@ -1,4 +1,4 @@
-package org.scouts105bentaya.features.user.dto;
+package org.scouts105bentaya.features.user.dto.form;
 
 import org.scouts105bentaya.features.user.constraint.ValidPassword;
 

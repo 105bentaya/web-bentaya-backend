@@ -113,7 +113,7 @@ class EventServiceTest {
 
         //when
         when(groupService.findById(1)).thenReturn(GroupUtils.basicGroup());
-        when(scoutService.findAllByLoggedScouterGroupId()).thenReturn(List.of(new OldScout().setId(1)));
+        when(scoutService.findAllScoutsByLoggedScouterGroupId()).thenReturn(List.of(new OldScout().setId(1)));
         ZonedDateTime date1 = ZonedDateTime.parse("2025-03-13T11:00:00Z");
         ZonedDateTime date2 = ZonedDateTime.parse("2025-03-12T11:00:00Z");
         mockSave();
@@ -140,7 +140,7 @@ class EventServiceTest {
 
         //when
         when(groupService.findById(1)).thenReturn(GroupUtils.basicGroup());
-        when(scoutService.findAllByLoggedScouterGroupId()).thenReturn(List.of(new OldScout().setId(1)));
+        when(scoutService.findAllScoutsByLoggedScouterGroupId()).thenReturn(List.of(new OldScout().setId(1)));
         ZonedDateTime date1 = ZonedDateTime.parse("2025-03-10T12:00:00Z");
         ZonedDateTime date2 = ZonedDateTime.parse("2025-03-09T11:00:00Z");
         mockSave();
@@ -169,7 +169,7 @@ class EventServiceTest {
 
         //when
         when(groupService.findById(1)).thenReturn(GroupUtils.basicGroup());
-        when(scoutService.findAllByLoggedScouterGroupId()).thenReturn(List.of(new OldScout().setId(1)));
+        when(scoutService.findAllScoutsByLoggedScouterGroupId()).thenReturn(List.of(new OldScout().setId(1)));
         ZonedDateTime date1 = ZonedDateTime.parse("2025-03-10T12:00:00Z");
         ZonedDateTime date2 = ZonedDateTime.parse("2025-03-09T11:00:00Z");
         mockSave();
@@ -228,7 +228,7 @@ class EventServiceTest {
         //when
         when(groupService.findById(1)).thenReturn(GroupUtils.basicGroup());
         when(eventRepository.findById(anyInt())).thenReturn(Optional.of(event));
-        when(scoutService.findAllByLoggedScouterGroupId()).thenReturn(List.of(new OldScout().setId(1)));
+        when(scoutService.findAllScoutsByLoggedScouterGroupId()).thenReturn(List.of(new OldScout().setId(1)));
         ZonedDateTime mockedNow = ZonedDateTime.parse("2025-03-13T12:00:00Z");
         mockSave();
         Event updatedEvent = eventService.update(eventFormDto);
@@ -253,7 +253,7 @@ class EventServiceTest {
         //when
         when(groupService.findById(1)).thenReturn(GroupUtils.basicGroup());
         when(eventRepository.findById(anyInt())).thenReturn(Optional.of(existingEvent));
-        when(scoutService.findAllByLoggedScouterGroupId()).thenReturn(List.of(new OldScout().setId(1)));
+        when(scoutService.findAllScoutsByLoggedScouterGroupId()).thenReturn(List.of(new OldScout().setId(1)));
         ZonedDateTime mockedNow = ZonedDateTime.parse("2025-03-13T12:00:00Z");
         mockSave();
         Event updatedEvent = eventService.update(eventFormDto);

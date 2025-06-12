@@ -78,7 +78,7 @@ public class ScoutFileService {
     }
 
     private void attachFileToScout(ScoutFile scoutFile, ScoutFileType type, Integer id) {
-        Scout scout = scoutRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
+        Scout scout = scoutRepository.get(id);
 
         getFileTypeList(scout, type).add(scoutFile);
         scoutRepository.save(scout);
@@ -109,7 +109,7 @@ public class ScoutFileService {
     }
 
     private void deleteScoutFileFromScout(Integer scoutId, Integer fileId, ScoutFileType type) {
-        Scout scout = scoutRepository.findById(scoutId).orElseThrow(WebBentayaNotFoundException::new);
+        Scout scout = scoutRepository.get(scoutId);
         this.deleteFileAndBlob(getFileTypeList(scout, type), fileId);
         scoutRepository.save(scout);
     }
@@ -120,5 +120,17 @@ public class ScoutFileService {
             .findFirst().orElseThrow(WebBentayaNotFoundException::new);
         blobService.deleteBlob(scoutFile.getUuid());
         files.remove(scoutFile);
+    }
+
+    public void deleteScoutFiles(Scout scout) {
+        this.deleteAll(scout.getMedicalData().getDocuments());
+        this.deleteAll(scout.getPersonalData().getDocuments());
+        this.deleteAll(scout.getEconomicData().getDocuments());
+        this.deleteAll(scout.getRecordList().stream().map(ScoutRecord::getFiles).flatMap(List::stream).toList());
+    }
+
+    private void deleteAll(List<ScoutFile> files) {
+        files.forEach(file -> blobService.deleteBlob(file.getUuid()));
+        scoutFileRepository.deleteAll(files);
     }
 }

@@ -36,7 +36,7 @@ public class ScoutEconomicDataService {
     }
 
     public Scout updateEconomicData(Integer id, EconomicDataFormDto form) {
-        Scout scout = scoutRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
+        Scout scout = scoutRepository.get(id);
         EconomicData data = scout.getEconomicData();
 
         scout.getContactList().forEach(contact -> contact.setDonor(false));
@@ -57,7 +57,7 @@ public class ScoutEconomicDataService {
     public EconomicEntry addEntry(Integer scoutId, EconomicEntryFormDto form) {
         this.validateEntryForm(form);
 
-        Scout scout = scoutRepository.findById(scoutId).orElseThrow(WebBentayaNotFoundException::new);
+        Scout scout = scoutRepository.get(scoutId);
         EconomicEntry entry = new EconomicEntry();
         this.updateEntryFromForm(entry, form);
         entry.setEconomicData(scout.getEconomicData());
@@ -77,7 +77,7 @@ public class ScoutEconomicDataService {
     public EconomicEntry updateEntry(Integer scoutId, Integer entryId, EconomicEntryFormDto form) {
         this.validateEntryForm(form);
 
-        Scout scout = scoutRepository.findById(scoutId).orElseThrow(WebBentayaNotFoundException::new);
+        Scout scout = scoutRepository.get(scoutId);
 
         EconomicEntry entry = scout.getEconomicData().getEntries().stream()
             .filter(e -> e.getId().equals(entryId))
@@ -108,8 +108,7 @@ public class ScoutEconomicDataService {
     }
 
     public void deleteEntry(Integer scoutId, Integer entryId) {
-        scoutRepository.findById(scoutId).orElseThrow(WebBentayaNotFoundException::new)
-            .getEconomicData().getEntries().stream()
+        scoutRepository.get(scoutId).getEconomicData().getEntries().stream()
             .filter(e -> e.getId().equals(entryId))
             .findFirst().orElseThrow(WebBentayaNotFoundException::new);
 

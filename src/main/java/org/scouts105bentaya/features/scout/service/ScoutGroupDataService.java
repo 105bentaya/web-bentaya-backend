@@ -8,6 +8,8 @@ import org.scouts105bentaya.core.exception.WebBentayaConflictException;
 import org.scouts105bentaya.core.exception.WebBentayaForbiddenException;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.booking.util.IntervalUtils;
+import org.scouts105bentaya.features.confirmation.service.ConfirmationService;
+import org.scouts105bentaya.features.group.Group;
 import org.scouts105bentaya.features.group.GroupRepository;
 import org.scouts105bentaya.features.scout.dto.form.ScoutInfoFormDto;
 import org.scouts105bentaya.features.scout.dto.form.ScoutRecordFormDto;
@@ -21,6 +23,7 @@ import org.scouts105bentaya.features.scout.repository.ScoutRecordRepository;
 import org.scouts105bentaya.features.scout.repository.ScoutRepository;
 import org.scouts105bentaya.features.setting.SettingService;
 import org.scouts105bentaya.features.setting.enums.SettingEnum;
+import org.scouts105bentaya.features.user.UserService;
 import org.scouts105bentaya.features.user.role.RoleEnum;
 import org.scouts105bentaya.shared.service.AuthService;
 import org.scouts105bentaya.shared.service.BlobService;
@@ -28,6 +31,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
@@ -37,26 +41,30 @@ public class ScoutGroupDataService {
     private final ScoutRepository scoutRepository;
     private final BlobService blobService;
     private final GroupRepository groupRepository;
-    private final ScoutService scoutService;
     private final ScoutRecordRepository scoutRecordRepository;
     private final SettingService settingService;
     private final AuthService authService;
+    private final ConfirmationService confirmationService;
+    private final UserService userService;
 
     public ScoutGroupDataService(
         ScoutRepository scoutRepository,
         BlobService blobService,
         GroupRepository groupRepository,
-        ScoutService scoutService,
         ScoutRecordRepository scoutRecordRepository,
         SettingService settingService,
-        AuthService authService) {
+        AuthService authService,
+        ConfirmationService confirmationService,
+        UserService userService
+    ) {
         this.scoutRepository = scoutRepository;
         this.blobService = blobService;
         this.groupRepository = groupRepository;
-        this.scoutService = scoutService;
         this.scoutRecordRepository = scoutRecordRepository;
         this.settingService = settingService;
         this.authService = authService;
+        this.confirmationService = confirmationService;
+        this.userService = userService;
     }
 
     public int findLastScoutCensus() {
@@ -86,7 +94,9 @@ public class ScoutGroupDataService {
         this.validateCensus(form, id);
         this.validateRegistrationDates(form);
 
-        Scout scout = scoutRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
+        Scout scout = scoutRepository.get(id);
+        ScoutType oldScoutType = scout.getScoutType();
+        Integer oldScoutScoutGroupId = Optional.ofNullable(scout.getGroup()).map(Group::getId).orElse(null);
 
         if (form.census() == null && scout.getCensus() != null) {
             throw new WebBentayaBadRequestException("No puede quitar el censo a una asociada que ya ha estado censada");
@@ -112,22 +122,30 @@ public class ScoutGroupDataService {
         );
 
         this.updateScoutRegistrationDates(scout, form);
+        Scout savedScout = scoutRepository.save(scout);
 
-        //todo hacer actualizaciones de roles, usuarios y asistencias según cosas
-        //        if (hasChangedGroup) {
-        //            this.deleteFutureConfirmations(savedScout);
-        //            this.createConfirmationForFutureEvents(scoutDB);
-        //        }
-        //    @Transactional
-        //    public void disable(Integer id) {
-        //        Scout scout = this.findActiveById(id);
-        //        scout.getUserList().forEach(user -> userService.removeScoutFromUser(user, scout));
-        //        this.deleteFutureConfirmations(scout);
-        //        scout.setActive(false);
-        //        scoutRepository.save(scout);
-        //    }
+        ScoutType newScoutType = savedScout.getScoutType();
+        Integer newScoutGroupId = Optional.ofNullable(savedScout.getGroup()).map(Group::getId).orElse(null);
 
-        return scoutRepository.save(scout);
+        if (oldScoutType.equals(newScoutType) && newScoutType == ScoutType.SCOUT && !Objects.equals(newScoutGroupId, oldScoutScoutGroupId)) {
+            confirmationService.deleteFutureConfirmations(savedScout);
+            confirmationService.createConfirmationForFutureEvents(savedScout);
+        }
+
+        if (oldScoutType == ScoutType.SCOUT && newScoutType != ScoutType.SCOUT) {
+            confirmationService.deleteFutureConfirmations(savedScout);
+            scout.getScoutUsers().forEach(user -> userService.removeScoutFromUser(user, scout));
+        }
+
+        if (oldScoutType != ScoutType.SCOUT && newScoutType == ScoutType.SCOUT) {
+            confirmationService.createConfirmationForFutureEvents(savedScout);
+        }
+
+        if (oldScoutType.hasScouterAccess() && !newScoutType.hasScouterAccess() && scout.getScouterUser() != null) {
+            userService.removeScoutFromUser(scout.getScouterUser(), scout);
+        }
+
+        return savedScout;
     }
 
 
@@ -201,7 +219,7 @@ public class ScoutGroupDataService {
     }
 
     public ScoutRecord uploadScoutRecord(Integer scoutId, ScoutRecordFormDto recordForm) {
-        Scout scout = scoutService.findById(scoutId);
+        Scout scout = scoutRepository.get(scoutId);
 
         ScoutRecord scoutRecord = new ScoutRecord()
             .setRecordType(recordForm.recordType())
@@ -219,7 +237,7 @@ public class ScoutGroupDataService {
     }
 
     public ScoutRecord updateScoutRecord(Integer scoutId, Integer recordId, ScoutRecordFormDto recordForm) {
-        Scout scout = scoutService.findById(scoutId);
+        Scout scout = scoutRepository.get(scoutId);
 
         ScoutRecord scoutRecord = scout.getRecordList().stream()
             .filter(r -> r.getId().equals(recordId))
@@ -235,7 +253,7 @@ public class ScoutGroupDataService {
     }
 
     public void deleteScoutRecord(Integer scoutId, Integer recordId) {
-        Scout scout = scoutService.findById(scoutId);
+        Scout scout = scoutRepository.get(scoutId);
         ScoutRecord scoutRecord = scout.getRecordList().stream()
             .filter(r -> r.getId().equals(recordId))
             .findFirst()

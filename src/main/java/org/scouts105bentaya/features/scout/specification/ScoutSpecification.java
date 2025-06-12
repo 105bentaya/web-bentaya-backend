@@ -61,6 +61,7 @@ public class ScoutSpecification implements Specification<Scout> {
         predicates.localDateBetweenFilterRange(personalData.get("birthday"), filter.getFilterDates());
         predicates.inList(personalData.get("gender"), filter.getGenders());
         predicates.like(personalData.get("idDocument").get("number"), filter.getIdDocument());
+        predicates.like(personalData.get("email"), filter.getEmail());
         predicates.isEqual(personalData.get("imageAuthorization"), filter.getImageAuthorization());
         predicates.inList(root.get("status"), filter.getStatuses());
 

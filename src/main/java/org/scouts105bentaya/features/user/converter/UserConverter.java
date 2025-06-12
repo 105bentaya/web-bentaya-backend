@@ -28,8 +28,12 @@ public class UserConverter extends GenericConverter<User, UserDto> {
             GenericConstants.FAKE_PASSWORD,
             user.getRoles().stream().map(Role::getName).collect(Collectors.toList()),
             user.isEnabled(),
-            Optional.ofNullable(user.getGroup()).map(Group::getName).orElse(null),
+            userScouterGroup(user),
             GenericConverter.convertEntityCollectionToDtoList(user.getScoutList(), UserScoutDto::fromScout)
         );
+    }
+
+    private String userScouterGroup(User user) {
+        return Optional.ofNullable(user.getScouter()).flatMap(scouter -> Optional.ofNullable(scouter.getGroup()).map(Group::getName)).orElse(null);
     }
 }

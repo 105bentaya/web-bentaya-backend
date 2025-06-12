@@ -4,6 +4,10 @@ public enum ScoutType {
     SCOUT, SCOUTER, COMMITTEE, MANAGER, INACTIVE;
 
     public boolean isScoutOrScouter() {
-        return this == ScoutType.SCOUT || this == ScoutType.SCOUTER;
+        return this == SCOUT || this == SCOUTER;
+    }
+
+    public boolean hasScouterAccess() {
+        return this == COMMITTEE || this == MANAGER || this == SCOUTER;
     }
 }

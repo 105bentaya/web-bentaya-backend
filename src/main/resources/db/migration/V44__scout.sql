@@ -30,7 +30,6 @@ CREATE TABLE scout
     federated    BIT(1)             NOT NULL,
     census       INT                NULL,
     group_id     INT                NULL,
-    observations TEXT               NULL,
     CONSTRAINT UC_SCOUT_CENSUS UNIQUE (census),
     CONSTRAINT PK_SCOUT PRIMARY KEY (id),
     CONSTRAINT FK_SCOUT_ON_GROUP FOREIGN KEY (group_id) REFERENCES bentaya_group (id)
@@ -66,24 +65,6 @@ CREATE TABLE scout_record_files
     CONSTRAINT UC_SCOUT_RECORD_FILES_FILES UNIQUE (files_id),
     CONSTRAINT FK_SCOUT_RECORD_FILE_ON_SCOUT_FILE FOREIGN KEY (files_id) REFERENCES scout_file (id),
     CONSTRAINT FK_SCOUT_RECORD_FILE_ON_SCOUT_RECORD FOREIGN KEY (scout_record_id) REFERENCES scout_record (id)
-);
-
-CREATE TABLE scout_extra_files
-(
-    scout_id       INT NOT NULL,
-    extra_files_id INT NOT NULL,
-    CONSTRAINT UC_SCOUT_EXTRA_FILES_EXTRA_FILES UNIQUE (extra_files_id),
-    CONSTRAINT FK_SCOUT_EXTRA_FILES_ON_SCOUT FOREIGN KEY (scout_id) REFERENCES scout (id),
-    CONSTRAINT FK_SCOUT_EXTRA_FILES_ON_SCOUT_FILE FOREIGN KEY (extra_files_id) REFERENCES scout_file (id)
-);
-
-CREATE TABLE scout_images
-(
-    scout_id  INT NOT NULL,
-    images_id INT NOT NULL,
-    CONSTRAINT UC_SCOUT_IMAGES_IMAGES UNIQUE (images_id),
-    CONSTRAINT FK_SCOUT_IMAGES_ON_SCOUT FOREIGN KEY (scout_id) REFERENCES scout (id),
-    CONSTRAINT FK_SCOUT_IMAGES_ON_SCOUT_FILE FOREIGN KEY (images_id) REFERENCES scout_file (id)
 );
 
 CREATE TABLE personal_data
@@ -299,6 +280,3 @@ ALTER TABLE scout_user
 
 ALTER TABLE scout_user
     ADD CONSTRAINT FK_SCOUT_USER_ON_USER FOREIGN KEY (user_id) REFERENCES user (id);
-
-INSERT INTO role
-VALUES (10, 'ROLE_SECRETARY');

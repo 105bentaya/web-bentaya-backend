@@ -1,9 +1,8 @@
 package org.scouts105bentaya.features.user.converter;
 
-import org.scouts105bentaya.features.group.Group;
 import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.user.User;
-import org.scouts105bentaya.features.user.dto.UserFormDto;
+import org.scouts105bentaya.features.user.dto.form.UserFormDto;
 import org.scouts105bentaya.features.user.role.Role;
 import org.scouts105bentaya.shared.GenericConstants;
 import org.scouts105bentaya.shared.GenericConverter;
@@ -28,7 +27,7 @@ public class UserFormConverter extends GenericConverter<User, UserFormDto> {
             GenericConstants.FAKE_PASSWORD,
             user.getRoles().stream().map(Role::getName).toList(),
             user.isEnabled(),
-            Optional.ofNullable(user.getGroup()).map(Group::getId).orElse(null),
+            Optional.ofNullable(user.getScouter()).map(Scout::getId).orElse(null),
             Optional.ofNullable(user.getScoutList()).orElse(Collections.emptySet()).stream().map(Scout::getId).toList()
         );
     }

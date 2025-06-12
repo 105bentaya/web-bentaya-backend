@@ -9,15 +9,14 @@ import org.scouts105bentaya.core.security.UserHasReachedMaxLoginAttemptsExceptio
 import org.scouts105bentaya.core.security.service.LoginAttemptService;
 import org.scouts105bentaya.core.security.service.RequestService;
 import org.scouts105bentaya.features.group.GroupBasicDataDto;
-import org.scouts105bentaya.features.group.GroupService;
 import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.scout.repository.ScoutRepository;
 import org.scouts105bentaya.features.setting.enums.SettingEnum;
-import org.scouts105bentaya.features.user.dto.ChangePasswordDto;
-import org.scouts105bentaya.features.user.dto.UserFormDto;
 import org.scouts105bentaya.features.user.dto.UserPasswordDto;
 import org.scouts105bentaya.features.user.dto.UserProfileDto;
 import org.scouts105bentaya.features.user.dto.UserScoutDto;
+import org.scouts105bentaya.features.user.dto.form.ChangePasswordDto;
+import org.scouts105bentaya.features.user.dto.form.UserFormDto;
 import org.scouts105bentaya.features.user.role.Role;
 import org.scouts105bentaya.features.user.role.RoleEnum;
 import org.scouts105bentaya.features.user.role.RoleRepository;
@@ -37,6 +36,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -57,7 +57,6 @@ public class UserService implements UserDetailsService {
     private final RoleRepository roleRepository;
     private final RequestService requestService;
     private final ScoutRepository scoutRepository;
-    private final GroupService groupService;
 
     @Value("${bentaya.web.url}") String url;
 
@@ -68,7 +67,8 @@ public class UserService implements UserDetailsService {
         EmailService emailService,
         RoleRepository roleRepository,
         RequestService requestService,
-        ScoutRepository scoutRepository, GroupService groupService) {
+        ScoutRepository scoutRepository
+    ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.loginAttemptService = loginAttemptService;
@@ -76,7 +76,6 @@ public class UserService implements UserDetailsService {
         this.roleRepository = roleRepository;
         this.requestService = requestService;
         this.scoutRepository = scoutRepository;
-        this.groupService = groupService;
     }
 
     public Page<User> findAll(UserSpecificationFilter filter) {
@@ -92,26 +91,27 @@ public class UserService implements UserDetailsService {
     }
 
     public void updateUserBasicData(User user, UserFormDto formDto) {
-        user
-            .setUsername(formDto.username().toLowerCase())
-            .setGroup(groupService.findByNullableId(formDto.groupId()))
-            .setRoles(formDto.roles().stream().map(role -> roleRepository.findByName(role).orElse(null)).collect(Collectors.toList()))
-            .setScoutList(Optional.ofNullable(formDto.scoutIds())
-                .map(scoutRepository::findAllById)
-                .map(HashSet::new)
-                .orElse(null)
-            );
+        user.setUsername(formDto.username().toLowerCase())
+            .setRoles(formDto.roles().stream().map(role -> roleRepository.findByName(role).orElse(null)).collect(Collectors.toList()));
 
-        if (!user.hasRole(RoleEnum.ROLE_SCOUTER)) {
-            user.setGroup(null);
-        } else if (user.getGroup() == null) {
-            throw new WebBentayaBadRequestException("El usuario debe tener una unidad asignada");
+        if (user.hasRole(RoleEnum.ROLE_SCOUTER)) {
+            if (user.getScouter() == null) {
+                throw new WebBentayaBadRequestException("El usuario debe tener un scouter asignado");
+            }
+            user.setScouter(scoutRepository.get(user.getScouter().getId()));
+        } else {
+            user.setScouter(null);
         }
 
-        if (!user.hasRole(RoleEnum.ROLE_USER)) {
+        if (user.hasRole(RoleEnum.ROLE_USER)) {
+            if (CollectionUtils.isEmpty(formDto.scoutIds())) {
+                throw new WebBentayaBadRequestException("El usuario debe tener educandos");
+            }
+            user.setScoutList(formDto.scoutIds().stream()
+                .map(scoutRepository::get)
+                .collect(Collectors.toSet()));
+        } else {
             user.setScoutList(null);
-        } else if (user.getScoutList() == null) {
-            throw new WebBentayaBadRequestException("El usuario debe tener educandos");
         }
     }
 
@@ -119,7 +119,10 @@ public class UserService implements UserDetailsService {
         log.info("Trying to save user new with username {}", formDto.username());
 
         if (formDto.id() != null) throw new WebBentayaBadRequestException("El usuario no puede tener una ID asignada");
-        if (formDto.password().equals(GenericConstants.FAKE_PASSWORD)) throw new WebBentayaBadRequestException("La contraseña no es válida");
+        if (formDto.password().equals(GenericConstants.FAKE_PASSWORD)) {
+            throw new WebBentayaBadRequestException("La contraseña no es válida");
+        }
+
         userRepository.findByUsername(formDto.username()).ifPresent(this::handleUserAlreadyExists);
 
         User user = new User()
@@ -141,7 +144,9 @@ public class UserService implements UserDetailsService {
             userRepository.findByUsername(userToUpdate.username()).ifPresent(this::handleUserAlreadyExists);
         }
 
-        if (!userToUpdate.password().equals(GenericConstants.FAKE_PASSWORD)) userDB.setPassword(passwordEncoder.encode(userToUpdate.password()));
+        if (!userToUpdate.password().equals(GenericConstants.FAKE_PASSWORD)) {
+            userDB.setPassword(passwordEncoder.encode(userToUpdate.password()));
+        }
 
         updateUserBasicData(userDB, userToUpdate);
         userDB.setEnabled(true);
@@ -151,6 +156,7 @@ public class UserService implements UserDetailsService {
 
 
     public void addScoutToNewUser(String username, Scout scout, RoleEnum role) {
+        log.info("addScoutToNewUser - user {} does not exist, creating new user for scout {}", username, scout.getId());
         userRepository.findByUsername(username).ifPresent(this::handleUserAlreadyExists);
 
         User newUser = new User();
@@ -158,11 +164,18 @@ public class UserService implements UserDetailsService {
         String password = PasswordHelper.generatePassword();
         newUser.setPassword(passwordEncoder.encode(password));
         newUser.setRoles(Collections.singletonList(roleRepository.findByName(role).orElse(null)));
-        newUser.setScoutList(Collections.singleton(scout));
+
+        if (role == RoleEnum.ROLE_USER) {
+            newUser.setScoutList(Collections.singleton(scout));
+        } else if (role == RoleEnum.ROLE_SCOUTER) {
+            newUser.setScouter(scout);
+        } else {
+            throw new WebBentayaBadRequestException("Sólo se pueden asociar scouts a usuarios de familias o scouters");
+        }
 
         userRepository.save(newUser);
 
-        //todo improve
+        //todo improve mail
         emailService.sendSimpleEmail(
             "Alta de usuario en la web de Asociación Scouts Exploradores Bentaya",
             String.format(
@@ -201,33 +214,50 @@ public class UserService implements UserDetailsService {
     }
 
     public void addScoutToExistingUser(User user, Scout scout, RoleEnum userRole) {
-        if (!user.getScoutList().contains(scout)) {
-            if (!user.isEnabled()) {
-                user.getRoles().removeIf(role -> role.getName() != userRole);
-                user.setEnabled(true);
+        log.info("addScoutToExistingUser - adding scout {} to user {}", scout.getId(), user.getUsername());
+        boolean userAdded = false;
+        boolean newRole = false;
+        if (userRole == RoleEnum.ROLE_USER) {
+            userAdded = user.getScoutList().add(scout);
+        } else if (userRole == RoleEnum.ROLE_SCOUTER) {
+            if (user.getScouter() != null) {
+                throw new WebBentayaBadRequestException("Un scouter sólo puede tener un scout asociado");
             }
-            if (!user.hasRole(userRole)) {
-                user.getRoles().add(roleRepository.findByName(userRole).orElseThrow(WebBentayaRoleNotFoundException::new));
-            }
-            user.getScoutList().add(scout);
-            userRepository.save(user);
-            emailService.sendSimpleEmail(//todo improve
-                "CAMBIAR - Nueva Persona Educanda Añadida a tu usuario",
-                """
-                    Se ha añadido a la persona educanda %s %s a tu usuario %s de la web de la Asociación Scouts Exploradores Bentaya.
-                    Si cree que esto es un error, por favor avísenos enviando un correo a %s
-                    """.formatted(scout.getPersonalData().getName(), scout.getPersonalData().getSurname(), user.getUsername(), this.emailService.getSettingEmails(SettingEnum.ADMINISTRATION_MAIL)[0]),
-                user.getUsername()
-            );
+            user.setScouter(scout);
+        } else {
+            throw new WebBentayaBadRequestException("Sólo se pueden asociar scouts a usuarios de familias o scouters");
         }
+
+        if (!user.isEnabled()) {
+            user.getRoles().removeIf(role -> role.getName() != userRole);
+            user.setEnabled(true);
+            userAdded = true;
+        }
+        if (!user.hasRole(userRole)) {
+            user.getRoles().add(roleRepository.findByName(userRole).orElseThrow(WebBentayaRoleNotFoundException::new));
+            newRole = true;
+        }
+        userRepository.save(user);
+
+        //todo improve
+        emailService.sendSimpleEmailWithHtml("Nueva Asociada Añadida a tu Usuario", "html según que has añadido", user.getUsername());
     }
 
     public void removeScoutFromUser(User user, Scout scout) {
-        user.getScoutList().remove(scout);
-        if (user.getScoutList().isEmpty() && user.hasRole(RoleEnum.ROLE_USER) && user.getRoles().size() == 1) {
-            user.setEnabled(false);
-        } else if (user.getScoutList().isEmpty() && user.hasRole(RoleEnum.ROLE_USER)) {
-            user.getRoles().removeIf(role -> role.getName() == RoleEnum.ROLE_USER);
+        if (user.getScoutList().contains(scout)) {
+            user.getScoutList().remove(scout);
+            if (user.getScoutList().isEmpty() && user.hasRole(RoleEnum.ROLE_USER) && user.getRoles().size() == 1) {
+                user.setEnabled(false);
+            } else if (user.getScoutList().isEmpty() && user.hasRole(RoleEnum.ROLE_USER)) {
+                user.getRoles().removeIf(role -> role.getName() == RoleEnum.ROLE_USER);
+            }
+        } else if (scout.equals(user.getScouter())) {
+            user.setScouter(null);
+            user.getRoles().removeIf(role -> role.getName().isScouterRole());
+            if (user.getRoles().isEmpty()) {
+                user.getRoles().add(roleRepository.findByName(RoleEnum.ROLE_SCOUTER).orElseThrow(WebBentayaRoleNotFoundException::new));
+                user.setEnabled(false);
+            }
         }
         userRepository.save(user);
     }
@@ -242,7 +272,7 @@ public class UserService implements UserDetailsService {
             user.getId(),
             user.getUsername(),
             user.getRoles().stream().map(Role::getName).toList(),
-            GroupBasicDataDto.fromGroup(user.getGroup()),
+            GroupBasicDataDto.fromGroup(Optional.ofNullable(user.getScouter()).map(Scout::getGroup).orElse(null)),
             user.getScoutList().stream().map(scout ->
                 new UserScoutDto(
                     scout.getId(),
@@ -256,7 +286,7 @@ public class UserService implements UserDetailsService {
 
     public void delete(int id) {
         User user = findById(id);
-        user.setGroup(null);
+        user.setScouter(null);
         user.setScoutList(Collections.emptySet());
         user.setEnabled(false);
         this.userRepository.save(user);
@@ -265,18 +295,18 @@ public class UserService implements UserDetailsService {
     public void changePassword(ChangePasswordDto changePasswordDto) {
         User user = findByUsername(SecurityUtils.getLoggedUserUsername());
 
-        log.info("User {} with id {} trying to change password", user.getUsername(), user.getId());
+        log.info("changePassword: User {} with id {} trying to change password", user.getUsername(), user.getId());
 
         if (!changePasswordDto.newPassword().equals(changePasswordDto.newPasswordRepeat())) {
-            log.warn("Passwords do not match");
+            log.warn("changePassword: Passwords do not match");
             throw new WebBentayaBadRequestException("Las contraseñas nuevas no coinciden");
         }
         if (changePasswordDto.newPassword().equals(GenericConstants.FAKE_PASSWORD)) {
-            log.warn("New password is not valid");
+            log.warn("changePassword: New password is not valid");
             throw new WebBentayaBadRequestException("La nueva contraseña no es válida");
         }
         if (!BCrypt.checkpw(changePasswordDto.currentPassword(), user.getPassword())) {
-            log.warn("Current password is not valid");
+            log.warn("changePassword: Current password is not valid");
             throw new WebBentayaBadRequestException("La contraseña actual no es válida");
         }
         user.setPassword(passwordEncoder.encode(changePasswordDto.newPassword()));
@@ -286,10 +316,10 @@ public class UserService implements UserDetailsService {
     public void changeForgottenPassword(String username, String newPassword) {
         User user = findByUsername(username);
 
-        log.info("Trying to change forgotten password for {}", username);
+        log.info("changeForgottenPassword: Trying to change forgotten password for {}", username);
 
         if (newPassword.equals(GenericConstants.FAKE_PASSWORD)) {
-            log.warn("New password is not valid");
+            log.warn("changeForgottenPassword: New password is not valid");
             throw new WebBentayaBadRequestException("La nueva contraseña no es válida");
         }
         user.setPassword(passwordEncoder.encode(newPassword));

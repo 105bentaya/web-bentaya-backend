@@ -33,10 +33,9 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.scouts105bentaya.features.confirmation.Confirmation;
 import org.scouts105bentaya.features.event.Event;
-import org.scouts105bentaya.features.event.service.EventService;
+import org.scouts105bentaya.features.event.EventRepository;
 import org.scouts105bentaya.features.group.Group;
 import org.scouts105bentaya.features.scout.entity.Scout;
-import org.scouts105bentaya.features.user.User;
 import org.scouts105bentaya.shared.service.AuthService;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
@@ -49,7 +48,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -72,14 +70,14 @@ public class AttendanceExcelReportService {
     private static final int FIRST_EVENT_COLUMN = 2;
 
 
-    private final EventService eventService;
+    private final EventRepository eventRepository;
     private final AuthService authService;
 
     public AttendanceExcelReportService(
-        EventService eventService,
+        EventRepository eventRepository,
         AuthService authService
     ) {
-        this.eventService = eventService;
+        this.eventRepository = eventRepository;
         this.authService = authService;
     }
 
@@ -88,7 +86,7 @@ public class AttendanceExcelReportService {
     }
 
     private List<Event> getEvents(Group group) {
-        List<Event> events = this.eventService.findAllByGroupIdAndActivatedAttendance(group);
+        List<Event> events = this.eventRepository.findAllByGroupAndActiveAttendanceListIsTrue(group);
         events.sort(Comparator.comparing(Event::getStartDate));
         return events;
     }
@@ -262,8 +260,8 @@ public class AttendanceExcelReportService {
     public ByteArrayOutputStream getGroupAttendanceAsExcel() {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-        User loggedUser = authService.getLoggedUser();
-        List<Event> events = getEvents(Objects.requireNonNull(loggedUser.getGroup()));
+        Group group = authService.getLoggedScouterGroupOrUnauthorized();
+        List<Event> events = getEvents(group);
         List<Scout> scouts = getScoutsInAttendanceList(events);
 
         try (InputStream file = new ClassPathResource("excel/attendance_template.xlsx").getInputStream()) {
@@ -271,7 +269,7 @@ public class AttendanceExcelReportService {
             XSSFSheet sheet = workbook.getSheetAt(0);
 
             XSSFCell groupCell = getCell(sheet, GROUP_CELL);
-            groupCell.setCellValue(loggedUser.getGroup().getName().toUpperCase());
+            groupCell.setCellValue(group.getName().toUpperCase());
 
             addEvents(sheet, events);
             addAttendances(sheet, scouts, events);

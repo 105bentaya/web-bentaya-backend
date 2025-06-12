@@ -1,7 +1,6 @@
 package org.scouts105bentaya.features.scout.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.scout.dto.form.ScoutHistoryFormDto;
 import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.scout.entity.ScoutHistory;
@@ -19,7 +18,7 @@ public class ScoutHistoryService {
     }
 
     public Scout updateScoutHistory(Integer id, ScoutHistoryFormDto form) {
-        Scout scout = scoutRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
+        Scout scout = scoutRepository.get(id);
 
         ScoutHistory scoutHistory = scout.getScoutHistory();
         scoutHistory.setObservations(form.observations());

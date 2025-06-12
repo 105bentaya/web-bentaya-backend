@@ -21,8 +21,4 @@ public class GroupService {
     public Group findById(int id) {
         return groupRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
     }
-
-    public Group findByNullableId(Integer id) {
-        return id == null ? null : findById(id);
-    }
 }

@@ -10,7 +10,6 @@ import org.scouts105bentaya.features.event.Event;
 import org.scouts105bentaya.features.event.EventRepository;
 import org.scouts105bentaya.features.event.dto.EventDateConflictsFormDto;
 import org.scouts105bentaya.features.event.dto.EventFormDto;
-import org.scouts105bentaya.features.group.Group;
 import org.scouts105bentaya.features.group.GroupBasicDataDto;
 import org.scouts105bentaya.features.group.GroupService;
 import org.scouts105bentaya.features.scout.service.ScoutService;
@@ -40,7 +39,8 @@ public class EventService {
         EventRepository eventRepository,
         ScoutService scoutService,
         ConfirmationService confirmationService,
-        GroupService groupService) {
+        GroupService groupService
+    ) {
         this.eventRepository = eventRepository;
         this.scoutService = scoutService;
         this.confirmationService = confirmationService;
@@ -49,14 +49,6 @@ public class EventService {
 
     public List<Event> findAll() {
         return eventRepository.findAll();
-    }
-
-    public List<Event> findAllByGroup(Group group) {
-        return eventRepository.findAllByGroup(group);
-    }
-
-    public List<Event> findAllByGroupIdAndActivatedAttendance(Group group) {
-        return eventRepository.findAllByGroupAndActiveAttendanceListIsTrue(group);
     }
 
     public Event findById(Integer id) {
@@ -82,7 +74,7 @@ public class EventService {
 
         Event savedEvent = eventRepository.save(newEvent);
         if (savedEvent.isActiveAttendanceList()) {
-            this.scoutService.findAllByLoggedScouterGroupId().forEach(scout -> {
+            this.scoutService.findAllScoutsByLoggedScouterGroupId().forEach(scout -> {
                 Confirmation confirmation = new Confirmation();
                 confirmation.setEvent(savedEvent);
                 confirmation.setScout(scout);
@@ -106,8 +98,11 @@ public class EventService {
     private void setEventBasicInfo(EventFormDto eventForm, Event event) {
         event.setTitle(eventForm.title());
         event.setForEveryone(eventForm.forEveryone());
-        if (!event.isForEveryone()) event.setGroup(groupService.findById(Objects.requireNonNull(eventForm.groupId())));
-        else event.setGroup(null);
+        if (!event.isForEveryone()) {
+            event.setGroup(groupService.findById(Objects.requireNonNull(eventForm.groupId())));
+        } else {
+            event.setGroup(null);
+        }
         event.setForScouters(eventForm.forScouters());
         event.setDescription(eventForm.description());
         event.setLocation(eventForm.location());
@@ -150,7 +145,7 @@ public class EventService {
             eventDB.setActiveAttendancePayment(eventForm.activateAttendancePayment());
             eventDB.setClosedAttendanceList(eventForm.closeAttendanceList());
             eventDB.setCloseDateTime(eventForm.closeAttendanceList() ? null : eventForm.closeDateTime());
-            this.scoutService.findAllByLoggedScouterGroupId().forEach(scout -> {
+            this.scoutService.findAllScoutsByLoggedScouterGroupId().forEach(scout -> {
                 Confirmation confirmation = new Confirmation();
                 confirmation.setEvent(eventDB);
                 confirmation.setScout(scout);

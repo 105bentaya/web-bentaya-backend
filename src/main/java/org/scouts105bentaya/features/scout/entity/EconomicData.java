@@ -24,7 +24,7 @@ public class EconomicData {
     private String iban;
     private String bank;
 
-    @OneToMany(cascade = CascadeType.PERSIST)
+    @OneToMany(cascade = CascadeType.PERSIST, orphanRemoval = true)
     private List<ScoutFile> documents;
 
     @OneToMany(mappedBy = "economicData")

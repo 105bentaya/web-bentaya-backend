@@ -2,7 +2,6 @@ package org.scouts105bentaya.features.scout.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.core.exception.WebBentayaConflictException;
-import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.scout.ScoutUtils;
 import org.scouts105bentaya.features.scout.dto.form.PersonalDataFormDto;
 import org.scouts105bentaya.features.scout.entity.PersonalData;
@@ -21,7 +20,7 @@ public class ScoutPersonalDataService {
     }
 
     public Scout updateScoutPersonalData(Integer id, PersonalDataFormDto form) {
-        Scout scout = scoutRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
+        Scout scout = scoutRepository.get(id);
         PersonalData data = scout.getPersonalData();
         this.updatePersonalData(form, data);
         return scoutRepository.save(scout);
@@ -33,6 +32,14 @@ public class ScoutPersonalDataService {
             scoutRepository.findFirstByPersonalDataIdDocumentNumber(form.idDocument().number()).ifPresent(scout -> {
                 if (!scout.getId().equals(data.getScoutId())) {
                     throw new WebBentayaConflictException("Ya hay una asociada con este documento de identidad");
+                }
+            });
+        }
+
+        if (form.email() != null) {
+            scoutRepository.findByPersonalDataEmail(form.email()).ifPresent(scout -> {
+                if (!scout.getId().equals(data.getScoutId())) {
+                    throw new WebBentayaConflictException("Ya hay una asociada con este correo electrónico");
                 }
             });
         }

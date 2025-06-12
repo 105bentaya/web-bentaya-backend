@@ -19,20 +19,15 @@ import java.util.List;
 public class ScoutContactService {
 
     private final ScoutRepository scoutRepository;
-    private final ScoutService scoutService;
 
-    public ScoutContactService(
-        ScoutRepository scoutRepository,
-        ScoutService scoutService
-    ) {
+    public ScoutContactService(ScoutRepository scoutRepository) {
         this.scoutRepository = scoutRepository;
-        this.scoutService = scoutService;
     }
 
     public Scout updateScoutContactData(Integer id, List<ContactFormDto> contactList) {
         this.validateContactList(contactList);
 
-        Scout scout = scoutService.findById(id);
+        Scout scout = scoutRepository.get(id);
 
         List<Contact> newContacts = new ArrayList<>();
         contactList.forEach(contactFormDto -> {

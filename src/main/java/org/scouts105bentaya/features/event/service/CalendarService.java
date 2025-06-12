@@ -213,9 +213,9 @@ public class CalendarService {
             }
             if (user.hasRole(RoleEnum.ROLE_SCOUTER)) {
                 tokenGroups.setScouterEvents(true);
-                groups.add(Objects.requireNonNull(user.getGroup()));
-            } else if (user.hasRole(RoleEnum.ROLE_GROUP_SCOUTER)) {
-                tokenGroups.setScouterEvents(true);
+                if (user.getScouter().getGroup() != null) {
+                    groups.add(user.getScouter().getGroup());
+                }
             }
         }
         tokenGroups.setGroups(groups);
