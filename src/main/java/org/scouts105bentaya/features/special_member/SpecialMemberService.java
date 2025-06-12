@@ -23,6 +23,7 @@ import org.scouts105bentaya.features.special_member.entity.SpecialMemberDonation
 import org.scouts105bentaya.features.special_member.entity.SpecialMemberPerson;
 import org.scouts105bentaya.features.special_member.enums.DonationType;
 import org.scouts105bentaya.features.special_member.enums.SpecialMemberRole;
+import org.scouts105bentaya.features.special_member.repository.SpecialMemberDonationRepository;
 import org.scouts105bentaya.features.special_member.repository.SpecialMemberPersonRepository;
 import org.scouts105bentaya.features.special_member.repository.SpecialMemberRepository;
 import org.scouts105bentaya.features.special_member.specification.SpecialMemberSpecification;
@@ -252,7 +253,7 @@ public class SpecialMemberService {
     }
 
     private void validateDonationForm(SpecialMemberDonationFormDto form) {
-        if (form.type() == DonationType.ECONOMIC && (form.amount() == null || form.bankAccount() == null || form.paymentType() == null)) {
+        if (form.type() == DonationType.ECONOMIC && (form.bankAccount() == null || form.paymentType() == null)) {
             throw new WebBentayaBadRequestException("Debe especificar la cantidad, forma de pago y cuenta bancaria en una donación económica");
         } else if (form.type() == DonationType.IN_KIND && form.inKindDonationType() == null) {
             throw new WebBentayaBadRequestException("Debe especificar el tipo de especies");
@@ -275,17 +276,16 @@ public class SpecialMemberService {
     private void updateDonationFromForm(SpecialMemberDonation donation, SpecialMemberDonationFormDto form) {
         donation
             .setDate(form.date())
+            .setAmount(form.amount())
             .setType(form.type())
             .setNotes(form.notes());
 
         if (donation.getType() == DonationType.ECONOMIC) {
-            donation.setAmount(form.amount())
-                .setPaymentType(form.paymentType())
+            donation.setPaymentType(form.paymentType())
                 .setBankAccount(form.bankAccount())
                 .setInKindDonationType(null);
         } else {
-            donation.setAmount(null)
-                .setPaymentType(null)
+            donation.setPaymentType(null)
                 .setBankAccount(null)
                 .setInKindDonationType(form.inKindDonationType());
         }

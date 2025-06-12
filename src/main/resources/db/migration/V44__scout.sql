@@ -216,22 +216,6 @@ CREATE TABLE economic_data_documents
     CONSTRAINT FK_ECONOMIC_DATA_ON_SCOUT_FILE FOREIGN KEY (documents_id) REFERENCES scout_file (id)
 );
 
-CREATE TABLE economic_entry
-(
-    id                     INT AUTO_INCREMENT NOT NULL,
-    date                   date               NOT NULL,
-    description            VARCHAR(255)       NOT NULL,
-    amount                 INT                NOT NULL,
-    income                 VARCHAR(255)       NULL,
-    spending               VARCHAR(255)       NULL,
-    account                VARCHAR(255)       NULL,
-    type                   VARCHAR(255)       NOT NULL,
-    observations           VARCHAR(511)       NULL,
-    economic_data_scout_id INT                NOT NULL,
-    CONSTRAINT FK_ECONOMIC_ENTRY_ON_ECONOMIC_DATA_SCOUT FOREIGN KEY (economic_data_scout_id) REFERENCES economic_data (scout_id),
-    CONSTRAINT PK_ECONOMIC_ENTRY PRIMARY KEY (id)
-);
-
 CREATE TABLE scout_history
 (
     scout_id     INT  NOT NULL,

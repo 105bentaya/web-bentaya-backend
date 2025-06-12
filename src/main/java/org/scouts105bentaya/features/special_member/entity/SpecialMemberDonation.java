@@ -31,6 +31,7 @@ public class SpecialMemberDonation {
     @Column(nullable = false)
     private DonationType type;
     private String inKindDonationType;
+    @Column(nullable = false)
     private Integer amount;
     private String paymentType;
     private String bankAccount;

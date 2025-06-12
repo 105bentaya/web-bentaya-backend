@@ -1,4 +1,4 @@
-package org.scouts105bentaya.features.special_member;
+package org.scouts105bentaya.features.special_member.repository;
 
 import org.scouts105bentaya.features.special_member.entity.SpecialMemberDonation;
 import org.springframework.data.jpa.repository.JpaRepository;

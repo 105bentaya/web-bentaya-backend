@@ -6,11 +6,12 @@ import org.hibernate.validator.constraints.Length;
 import java.time.LocalDate;
 
 public record EconomicEntryFormDto(
-    @NotNull LocalDate date,
+    @NotNull LocalDate issueDate,
+    @NotNull LocalDate dueDate,
     @NotNull String description,
     @NotNull int amount,
-    String income,
-    String spending,
+    Integer incomeId,
+    Integer expenseId,
     String account,
     @NotNull String type,
     @Length(max = 511) String observations

@@ -12,7 +12,7 @@ public record SpecialMemberDonationFormDto(
     @NotNull LocalDate date,
     @NotNull DonationType type,
     @Length(max = GenericConstants.MYSQL_BASIC_VARCHAR_LENGTH) String inKindDonationType,
-    @Min(1) Integer amount,
+    @Min(0) @NotNull Integer amount,
     @Length(max = GenericConstants.MYSQL_BASIC_VARCHAR_LENGTH) String paymentType,
     @Length(max = GenericConstants.MYSQL_BASIC_VARCHAR_LENGTH) String bankAccount,
     @Length(max = 511) String notes

@@ -7,9 +7,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.scouts105bentaya.features.invoice.entity.InvoiceExpenseType;
+import org.scouts105bentaya.features.invoice.entity.InvoiceIncomeType;
 
 import java.time.LocalDate;
 
@@ -23,15 +26,25 @@ public class EconomicEntry {
     private Integer id;
 
     @Column(nullable = false)
-    private LocalDate date;
+    private LocalDate issueDate;
+
+    @Column(nullable = false)
+    private LocalDate dueDate;
+
     @Column(nullable = false)
     private String description;
+
     @Column(nullable = false)
     private Integer amount;
-    //todo this four change with something lixe expense type????
-    private String income;
-    private String spending;
+
+    @ManyToOne
+    private InvoiceExpenseType expenseType;
+
+    @ManyToOne
+    private InvoiceIncomeType incomeType;
+
     private String account;
+
     @Column(nullable = false)
     private String type;
 
@@ -41,5 +54,4 @@ public class EconomicEntry {
     @ManyToOne(optional = false)
     @JsonIgnore
     private EconomicData economicData;
-
 }

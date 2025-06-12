@@ -10,7 +10,7 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-public class InvoiceExpenseType {
+public class InvoiceIncomeType {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;

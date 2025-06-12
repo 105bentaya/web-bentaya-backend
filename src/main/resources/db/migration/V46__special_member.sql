@@ -37,7 +37,7 @@ CREATE TABLE special_member_donation
     date                  DATE               NOT NULL,
     type                  VARCHAR(255)       NOT NULL,
     in_kind_donation_type VARCHAR(255)       NULL,
-    amount                INT                NULL,
+    amount                INT                NOT NULL,
     payment_type          VARCHAR(255)       NULL,
     bank_account          VARCHAR(255)       NULL,
     notes                 VARCHAR(511)       NULL,

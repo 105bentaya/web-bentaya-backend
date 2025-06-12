@@ -2,6 +2,8 @@ package org.scouts105bentaya.features.scout;
 
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.scouts105bentaya.features.invoice.InvoiceService;
+import org.scouts105bentaya.features.invoice.dto.InvoiceTypesDto;
 import org.scouts105bentaya.features.scout.dto.ScoutDto;
 import org.scouts105bentaya.features.scout.dto.UserScoutDto;
 import org.scouts105bentaya.features.scout.dto.form.ContactListFormDto;
@@ -60,6 +62,7 @@ public class ScoutController {
     private final ScoutEconomicDataService scoutEconomicDataService;
     private final ScoutHistoryService scoutHistoryService;
     private final ScoutCreationService scoutCreationService;
+    private final InvoiceService invoiceService;
 
     public ScoutController(
         ScoutService scoutService,
@@ -70,7 +73,8 @@ public class ScoutController {
         ScoutGroupDataService scoutGroupDataService,
         ScoutEconomicDataService scoutEconomicDataService,
         ScoutHistoryService scoutHistoryService,
-        ScoutCreationService scoutCreationService
+        ScoutCreationService scoutCreationService,
+        InvoiceService invoiceService
     ) {
         this.scoutService = scoutService;
         this.scoutFileService = scoutFileService;
@@ -81,23 +85,17 @@ public class ScoutController {
         this.scoutEconomicDataService = scoutEconomicDataService;
         this.scoutHistoryService = scoutHistoryService;
         this.scoutCreationService = scoutCreationService;
+        this.invoiceService = invoiceService;
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'SCOUTER', 'GROUP_SCOUTER')")
+    @PreAuthorize("hasAnyRole('SECRETARY', 'SCOUTER', 'GROUP_SCOUTER')")
     @GetMapping
     public PageDto<ScoutDto> findAll(ScoutSpecificationFilter filter) {
         log.info("findAll - filter:{}{}", filter, SecurityUtils.getLoggedUserUsernameForLog());
         return GenericConverter.convertListToPageDto(scoutService.findAll(filter), ScoutDto::fromScout);
     }
 
-    @PreAuthorize("hasRole('SECRETARY')")
-    @GetMapping("any-pending-registrations")
-    public long getTotalPendingRegistrations() {
-        log.info("getTotalPendingRegistrations{}", SecurityUtils.getLoggedUserUsernameForLog());
-        return scoutService.totalPendingRegistrations();
-    }
-
-    @PreAuthorize("hasAnyRole('ADMIN', 'SCOUTER', 'GROUP_SCOUTER')")
+    @PreAuthorize("hasAnyRole('SECRETARY', 'SCOUTER', 'GROUP_SCOUTER')")
     @GetMapping("/{id}")
     public ScoutDto findById(@PathVariable Integer id) {
         log.info("findById{}", SecurityUtils.getLoggedUserUsernameForLog());
@@ -109,6 +107,19 @@ public class ScoutController {
     public List<UserScoutDto> findCurrentByUser() { //todo check
         log.info("METHOD ScoutController.findCurrentByUser{}", SecurityUtils.getLoggedUserUsernameForLog());
         return GenericConverter.convertEntityCollectionToDtoList(scoutService.findCurrentByUser(), UserScoutDto::fromScout);
+    }
+
+    @GetMapping("/donation-types")
+    public InvoiceTypesDto getInvoiceTypes() {
+        log.info("getInvoiceTypes{}", SecurityUtils.getLoggedUserUsernameForLog());
+        return invoiceService.getInvoicesTypes();
+    }
+
+    @PreAuthorize("hasRole('SECRETARY')")
+    @GetMapping("any-pending-registrations")
+    public long getTotalPendingRegistrations() {
+        log.info("getTotalPendingRegistrations{}", SecurityUtils.getLoggedUserUsernameForLog());
+        return scoutService.totalPendingRegistrations();
     }
 
     //NEW - TODO AUTH, LOGS

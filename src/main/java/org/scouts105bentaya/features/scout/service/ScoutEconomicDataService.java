@@ -1,24 +1,18 @@
 package org.scouts105bentaya.features.scout.service;
 
-import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
+import org.scouts105bentaya.features.invoice.repository.InvoiceExpenseTypeRepository;
+import org.scouts105bentaya.features.invoice.repository.InvoiceIncomeTypeRepository;
 import org.scouts105bentaya.features.scout.dto.form.EconomicDataFormDto;
 import org.scouts105bentaya.features.scout.dto.form.EconomicEntryFormDto;
 import org.scouts105bentaya.features.scout.entity.EconomicData;
 import org.scouts105bentaya.features.scout.entity.EconomicEntry;
 import org.scouts105bentaya.features.scout.entity.Scout;
-import org.scouts105bentaya.features.scout.entity.ScoutFile;
 import org.scouts105bentaya.features.scout.repository.EconomicEntryRepository;
-import org.scouts105bentaya.features.scout.repository.ScoutFileRepository;
 import org.scouts105bentaya.features.scout.repository.ScoutRepository;
-import org.scouts105bentaya.shared.service.BlobService;
-import org.scouts105bentaya.shared.util.FileUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
 
 @Slf4j
 @Service
@@ -26,10 +20,19 @@ public class ScoutEconomicDataService {
 
     private final ScoutRepository scoutRepository;
     private final EconomicEntryRepository economicEntryRepository;
+    private final InvoiceExpenseTypeRepository invoiceExpenseTypeRepository;
+    private final InvoiceIncomeTypeRepository invoiceIncomeTypeRepository;
 
-    public ScoutEconomicDataService(ScoutRepository scoutRepository, EconomicEntryRepository economicEntryRepository) {
+    public ScoutEconomicDataService(
+        ScoutRepository scoutRepository,
+        EconomicEntryRepository economicEntryRepository,
+        InvoiceExpenseTypeRepository invoiceExpenseTypeRepository,
+        InvoiceIncomeTypeRepository invoiceIncomeTypeRepository
+    ) {
         this.scoutRepository = scoutRepository;
         this.economicEntryRepository = economicEntryRepository;
+        this.invoiceExpenseTypeRepository = invoiceExpenseTypeRepository;
+        this.invoiceIncomeTypeRepository = invoiceIncomeTypeRepository;
     }
 
     public Scout updateEconomicData(Integer id, EconomicDataFormDto form) {
@@ -64,8 +67,8 @@ public class ScoutEconomicDataService {
 
     private void validateEntryForm(EconomicEntryFormDto form) {
         if (
-            (form.income() == null && form.spending() == null) ||
-            (form.income() != null && form.spending() != null)
+            form.expenseId() == null && form.incomeId() == null ||
+            form.expenseId() != null && form.incomeId() == null
         ) {
             throw new WebBentayaBadRequestException("Debe especificar un único gasto o ingreso");
         }
@@ -87,19 +90,20 @@ public class ScoutEconomicDataService {
 
     private void updateEntryFromForm(EconomicEntry entry, EconomicEntryFormDto form) {
         entry
-            .setDate(form.date())
+            .setIssueDate(form.issueDate())
+            .setDueDate(form.dueDate())
             .setDescription(form.description())
             .setAmount(form.amount())
             .setAccount(form.account())
             .setType(form.type())
             .setObservations(form.observations());
 
-        if (form.income() != null) {
-            entry.setIncome(form.income());
-            entry.setSpending(null);
+        if (form.incomeId() != null) {
+            entry.setIncomeType(invoiceIncomeTypeRepository.findById(form.incomeId()).orElseThrow(WebBentayaNotFoundException::new));
+            entry.setExpenseType(null);
         } else {
-            entry.setIncome(null);
-            entry.setSpending(form.spending());
+            entry.setIncomeType(null);
+            entry.setExpenseType(invoiceExpenseTypeRepository.findById(form.expenseId()).orElseThrow(WebBentayaNotFoundException::new));
         }
     }
 

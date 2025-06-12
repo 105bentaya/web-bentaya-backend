@@ -3,12 +3,14 @@ package org.scouts105bentaya.features.invoice;
 import jakarta.transaction.Transactional;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.invoice.dto.InvoiceDataDto;
+import org.scouts105bentaya.features.invoice.dto.InvoiceTypesDto;
 import org.scouts105bentaya.features.invoice.entity.Invoice;
 import org.scouts105bentaya.features.invoice.entity.InvoiceFile;
 import org.scouts105bentaya.features.invoice.entity.InvoicePayer;
 import org.scouts105bentaya.features.invoice.repository.InvoiceExpenseTypeRepository;
 import org.scouts105bentaya.features.invoice.repository.InvoiceFileRepository;
 import org.scouts105bentaya.features.invoice.repository.InvoiceGrantRepository;
+import org.scouts105bentaya.features.invoice.repository.InvoiceIncomeTypeRepository;
 import org.scouts105bentaya.features.invoice.repository.InvoicePayerRepository;
 import org.scouts105bentaya.features.invoice.repository.InvoiceRepository;
 import org.scouts105bentaya.features.invoice.specification.InvoiceSpecification;
@@ -32,6 +34,7 @@ public class InvoiceService {
     private final InvoicePayerRepository invoicePayerRepository;
     private final BlobService blobService;
     private final InvoiceFileRepository invoiceFileRepository;
+    private final InvoiceIncomeTypeRepository invoiceIncomeTypeRepository;
 
     public InvoiceService(
         InvoiceRepository invoiceRepository,
@@ -39,7 +42,8 @@ public class InvoiceService {
         InvoiceGrantRepository invoiceGrantRepository,
         InvoicePayerRepository invoicePayerRepository,
         BlobService blobService,
-        InvoiceFileRepository invoiceFileRepository
+        InvoiceFileRepository invoiceFileRepository,
+        InvoiceIncomeTypeRepository invoiceIncomeTypeRepository
     ) {
         this.invoiceRepository = invoiceRepository;
         this.invoiceExpenseTypeRepository = invoiceExpenseTypeRepository;
@@ -47,6 +51,7 @@ public class InvoiceService {
         this.invoicePayerRepository = invoicePayerRepository;
         this.blobService = blobService;
         this.invoiceFileRepository = invoiceFileRepository;
+        this.invoiceIncomeTypeRepository = invoiceIncomeTypeRepository;
     }
 
     public Page<Invoice> findAll(InvoiceSpecificationFilter filter) {
@@ -63,6 +68,13 @@ public class InvoiceService {
             invoiceGrantRepository.findAll(),
             invoicePayerRepository.findAll().stream().sorted(this::invoiceComparator).collect(Collectors.toList()),
             invoiceRepository.findAllIssuerNif()
+        );
+    }
+
+    public InvoiceTypesDto getInvoicesTypes() {
+        return new InvoiceTypesDto(
+            invoiceExpenseTypeRepository.findAll(),
+            invoiceIncomeTypeRepository.findAll()
         );
     }
 
