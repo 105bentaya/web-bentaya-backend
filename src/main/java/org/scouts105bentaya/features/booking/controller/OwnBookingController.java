@@ -39,7 +39,7 @@ public class OwnBookingController {
         this.ownBookingRepository = ownBookingRepository;
     }
 
-    @PreAuthorize("hasAnyRole('SCOUTER', 'GROUP_SCOUTER')")
+    @PreAuthorize("hasRole('SCOUTER')")
     @GetMapping()
     public PageDto<OwnBookingDto> getAll(BookingSpecificationFilter filterDto) {
         log.info("getAll - {}{}", filterDto, SecurityUtils.getLoggedUserUsernameForLog());
@@ -47,21 +47,21 @@ public class OwnBookingController {
         return new PageDto<>(page.getTotalElements(), page.stream().map(OwnBookingDto::fromEntity).toList());
     }
 
-    @PreAuthorize("hasAnyRole('SCOUTER', 'GROUP_SCOUTER')")
+    @PreAuthorize("hasRole('SCOUTER')")
     @GetMapping("/{bookingId}")
     public OwnBookingDto getById(@PathVariable Integer bookingId) {
         log.info("getById - bookingId:{}{}", bookingId, SecurityUtils.getLoggedUserUsernameForLog());
         return OwnBookingDto.fromEntity(ownBookingRepository.get(bookingId));
     }
 
-    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or (hasAnyRole('SCOUTER', 'GROUP_SCOUTER') and (#formDto.groupId == 0 or @authLogic.scouterHasGroupId(#formDto.groupId)))")
+    @PreAuthorize("hasRole('SCOUT_CENTER_MANAGER') or (hasRole('SCOUTER') and (#formDto.groupId == 0 or @authLogic.scouterHasGroupId(#formDto.groupId)))")
     @PostMapping("/new")
     public void addOwnBooking(@RequestBody @Valid OwnBookingFormDto formDto) {
         log.info("addOwnBooking{}", SecurityUtils.getLoggedUserUsernameForLog());
         ownBookingService.addOwnBooking(formDto);
     }
 
-    @PreAuthorize("hasAnyRole('SCOUTER', 'GROUP_SCOUTER') and @authLogic.scouterHasAccessToBooking(#bookingId)")
+    @PreAuthorize("hasRole('SCOUTER') and @authLogic.scouterHasAccessToBooking(#bookingId)")
     @PatchMapping("/cancel/{bookingId}")
     public OwnBookingDto cancelOwnBooking(@PathVariable Integer bookingId, @RequestBody @Valid BookingStatusUpdateDto dto) {
         log.info("cancelOwnBooking{}", SecurityUtils.getLoggedUserUsernameForLog());

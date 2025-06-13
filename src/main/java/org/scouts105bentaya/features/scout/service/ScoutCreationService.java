@@ -1,6 +1,7 @@
 package org.scouts105bentaya.features.scout.service;
 
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.confirmation.service.ConfirmationService;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Slf4j
 @Service
 public class ScoutCreationService {
 
@@ -102,6 +104,7 @@ public class ScoutCreationService {
     }
 
     private Scout reactivateExistingScout(NewScoutFormDto form) {
+        log.info("reactivateExistingScout - scoutId{}", form.existingScoutId());
         Scout scout = scoutRepository.get(form.existingScoutId());
         scoutPersonalDataService.updatePersonalData(PersonalDataFormDto.fromNewScoutForm(form), scout.getPersonalData());
         scout.getContactList().clear();
@@ -159,10 +162,13 @@ public class ScoutCreationService {
             }
         } else if (form.scoutType() != ScoutType.INACTIVE) {
             if (form.email() == null) {
-                throw new WebBentayaBadRequestException("Debe especificar el correo de la scout");
+                throw new WebBentayaBadRequestException("Debe especificar el correo de la asociada");
             }
             if (form.phone() == null) {
-                throw new WebBentayaBadRequestException("Debe especificar el teléfono móvil de la scout");
+                throw new WebBentayaBadRequestException("Debe especificar el teléfono móvil de la asociada");
+            }
+            if (form.idDocument() == null) {
+                throw new WebBentayaBadRequestException("Debe especificar el documento de identidad de la asociada");
             }
         }
     }

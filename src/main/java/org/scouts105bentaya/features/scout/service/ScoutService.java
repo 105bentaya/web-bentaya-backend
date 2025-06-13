@@ -7,6 +7,8 @@ import org.scouts105bentaya.core.exception.WebBentayaForbiddenException;
 import org.scouts105bentaya.core.exception.WebBentayaUserNotFoundException;
 import org.scouts105bentaya.features.pre_scout.entity.PreScout;
 import org.scouts105bentaya.features.pre_scout.service.PreScoutService;
+import org.scouts105bentaya.features.scout.ScoutConverter;
+import org.scouts105bentaya.features.scout.dto.ScoutDto;
 import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.scout.enums.ScoutStatus;
 import org.scouts105bentaya.features.scout.enums.ScoutType;
@@ -52,10 +54,6 @@ public class ScoutService {
 
     public List<Scout> findAllScoutsByLoggedScouterGroupId() {
         return scoutRepository.findScoutsByGroup(authService.getLoggedScouterGroupOrUnauthorized());
-    }
-
-    public Set<Scout> findCurrentByUser() {
-        return authService.getLoggedUser().getScoutList();
     }
 
     public void addUsersToNewScout(Scout scout, List<String> scoutUsers) {
@@ -143,7 +141,12 @@ public class ScoutService {
         return this.findAll(scoutSpecificationFilter).getTotalElements();
     }
 
-    public Scout getScoutInfo(Integer id) {
-        return this.scoutRepository.get(id);
+    public Scout getFilteredScout(Integer scoutId) {
+        Scout scout = this.scoutRepository.get(scoutId);
+        if (authService.getLoggedUser().hasRole(RoleEnum.ROLE_USER)) {
+            scout.setScoutHistory(null);
+            scout.setRecordList(Collections.emptyList());
+        }
+        return scout;
     }
 }

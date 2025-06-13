@@ -18,14 +18,17 @@ public interface ScoutRepository extends JpaRepository<Scout, Integer>, JpaSpeci
         return findById(id).orElseThrow(WebBentayaNotFoundException::new);
     }
 
-    @Query("SELECT s FROM Scout s WHERE s.scoutType = 'SCOUT' AND s.group = :group")
-    List<Scout> findScoutsByGroup(Group group);
-
     Optional<Scout> findFirstByPersonalDataIdDocumentNumber(String idNumber);
 
     Optional<Scout> findByPersonalDataEmail(String email);
 
     Optional<Scout> findByCensus(int census);
+
+    @Query("SELECT s.group FROM Scout s WHERE s.scoutType = 'SCOUT' AND s.id = :scoutId")
+    Optional<Group> findScoutGroup(Integer scoutId);
+
+    @Query("SELECT s FROM Scout s WHERE s.scoutType = 'SCOUT' AND s.group = :group")
+    List<Scout> findScoutsByGroup(Group group);
 
     @Query("""
         SELECT s FROM Scout s

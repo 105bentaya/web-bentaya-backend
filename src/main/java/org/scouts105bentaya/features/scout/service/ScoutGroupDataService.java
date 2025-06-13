@@ -91,7 +91,6 @@ public class ScoutGroupDataService {
 
     public Scout updateScoutInfo(Integer id, ScoutInfoFormDto form) {
         this.validateScoutGroup(form);
-        this.validateCensus(form, id);
         this.validateRegistrationDates(form);
 
         Scout scout = scoutRepository.get(id);
@@ -173,15 +172,6 @@ public class ScoutGroupDataService {
             .noneMatch(newDate -> date.getId().equals(newDate.id()))
         );
         registrationDates.addAll(newDates);
-    }
-
-    private void validateCensus(ScoutInfoFormDto form, Integer scoutId) {
-        if (form.census() != null) {
-            Optional<Scout> existingCensus = scoutRepository.findByCensus(form.census());
-            if (existingCensus.isPresent() && !existingCensus.get().getId().equals(scoutId)) {
-                throw new WebBentayaConflictException("Este censo ya está asignado");
-            }
-        }
     }
 
     private void validateScoutGroup(ScoutInfoFormDto form) {

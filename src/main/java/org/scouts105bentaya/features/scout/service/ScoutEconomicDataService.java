@@ -68,7 +68,7 @@ public class ScoutEconomicDataService {
     private void validateEntryForm(EconomicEntryFormDto form) {
         if (
             form.expenseId() == null && form.incomeId() == null ||
-            form.expenseId() != null && form.incomeId() == null
+            form.expenseId() != null && form.incomeId() != null
         ) {
             throw new WebBentayaBadRequestException("Debe especificar un único gasto o ingreso");
         }

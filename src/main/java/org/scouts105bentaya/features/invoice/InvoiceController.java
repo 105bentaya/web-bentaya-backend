@@ -24,7 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 @RestController
 @RequestMapping("api/invoice")
-@PreAuthorize("hasAnyRole('SCOUTER', 'GROUP_SCOUTER')")
+@PreAuthorize("hasRole('SCOUTER')")
 public class InvoiceController {
 
     private final InvoiceService invoiceService;

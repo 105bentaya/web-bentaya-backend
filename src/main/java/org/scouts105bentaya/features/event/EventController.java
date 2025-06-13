@@ -56,21 +56,21 @@ public class EventController {
         this.eventConverter = eventConverter;
     }
 
-    @PreAuthorize("hasAnyRole('SCOUTER', 'GROUP_SCOUTER', 'USER')")
-    @PostFilter("hasAnyRole('SCOUTER', 'GROUP_SCOUTER') ? true : !filterObject.forScouters")
+    @PreAuthorize("hasAnyRole('SCOUTER', 'USER')")
+    @PostFilter("hasRole('SCOUTER') ? true : !filterObject.forScouters")
     @GetMapping
     public List<EventCalendarDto> findAll() {
         return eventCalendarConverter.convertEntityCollectionToDtoList(eventService.findAll());
     }
 
-    @PreAuthorize("hasAnyRole('SCOUTER', 'GROUP_SCOUTER', 'USER')")
+    @PreAuthorize("hasAnyRole('SCOUTER', 'USER')")
     @GetMapping("/subscribe")
     public String subscribeToCalendar() {
         log.info("METHOD EventController.subscribeToCalendar{}", SecurityUtils.getLoggedUserUsernameForLog());
         return (calendarService.getCalendarSubscription());
     }
 
-    @PreAuthorize("hasAnyRole('SCOUTER', 'GROUP_SCOUTER')")
+    @PreAuthorize("hasRole('SCOUTER')")
     @GetMapping("/coincidences")
     public List<GroupBasicDataDto> getEventDateConflicts(@Valid EventDateConflictsFormDto formDto) {
         log.info("METHOD EventController.getEventDateConflicts{}", SecurityUtils.getLoggedUserUsernameForLog());
@@ -88,36 +88,36 @@ public class EventController {
             .body(calendarDto.calendar());
     }
 
-    @PreAuthorize("hasAnyRole('SCOUTER', 'GROUP_SCOUTER', 'USER')")
-    @PostAuthorize("!returnObject.forScouters or hasAnyRole('SCOUTER', 'GROUP_SCOUTER')")
+    @PreAuthorize("hasAnyRole('SCOUTER', 'USER')")
+    @PostAuthorize("!returnObject.forScouters or hasRole('SCOUTER')")
     @GetMapping("/get/{id}")
     public EventDto findById(@PathVariable Integer id) {
         log.info("METHOD EventController.findById --- PARAMS id: {}{}", id, SecurityUtils.getLoggedUserUsernameForLog());
         return eventConverter.convertFromEntity(eventService.findById(id));
     }
 
-    @PreAuthorize("hasAnyRole('SCOUTER', 'GROUP_SCOUTER') and @authLogic.scouterHasAccessToEvent(#id)")
+    @PreAuthorize("hasRole('SCOUTER') and @authLogic.scouterHasAccessToEvent(#id)")
     @GetMapping("/edit/{id}")
     public EventFormDto findByIdToEdit(@PathVariable Integer id) {
         log.info("METHOD EventController.findByIdToEdit --- PARAMS id: {}{}", id, SecurityUtils.getLoggedUserUsernameForLog());
         return eventFormConverter.convertFromEntity(eventService.findById(id));
     }
 
-    @PreAuthorize("(hasRole('SCOUTER') and (#event.forEveryone or @authLogic.scouterHasGroupId(#event.groupId))) or (hasRole('GROUP_SCOUTER') and #event.forEveryone)")
+    @PreAuthorize("(hasRole('SCOUTER') and (#event.forEveryone or @authLogic.scouterHasGroupId(#event.groupId)))")
     @PostMapping
     public EventDto save(@RequestBody @Valid EventFormDto event) {
         log.info("METHOD EventController.save{}", SecurityUtils.getLoggedUserUsernameForLog());
         return eventConverter.convertFromEntity(eventService.save(event));
     }
 
-    @PreAuthorize("hasAnyRole('SCOUTER', 'GROUP_SCOUTER') and @authLogic.eventIsEditableByScouter(#eventDto)")
+    @PreAuthorize("hasRole('SCOUTER') and @authLogic.eventIsEditableByScouter(#eventDto)")
     @PutMapping
     public EventDto update(@RequestBody @Valid EventFormDto eventDto) {
         log.info("METHOD EventController.update --- PARAMS id: {}{}", eventDto.id(), SecurityUtils.getLoggedUserUsernameForLog());
         return eventConverter.convertFromEntity(eventService.update(eventDto));
     }
 
-    @PreAuthorize("hasAnyRole('SCOUTER', 'GROUP_SCOUTER') and @authLogic.scouterHasAccessToEvent(#id)")
+    @PreAuthorize("hasRole('SCOUTER') and @authLogic.scouterHasAccessToEvent(#id)")
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Integer id) {
         log.info("METHOD EventController.delete --- PARAMS id: {}{}", id, SecurityUtils.getLoggedUserUsernameForLog());

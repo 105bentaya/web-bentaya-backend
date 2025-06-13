@@ -8,13 +8,12 @@ import org.scouts105bentaya.core.exception.WebBentayaUserNotFoundException;
 import org.scouts105bentaya.core.security.UserHasReachedMaxLoginAttemptsException;
 import org.scouts105bentaya.core.security.service.LoginAttemptService;
 import org.scouts105bentaya.core.security.service.RequestService;
-import org.scouts105bentaya.features.group.GroupBasicDataDto;
+import org.scouts105bentaya.features.scout.dto.UserScoutDto;
 import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.scout.repository.ScoutRepository;
 import org.scouts105bentaya.features.setting.enums.SettingEnum;
 import org.scouts105bentaya.features.user.dto.UserPasswordDto;
 import org.scouts105bentaya.features.user.dto.UserProfileDto;
-import org.scouts105bentaya.features.user.dto.UserScoutDto;
 import org.scouts105bentaya.features.user.dto.form.ChangePasswordDto;
 import org.scouts105bentaya.features.user.dto.form.UserFormDto;
 import org.scouts105bentaya.features.user.role.Role;
@@ -42,6 +41,7 @@ import org.thymeleaf.context.Context;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -222,7 +222,7 @@ public class UserService implements UserDetailsService {
         } else if (userRole == RoleEnum.ROLE_SCOUTER) {
             if (user.getScouter() != null && !user.getScouter().getId().equals(scout.getId())) {
                 throw new WebBentayaBadRequestException("Un scouter sólo puede tener un scout asociado");
-            } else if (user.getScouter() != null) {
+            } else if (user.getScouter() == null) {
                 userAdded = true;
             }
             user.setScouter(scout);
@@ -299,15 +299,8 @@ public class UserService implements UserDetailsService {
             user.getId(),
             user.getUsername(),
             user.getRoles().stream().map(Role::getName).toList(),
-            GroupBasicDataDto.fromGroup(Optional.ofNullable(user.getScouter()).map(Scout::getGroup).orElse(null)),
-            user.getScoutList().stream().map(scout ->
-                new UserScoutDto(
-                    scout.getId(),
-                    GroupBasicDataDto.fromGroup(scout.getGroup()),
-                    scout.getPersonalData().getName(),
-                    scout.getPersonalData().getSurname()
-                )
-            ).toList()
+            Optional.ofNullable(user.getScouter()).map(UserScoutDto::fromScout).orElse(null),
+            user.getScoutList().stream().sorted(Comparator.comparing(s -> s.getPersonalData().getBirthday())).map(UserScoutDto::fromScout).toList()
         );
     }
 
