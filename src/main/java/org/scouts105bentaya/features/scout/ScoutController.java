@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.features.invoice.InvoiceService;
 import org.scouts105bentaya.features.invoice.dto.InvoiceTypesDto;
 import org.scouts105bentaya.features.scout.dto.ScoutDto;
+import org.scouts105bentaya.features.scout.dto.ScoutListDataDto;
+import org.scouts105bentaya.features.scout.dto.UserScoutDto;
 import org.scouts105bentaya.features.scout.dto.form.ContactListFormDto;
 import org.scouts105bentaya.features.scout.dto.form.EconomicDataFormDto;
 import org.scouts105bentaya.features.scout.dto.form.EconomicEntryFormDto;
@@ -28,6 +30,7 @@ import org.scouts105bentaya.features.scout.service.ScoutMedicalDataService;
 import org.scouts105bentaya.features.scout.service.ScoutPersonalDataService;
 import org.scouts105bentaya.features.scout.service.ScoutService;
 import org.scouts105bentaya.features.scout.specification.ScoutSpecificationFilter;
+import org.scouts105bentaya.features.user.dto.UserDto;
 import org.scouts105bentaya.shared.GenericConverter;
 import org.scouts105bentaya.shared.specification.PageDto;
 import org.scouts105bentaya.shared.util.SecurityUtils;
@@ -96,9 +99,17 @@ public class ScoutController {
 
     @PreAuthorize("hasAnyRole('SECRETARY', 'SCOUTER')")
     @GetMapping
-    public PageDto<ScoutDto> findAll(ScoutSpecificationFilter filter) {
+    public PageDto<ScoutListDataDto> findAll(ScoutSpecificationFilter filter) {
         log.info("findAll - filter:{}{}", filter, SecurityUtils.getLoggedUserUsernameForLog());
-        return GenericConverter.convertListToPageDto(scoutService.findAll(filter), scoutConverter::convertFromEntity);
+        return GenericConverter.convertListToPageDto(scoutService.findAll(filter), ScoutListDataDto::fromScout);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/user-edition")
+    public List<ScoutListDataDto> findAllForUserEdition(ScoutSpecificationFilter filter) {
+        log.info("findAllForUserEdition - filter:{}{}", filter, SecurityUtils.getLoggedUserUsernameForLog());
+        filter.setUnpaged();
+        return GenericConverter.convertEntityCollectionToDtoList(scoutService.findAll(filter).toList(), ScoutListDataDto::fromScout);
     }
 
     @PreAuthorize("hasAnyRole('SECRETARY', 'SCOUTER') or @authLogic.userHasAccessToScout(#scoutId)")

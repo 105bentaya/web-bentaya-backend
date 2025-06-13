@@ -63,6 +63,12 @@ public class SpecificationPredicateHelper {
         }
     }
 
+    public void notInList(Expression<String> root, List<?> filter) {
+        if (filter != null && !filter.isEmpty()) {
+            predicates.add(root.in(filter).not());
+        }
+    }
+
     public void localDateTimeIsAfterDate(Expression<LocalDateTime> root, String date) {
         if (date != null) {
             predicates.add(cb.greaterThanOrEqualTo(root, LocalDateTime.parse(date)));

@@ -140,7 +140,7 @@ public class ScoutGroupDataService {
             confirmationService.createConfirmationForFutureEvents(savedScout);
         }
 
-        if (oldScoutType.hasScouterAccess() && !newScoutType.hasScouterAccess() && scout.getScouterUser() != null) {
+        if (oldScoutType.isScouterOrScoutSupport() && !newScoutType.isScouterOrScoutSupport() && scout.getScouterUser() != null) {
             userService.removeScoutFromUser(scout.getScouterUser(), scout);
         }
 

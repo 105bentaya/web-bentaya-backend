@@ -2,6 +2,7 @@ package org.scouts105bentaya.features.scout.specification;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
@@ -35,25 +36,34 @@ public class ScoutSpecification implements Specification<Scout> {
             personalData.get("feltName")
         );
 
-        if (!CollectionUtils.isEmpty(filter.getGroupIds()) || !CollectionUtils.isEmpty(filter.getGroupScoutTypes())) {
+        if (!CollectionUtils.isEmpty(filter.getGroupIds()) || !CollectionUtils.isEmpty(filter.getScoutTypes())) {
             SpecificationPredicateHelper groupPredicates = new SpecificationPredicateHelper(criteriaBuilder);
             groupPredicates.inList(root.get("group").get("id"), filter.getGroupIds());
-            groupPredicates.inList(root.get("scoutType"), filter.getGroupScoutTypes());
+            groupPredicates.inList(root.get("scoutType"), filter.getScoutTypes());
             predicates.addPredicate(groupPredicates.getPredicatesOr());
         }
 
         List<Section> sections = filter.getSections();
         if (!CollectionUtils.isEmpty(sections)) {
+
             SpecificationPredicateHelper sectionPredicates = new SpecificationPredicateHelper(criteriaBuilder);
-            sectionPredicates.inList(root.get("group").get("section"), sections);
+
+            SpecificationPredicateHelper subPredicates = new SpecificationPredicateHelper(criteriaBuilder);
+            subPredicates.inList(root.join("group", JoinType.LEFT).get("section"), sections);
+
             if (sections.contains(Section.SCOUTERS)) {
                 sectionPredicates.isEqual(root.get("scoutType"), ScoutType.SCOUTER);
             } else {
-                predicates.isNotEqual(root.get("scoutType"), ScoutType.SCOUTER);
+                subPredicates.isNotEqual(root.get("scoutType"), ScoutType.SCOUTER);
             }
+
             if (sections.contains(Section.SCOUTSUPPORT)) {
                 sectionPredicates.inList(root.get("scoutType"), List.of(ScoutType.COMMITTEE, ScoutType.MANAGER));
+            } else {
+                subPredicates.notInList(root.get("scoutType"), List.of(ScoutType.COMMITTEE, ScoutType.MANAGER));
             }
+
+            sectionPredicates.addPredicate(subPredicates.getPredicatesAnd());
             predicates.addPredicate(sectionPredicates.getPredicatesOr());
         }
 

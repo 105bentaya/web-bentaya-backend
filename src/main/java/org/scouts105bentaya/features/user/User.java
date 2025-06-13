@@ -21,6 +21,7 @@ import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.user.role.Role;
 import org.scouts105bentaya.features.user.role.RoleEnum;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -61,7 +62,7 @@ public class User {
         joinColumns = @JoinColumn(name = "user_id"),
         inverseJoinColumns = @JoinColumn(name = "scout_id")
     )
-    private Set<Scout> scoutList;
+    private Set<Scout> scoutList = new HashSet<>();
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<GeneralBooking> bookingList;

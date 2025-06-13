@@ -10,6 +10,7 @@ import org.scouts105bentaya.core.security.service.LoginAttemptService;
 import org.scouts105bentaya.core.security.service.RequestService;
 import org.scouts105bentaya.features.scout.dto.UserScoutDto;
 import org.scouts105bentaya.features.scout.entity.Scout;
+import org.scouts105bentaya.features.scout.enums.ScoutType;
 import org.scouts105bentaya.features.scout.repository.ScoutRepository;
 import org.scouts105bentaya.features.setting.enums.SettingEnum;
 import org.scouts105bentaya.features.user.dto.UserPasswordDto;
@@ -61,7 +62,8 @@ public class UserService implements UserDetailsService {
     private final ScoutRepository scoutRepository;
     private final TemplateEngine templateEngine;
 
-    @Value("${bentaya.web.url}") String url;
+    @Value("${bentaya.web.url}")
+    String url;
 
     public UserService(
         UserRepository userRepository,
@@ -95,30 +97,22 @@ public class UserService implements UserDetailsService {
         return user.orElseThrow(WebBentayaUserNotFoundException::new);
     }
 
-    public void updateUserBasicData(User user, UserFormDto formDto) {
-        user.setUsername(formDto.username().toLowerCase())
-            .setRoles(formDto.roles().stream().map(role -> roleRepository.findByName(role).orElse(null)).collect(Collectors.toList()));
-
-        if (user.hasRole(RoleEnum.ROLE_SCOUTER)) {
-            if (user.getScouter() == null) {
-                throw new WebBentayaBadRequestException("El usuario debe tener un scouter asignado");
-            }
-            user.setScouter(scoutRepository.get(user.getScouter().getId()));
-        } else {
-            user.setScouter(null);
-        }
-
-        if (user.hasRole(RoleEnum.ROLE_USER)) {
-            if (CollectionUtils.isEmpty(formDto.scoutIds())) {
-                throw new WebBentayaBadRequestException("El usuario debe tener educandos");
-            }
-            user.setScoutList(formDto.scoutIds().stream()
-                .map(scoutRepository::get)
-                .collect(Collectors.toSet()));
-        } else {
-            user.setScoutList(null);
-        }
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username).orElseThrow(WebBentayaUserNotFoundException::new);
     }
+
+    public UserProfileDto findProfileByUsername(String username) {
+        User user = findByUsername(username);
+        return new UserProfileDto(
+            user.getId(),
+            user.getUsername(),
+            user.getRoles().stream().map(Role::getName).toList(),
+            Optional.ofNullable(user.getScouter()).map(UserScoutDto::fromScout).orElse(null),
+            user.getScoutList().stream().sorted(Comparator.comparing(s -> s.getPersonalData().getBirthday())).map(UserScoutDto::fromScout).toList()
+        );
+    }
+
+    // CUD
 
     public User save(UserFormDto formDto) {
         log.info("Trying to save user new with username {}", formDto.username());
@@ -159,6 +153,43 @@ public class UserService implements UserDetailsService {
         return this.userRepository.save(userDB);
     }
 
+    private void updateUserBasicData(User user, UserFormDto formDto) {
+        user.setUsername(formDto.username().toLowerCase())
+            .setRoles(formDto.roles().stream().map(role -> roleRepository.findByName(role).orElse(null)).collect(Collectors.toList()));
+
+        if (user.hasRole(RoleEnum.ROLE_SCOUTER)) {
+            if (formDto.scouterId() == null) {
+                throw new WebBentayaBadRequestException("El usuario debe tener un scouter asignado");
+            }
+            Scout scouter = scoutRepository.get(formDto.scouterId());
+            this.validateScouterRoleScout(scouter, user);
+            user.setScouter(scouter);
+        } else {
+            user.setScouter(null);
+        }
+
+        if (user.hasRole(RoleEnum.ROLE_USER)) {
+            if (CollectionUtils.isEmpty(formDto.scoutIds())) {
+                throw new WebBentayaBadRequestException("El usuario debe tener educandos");
+            }
+            Set<Scout> scoutList = formDto.scoutIds().stream().map(scoutRepository::get).collect(Collectors.toSet());
+            scoutList.forEach(this::validateUserRoleScout);
+            user.setScoutList(scoutList);
+        } else {
+            user.setScoutList(null);
+        }
+    }
+
+    public void delete(int id) {
+        User user = findById(id);
+        user.setScouter(null);
+        user.setScoutList(Collections.emptySet());
+        user.setEnabled(false);
+        this.userRepository.save(user);
+    }
+
+    // ROLE USERS RELATIONS
+
     public UserPasswordDto addNewScoutCenterUser(String username) {
         Optional<User> usernameUser = userRepository.findByUsername(username);
 
@@ -190,46 +221,16 @@ public class UserService implements UserDetailsService {
         String password = PasswordHelper.generatePassword();
         newUser.setPassword(passwordEncoder.encode(password));
         newUser.setRoles(Collections.singletonList(roleRepository.findByName(role).orElse(null)));
-
-        if (role == RoleEnum.ROLE_USER) {
-            newUser.setScoutList(Collections.singleton(scout));
-        } else if (role == RoleEnum.ROLE_SCOUTER) {
-            newUser.setScouter(scout);
-        } else {
-            throw new WebBentayaBadRequestException("Sólo se pueden asociar scouts a usuarios de familias o scouters");
-        }
+        this.associateScoutToScouter(newUser, scout, role);
 
         userRepository.save(newUser);
 
         this.sendNewUserMail(username, scout, password);
     }
 
-    private void sendNewUserMail(String username, Scout scout, String newUserPassword) {
-        String subject = "Scouts 105 Bentaya - Alta de usuario en la Web";
-
-        Context context = userMailBasicContext(username, scout, subject);
-        context.setVariable("password", newUserPassword);
-
-        final String htmlContent = this.templateEngine.process("users/new-user.html", context);
-        this.emailService.sendSimpleEmailWithHtml(subject, htmlContent, username);
-    }
-
     public void addScoutToExistingUser(User user, Scout scout, RoleEnum userRole) {
         log.info("addScoutToExistingUser - adding scout {} to user {}", scout.getId(), user.getUsername());
-        boolean userAdded = false;
-        if (userRole == RoleEnum.ROLE_USER) {
-            userAdded = user.getScoutList().add(scout);
-        } else if (userRole == RoleEnum.ROLE_SCOUTER) {
-            if (user.getScouter() != null && !user.getScouter().getId().equals(scout.getId())) {
-                throw new WebBentayaBadRequestException("Un scouter sólo puede tener un scout asociado");
-            } else if (user.getScouter() == null) {
-                userAdded = true;
-            }
-            user.setScouter(scout);
-        } else {
-            throw new WebBentayaBadRequestException("Sólo se pueden asociar scouts a usuarios de familias o scouters");
-        }
-
+        boolean userAdded = this.associateScoutToScouter(user, scout, userRole);
         if (!user.isEnabled()) {
             user.getRoles().removeIf(role -> role.getName() != userRole);
             user.setEnabled(true);
@@ -245,24 +246,18 @@ public class UserService implements UserDetailsService {
         }
     }
 
-    private void sendExistingUserMail(String username, Scout scout) {
-        String subject = "Scouts 105 Bentaya - Nueva Asociada Añadida en la Web";
-
-        Context context = userMailBasicContext(username, scout, subject);
-        final String htmlContent = this.templateEngine.process("users/existing-user.html", context);
-        this.emailService.sendSimpleEmailWithHtml(subject, htmlContent, username);
-    }
-
-    private Context userMailBasicContext(String username, Scout scout, String subject) {
-        Context context = new Context();
-
-        context.setVariable("scoutName", "%s %s".formatted(scout.getPersonalData().getName(), scout.getPersonalData().getSurname()));
-        context.setVariable("username", username);
-        context.setVariable("webUrl", url);
-        context.setVariable("itMail", emailService.getSettingEmails(SettingEnum.ADMINISTRATION_MAIL)[0]);
-        context.setVariable("subject", subject);
-
-        return context;
+    private boolean associateScoutToScouter(User user, Scout scout, RoleEnum roleToAdd) {
+        if (roleToAdd == RoleEnum.ROLE_USER) {
+            this.validateUserRoleScout(scout);
+            return user.getScoutList().add(scout);
+        } else if (roleToAdd == RoleEnum.ROLE_SCOUTER) {
+            this.validateScouterRoleScout(scout, user);
+            boolean hadNoScouter = user.getScouter() == null;
+            user.setScouter(scout);
+            return hadNoScouter;
+        } else {
+            throw new WebBentayaBadRequestException("Sólo se pueden asociar scouts a usuarios de familias o scouters");
+        }
     }
 
     public void removeScoutFromUser(User user, Scout scout) {
@@ -289,28 +284,27 @@ public class UserService implements UserDetailsService {
         userRepository.save(user);
     }
 
-    public User findByUsername(String username) {
-        return userRepository.findByUsername(username).orElseThrow(WebBentayaUserNotFoundException::new);
+    // SCOUT USER VALIDATIONS
+
+    private void validateScouterRoleScout(Scout scout, User user) {
+        if (!scout.getScoutType().isScouterOrScoutSupport()) {
+            throw new WebBentayaBadRequestException("Un usuario con rol SCOUTER no puede tener este tipo de asociada");
+        }
+        if (scout.getScouterUser() != null && !scout.getScouterUser().getId().equals(user.getId())) {
+            throw new WebBentayaBadRequestException("Un scouter sólo puede estar asociado a un usuario");
+        }
+        if (user.getScouter() != null && !user.getScouter().getId().equals(scout.getId())) {
+            throw new WebBentayaBadRequestException("Un usuario sólo puede tener un scouter asociado");
+        }
     }
 
-    public UserProfileDto findProfileByUsername(String username) {
-        User user = findByUsername(username);
-        return new UserProfileDto(
-            user.getId(),
-            user.getUsername(),
-            user.getRoles().stream().map(Role::getName).toList(),
-            Optional.ofNullable(user.getScouter()).map(UserScoutDto::fromScout).orElse(null),
-            user.getScoutList().stream().sorted(Comparator.comparing(s -> s.getPersonalData().getBirthday())).map(UserScoutDto::fromScout).toList()
-        );
+    private void validateUserRoleScout(Scout scout) {
+        if (!scout.getScoutType().equals(ScoutType.SCOUT)) {
+            throw new WebBentayaBadRequestException("Un usuario con rol FAMILIA sólo puede tener asociadas educandas");
+        }
     }
 
-    public void delete(int id) {
-        User user = findById(id);
-        user.setScouter(null);
-        user.setScoutList(Collections.emptySet());
-        user.setEnabled(false);
-        this.userRepository.save(user);
-    }
+    // PASSWORD
 
     public void changePassword(ChangePasswordDto changePasswordDto) {
         User user = findByUsername(SecurityUtils.getLoggedUserUsername());
@@ -345,6 +339,40 @@ public class UserService implements UserDetailsService {
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
     }
+
+    // EMAILS
+
+    private void sendExistingUserMail(String username, Scout scout) {
+        String subject = "Scouts 105 Bentaya - Nueva Asociada Añadida en la Web";
+
+        Context context = userMailBasicContext(username, scout, subject);
+        final String htmlContent = this.templateEngine.process("users/existing-user.html", context);
+        this.emailService.sendSimpleEmailWithHtml(subject, htmlContent, username);
+    }
+
+    private void sendNewUserMail(String username, Scout scout, String newUserPassword) {
+        String subject = "Scouts 105 Bentaya - Alta de usuario en la Web";
+
+        Context context = userMailBasicContext(username, scout, subject);
+        context.setVariable("password", newUserPassword);
+
+        final String htmlContent = this.templateEngine.process("users/new-user.html", context);
+        this.emailService.sendSimpleEmailWithHtml(subject, htmlContent, username);
+    }
+
+    private Context userMailBasicContext(String username, Scout scout, String subject) {
+        Context context = new Context();
+
+        context.setVariable("scoutName", "%s %s".formatted(scout.getPersonalData().getName(), scout.getPersonalData().getSurname()));
+        context.setVariable("username", username);
+        context.setVariable("webUrl", url);
+        context.setVariable("itMail", emailService.getSettingEmails(SettingEnum.ADMINISTRATION_MAIL)[0]);
+        context.setVariable("subject", subject);
+
+        return context;
+    }
+
+    // USER DETAILS
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {

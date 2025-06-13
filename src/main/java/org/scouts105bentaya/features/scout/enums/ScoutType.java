@@ -7,7 +7,7 @@ public enum ScoutType {
         return this == SCOUT || this == SCOUTER;
     }
 
-    public boolean hasScouterAccess() {
+    public boolean isScouterOrScoutSupport() {
         return this == COMMITTEE || this == MANAGER || this == SCOUTER;
     }
 }

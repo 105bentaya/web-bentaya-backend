@@ -7,8 +7,6 @@ import org.scouts105bentaya.core.exception.WebBentayaForbiddenException;
 import org.scouts105bentaya.core.exception.WebBentayaUserNotFoundException;
 import org.scouts105bentaya.features.pre_scout.entity.PreScout;
 import org.scouts105bentaya.features.pre_scout.service.PreScoutService;
-import org.scouts105bentaya.features.scout.ScoutConverter;
-import org.scouts105bentaya.features.scout.dto.ScoutDto;
 import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.scout.enums.ScoutStatus;
 import org.scouts105bentaya.features.scout.enums.ScoutType;
@@ -61,7 +59,7 @@ public class ScoutService {
             return;
         }
 
-        if (scout.getScoutType().hasScouterAccess() && scoutUsers.size() > 1) {
+        if (scout.getScoutType().isScouterOrScoutSupport() && scoutUsers.size() > 1) {
             throw new WebBentayaBadRequestException("Este tipo de asociada sólo puede tener un usuario asociado");
         }
         RoleEnum userRole = getScoutRole(scout.getScoutType());
@@ -73,7 +71,7 @@ public class ScoutService {
 
         if (scout.getScoutType() == ScoutType.INACTIVE) {
             throw new WebBentayaConflictException("Una asociada de baja no puede tener usuarios asociados");
-        } else if (scout.getScoutType().hasScouterAccess() && scoutUsers.size() > 1) {
+        } else if (scout.getScoutType().isScouterOrScoutSupport() && scoutUsers.size() > 1) {
             throw new WebBentayaBadRequestException("Este tipo de asociada sólo puede tener un usuario asociado");
         }
 
