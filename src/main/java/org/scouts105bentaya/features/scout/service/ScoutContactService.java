@@ -1,7 +1,9 @@
 package org.scouts105bentaya.features.scout.service;
 
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
+import org.scouts105bentaya.core.exception.WebBentayaConflictException;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.scout.ScoutUtils;
 import org.scouts105bentaya.features.scout.dto.form.ContactFormDto;
@@ -9,28 +11,37 @@ import org.scouts105bentaya.features.scout.entity.Contact;
 import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.scout.enums.PersonType;
 import org.scouts105bentaya.features.scout.repository.ScoutRepository;
+import org.scouts105bentaya.features.user.UserService;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
 public class ScoutContactService {
 
     private final ScoutRepository scoutRepository;
+    private final UserService userService;
 
-    public ScoutContactService(ScoutRepository scoutRepository) {
+    public ScoutContactService(
+        ScoutRepository scoutRepository,
+        UserService userService
+    ) {
         this.scoutRepository = scoutRepository;
+        this.userService = userService;
     }
 
-    public Scout updateScoutContactData(Integer id, List<ContactFormDto> contactList) {
-        this.validateContactList(contactList);
-
+    @Transactional
+    public Scout updateScoutContactData(Integer id, List<ContactFormDto> contactListForm) {
         Scout scout = scoutRepository.get(id);
 
+        this.validateContactList(contactListForm, scout);
+        this.deleteUsersNoLongerInContactList(contactListForm, scout);
+
         List<Contact> newContacts = new ArrayList<>();
-        contactList.forEach(contactFormDto -> {
+        contactListForm.forEach(contactFormDto -> {
             if (contactFormDto.id() != null) {
                 Contact existingContact = scout.getContactList().stream()
                     .filter(contact -> contact.getId().equals(contactFormDto.id()))
@@ -41,19 +52,34 @@ public class ScoutContactService {
             }
         });
 
-        scout.getContactList().removeIf(contact -> contactList.stream().noneMatch(form -> contact.getId().equals(form.id())));
+        scout.getContactList().removeIf(contact -> contactListForm.stream().noneMatch(form -> contact.getId().equals(form.id())));
         scout.getContactList().addAll(newContacts);
 
         return scoutRepository.save(scout);
     }
 
-    private void validateContactList(List<ContactFormDto> contactList) {
+    private void deleteUsersNoLongerInContactList(List<ContactFormDto> contactListForm, Scout scout) {
+        String scoutEmail = scout.getPersonalData().getEmail();
+        scout.getAllUsers()
+            .stream().filter(user -> !user.getUsername().equalsIgnoreCase(scoutEmail))
+            .forEach(user -> {
+                if (contactListForm.stream().noneMatch(contact -> user.getUsername().equalsIgnoreCase(contact.email()))) {
+                    userService.removeScoutFromUser(user, scout);
+                }
+            });
+    }
+
+    private void validateContactList(List<ContactFormDto> contactList, Scout scout) {
         if (contactList == null || contactList.isEmpty() || contactList.size() > 3) {
             throw new WebBentayaBadRequestException("La lista de contactos debe contener entre 1 y 3 contactos");
         }
 
         if (contactList.stream().filter(ContactFormDto::donor).count() > 1) {
             throw new WebBentayaBadRequestException("Sólo un contacto puede ser el donante");
+        }
+        String scoutEmail = scout.getPersonalData().getEmail();
+        if (scoutEmail != null && contactList.stream().anyMatch(contact -> contact.email().equalsIgnoreCase(scoutEmail))) {
+            throw new WebBentayaConflictException("Los contactos no pueden tener el mismo correo electrónico que la persona asociada");
         }
     }
 
@@ -84,7 +110,7 @@ public class ScoutContactService {
 
         contact.setName(contactFormDto.name());
         contact.setSurname(contactFormDto.surname());
-        contact.setEmail(contactFormDto.email());
+        contact.setEmail(Optional.ofNullable(contactFormDto.email()).map(String::toLowerCase).orElse(null));
         contact.setPhone(contactFormDto.phone());
         contact.setDonor(contactFormDto.donor());
         contact.setObservations(contactFormDto.observations());

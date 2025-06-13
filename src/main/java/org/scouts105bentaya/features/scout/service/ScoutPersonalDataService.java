@@ -1,5 +1,6 @@
 package org.scouts105bentaya.features.scout.service;
 
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.core.exception.WebBentayaConflictException;
 import org.scouts105bentaya.features.scout.ScoutUtils;
@@ -7,23 +8,45 @@ import org.scouts105bentaya.features.scout.dto.form.PersonalDataFormDto;
 import org.scouts105bentaya.features.scout.entity.PersonalData;
 import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.scout.repository.ScoutRepository;
+import org.scouts105bentaya.features.user.UserService;
 import org.springframework.stereotype.Service;
+
+import java.util.Objects;
+import java.util.Optional;
 
 @Slf4j
 @Service
 public class ScoutPersonalDataService {
 
     private final ScoutRepository scoutRepository;
+    private final UserService userService;
 
-    public ScoutPersonalDataService(ScoutRepository scoutRepository) {
+    public ScoutPersonalDataService(ScoutRepository scoutRepository, UserService userService) {
         this.scoutRepository = scoutRepository;
+        this.userService = userService;
     }
 
+    @Transactional
     public Scout updateScoutPersonalData(Integer id, PersonalDataFormDto form) {
         Scout scout = scoutRepository.get(id);
-        PersonalData data = scout.getPersonalData();
-        this.updatePersonalData(form, data);
+        this.validatePersonalDataEmailsAndUsers(form, scout);
+        this.updatePersonalData(form, scout.getPersonalData());
         return scoutRepository.save(scout);
+    }
+
+    private void validatePersonalDataEmailsAndUsers(PersonalDataFormDto form, Scout scout) {
+        String oldEmail = scout.getPersonalData().getEmail();
+        String newEmail = form.email();
+
+        if (newEmail != null && scout.getContactList().stream().anyMatch(contact -> contact.getEmail().equals(newEmail))) {
+            throw new WebBentayaConflictException("La persona asociada no puede tener el mismo correo que uno de los contactos");
+        }
+
+        if (oldEmail != null && !oldEmail.equalsIgnoreCase(newEmail)) {
+            scout.getAllUsers().stream()
+                .filter(user -> user.getUsername().equalsIgnoreCase(oldEmail))
+                .findFirst().ifPresent(user -> userService.removeScoutFromUser(user, scout));
+        }
     }
 
     public void updatePersonalData(PersonalDataFormDto form, PersonalData data) {
@@ -56,7 +79,7 @@ public class ScoutPersonalDataService {
         data.setProvince(form.province());
         data.setPhone(form.phone());
         data.setLandline(form.landline());
-        data.setEmail(form.email());
+        data.setEmail(Optional.ofNullable(form.email()).map(String::toLowerCase).orElse(null));
         data.setShirtSize(form.shirtSize());
         data.setResidenceMunicipality(form.residenceMunicipality());
         data.setGender(form.gender());

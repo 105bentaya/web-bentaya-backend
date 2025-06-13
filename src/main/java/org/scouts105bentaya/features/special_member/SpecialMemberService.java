@@ -175,7 +175,7 @@ public class SpecialMemberService {
 
     private SpecialMemberPerson personFromForm(SpecialMemberPersonFormDto form, SpecialMemberPerson person) {
         person.setType(form.type())
-            .setEmail(form.email())
+            .setEmail(Optional.ofNullable(form.email()).map(String::toLowerCase).orElse(null))
             .setPhone(form.phone())
             .setIdDocument(ScoutUtils.updateIdDocument(person.getIdDocument(), form.idDocument()));
 

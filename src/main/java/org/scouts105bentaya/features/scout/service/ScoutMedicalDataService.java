@@ -13,6 +13,7 @@ import org.scouts105bentaya.features.scout.repository.ScoutRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -94,7 +95,7 @@ public class ScoutMedicalDataService {
         return insuranceHolder.setContact(null)
             .setName(form.name())
             .setSurname(form.surname())
-            .setEmail(form.email())
+            .setEmail(Optional.ofNullable(form.email()).map(String::toLowerCase).orElse(null))
             .setPhone(form.phone())
             .setIdDocument(ScoutUtils.updateIdDocument(insuranceHolder.getIdDocument(), form.idDocument()));
     }

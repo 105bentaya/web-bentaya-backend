@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${subject}">Nuevo Usuario</title>
+
+</head>
+<body style="font-family: Arial, sans-serif;background-color: #f4f4f4;margin: 0;padding: 5px 0;">
+<div th:replace="~{users/common :: container(~{::#content})}">
+  <div id="content">
+    <div th:replace="~{users/common :: header}"></div>
+    <div class="content" style="padding: 20px;font-size: 16px;color: #111111;line-height: 1.5;">
+      <p>
+        Se le ha creado un usuario en nuestro sitio web con acceso a la siguiente persona asociada:
+      </p>
+
+      <p th:replace="~{users/common :: important-text(${scoutName})}">
+        scoutName
+      </p>
+
+      <div th:replace="~{users/common :: hr}"></div>
+
+      <div th:replace="~{users/common :: new-user }"></div>
+    </div>
+    <div th:replace="~{users/common :: footer}"></div>
+  </div>
+</div>
+</body>
+</html>

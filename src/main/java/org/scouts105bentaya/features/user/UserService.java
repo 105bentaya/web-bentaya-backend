@@ -37,6 +37,8 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -57,6 +59,7 @@ public class UserService implements UserDetailsService {
     private final RoleRepository roleRepository;
     private final RequestService requestService;
     private final ScoutRepository scoutRepository;
+    private final TemplateEngine templateEngine;
 
     @Value("${bentaya.web.url}") String url;
 
@@ -67,7 +70,8 @@ public class UserService implements UserDetailsService {
         EmailService emailService,
         RoleRepository roleRepository,
         RequestService requestService,
-        ScoutRepository scoutRepository
+        ScoutRepository scoutRepository,
+        TemplateEngine templateEngine
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -76,6 +80,7 @@ public class UserService implements UserDetailsService {
         this.roleRepository = roleRepository;
         this.requestService = requestService;
         this.scoutRepository = scoutRepository;
+        this.templateEngine = templateEngine;
     }
 
     public Page<User> findAll(UserSpecificationFilter filter) {
@@ -139,7 +144,7 @@ public class UserService implements UserDetailsService {
 
         User userDB = findById(id);
 
-        if (!userDB.getUsername().equals(userToUpdate.username())) {
+        if (!userDB.getUsername().equalsIgnoreCase(userToUpdate.username())) {
             log.info("Trying to change user's {} username from {} to {}", id, userDB.getUsername(), userToUpdate.username());
             userRepository.findByUsername(userToUpdate.username()).ifPresent(this::handleUserAlreadyExists);
         }
@@ -152,43 +157,6 @@ public class UserService implements UserDetailsService {
         userDB.setEnabled(true);
 
         return this.userRepository.save(userDB);
-    }
-
-
-    public void addScoutToNewUser(String username, Scout scout, RoleEnum role) {
-        log.info("addScoutToNewUser - user {} does not exist, creating new user for scout {}", username, scout.getId());
-        userRepository.findByUsername(username).ifPresent(this::handleUserAlreadyExists);
-
-        User newUser = new User();
-        newUser.setUsername(username);
-        String password = PasswordHelper.generatePassword();
-        newUser.setPassword(passwordEncoder.encode(password));
-        newUser.setRoles(Collections.singletonList(roleRepository.findByName(role).orElse(null)));
-
-        if (role == RoleEnum.ROLE_USER) {
-            newUser.setScoutList(Collections.singleton(scout));
-        } else if (role == RoleEnum.ROLE_SCOUTER) {
-            newUser.setScouter(scout);
-        } else {
-            throw new WebBentayaBadRequestException("Sólo se pueden asociar scouts a usuarios de familias o scouters");
-        }
-
-        userRepository.save(newUser);
-
-        //todo improve mail
-        emailService.sendSimpleEmail(
-            "Alta de usuario en la web de Asociación Scouts Exploradores Bentaya",
-            String.format(
-                """
-                    Se ha añadido un nuevo usuario asociado a este correo para la web %s
-                    Nombre de usuario: %s
-                    Persona educanda asociada: %s %s
-                    Contraseña: %s
-                    Es altamente recomendable cambiar la contraseña.
-                    Si cree que esto es un error, por favor avísenos enviando un correo a %s""",
-                url, username, scout.getPersonalData().getName(), scout.getPersonalData().getSurname(), password, this.emailService.getSettingEmails(SettingEnum.ADMINISTRATION_MAIL)[0]),
-            username
-        );
     }
 
     public UserPasswordDto addNewScoutCenterUser(String username) {
@@ -213,15 +181,49 @@ public class UserService implements UserDetailsService {
         return new UserPasswordDto(userRepository.save(newUser), password);
     }
 
+    public void addScoutToNewUser(String username, Scout scout, RoleEnum role) {
+        log.info("addScoutToNewUser - user {} does not exist, creating new user for scout {}", username, scout.getId());
+        userRepository.findByUsername(username).ifPresent(this::handleUserAlreadyExists);
+
+        User newUser = new User();
+        newUser.setUsername(username);
+        String password = PasswordHelper.generatePassword();
+        newUser.setPassword(passwordEncoder.encode(password));
+        newUser.setRoles(Collections.singletonList(roleRepository.findByName(role).orElse(null)));
+
+        if (role == RoleEnum.ROLE_USER) {
+            newUser.setScoutList(Collections.singleton(scout));
+        } else if (role == RoleEnum.ROLE_SCOUTER) {
+            newUser.setScouter(scout);
+        } else {
+            throw new WebBentayaBadRequestException("Sólo se pueden asociar scouts a usuarios de familias o scouters");
+        }
+
+        userRepository.save(newUser);
+
+        this.sendNewUserMail(username, scout, password);
+    }
+
+    private void sendNewUserMail(String username, Scout scout, String newUserPassword) {
+        String subject = "Scouts 105 Bentaya - Alta de usuario en la Web";
+
+        Context context = userMailBasicContext(username, scout, subject);
+        context.setVariable("password", newUserPassword);
+
+        final String htmlContent = this.templateEngine.process("users/new-user.html", context);
+        this.emailService.sendSimpleEmailWithHtml(subject, htmlContent, username);
+    }
+
     public void addScoutToExistingUser(User user, Scout scout, RoleEnum userRole) {
         log.info("addScoutToExistingUser - adding scout {} to user {}", scout.getId(), user.getUsername());
         boolean userAdded = false;
-        boolean newRole = false;
         if (userRole == RoleEnum.ROLE_USER) {
             userAdded = user.getScoutList().add(scout);
         } else if (userRole == RoleEnum.ROLE_SCOUTER) {
-            if (user.getScouter() != null) {
+            if (user.getScouter() != null && !user.getScouter().getId().equals(scout.getId())) {
                 throw new WebBentayaBadRequestException("Un scouter sólo puede tener un scout asociado");
+            } else if (user.getScouter() != null) {
+                userAdded = true;
             }
             user.setScouter(scout);
         } else {
@@ -235,16 +237,37 @@ public class UserService implements UserDetailsService {
         }
         if (!user.hasRole(userRole)) {
             user.getRoles().add(roleRepository.findByName(userRole).orElseThrow(WebBentayaRoleNotFoundException::new));
-            newRole = true;
         }
         userRepository.save(user);
 
-        //todo improve
-        emailService.sendSimpleEmailWithHtml("Nueva Asociada Añadida a tu Usuario", "html según que has añadido", user.getUsername());
+        if (userAdded) {
+            this.sendExistingUserMail(user.getUsername(), scout);
+        }
+    }
+
+    private void sendExistingUserMail(String username, Scout scout) {
+        String subject = "Scouts 105 Bentaya - Nueva Asociada Añadida en la Web";
+
+        Context context = userMailBasicContext(username, scout, subject);
+        final String htmlContent = this.templateEngine.process("users/existing-user.html", context);
+        this.emailService.sendSimpleEmailWithHtml(subject, htmlContent, username);
+    }
+
+    private Context userMailBasicContext(String username, Scout scout, String subject) {
+        Context context = new Context();
+
+        context.setVariable("scoutName", "%s %s".formatted(scout.getPersonalData().getName(), scout.getPersonalData().getSurname()));
+        context.setVariable("username", username);
+        context.setVariable("webUrl", url);
+        context.setVariable("itMail", emailService.getSettingEmails(SettingEnum.ADMINISTRATION_MAIL)[0]);
+        context.setVariable("subject", subject);
+
+        return context;
     }
 
     public void removeScoutFromUser(User user, Scout scout) {
         if (user.getScoutList().contains(scout)) {
+            log.info("removeScoutFromUser - removing scout {} from user {}", scout.getId(), user.getUsername());
             user.getScoutList().remove(scout);
             if (user.getScoutList().isEmpty() && user.hasRole(RoleEnum.ROLE_USER) && user.getRoles().size() == 1) {
                 user.setEnabled(false);
@@ -252,12 +275,16 @@ public class UserService implements UserDetailsService {
                 user.getRoles().removeIf(role -> role.getName() == RoleEnum.ROLE_USER);
             }
         } else if (scout.equals(user.getScouter())) {
+            log.info("removeScoutFromUser - removing scouter {} from user {}", scout.getId(), user.getUsername());
             user.setScouter(null);
             user.getRoles().removeIf(role -> role.getName().isScouterRole());
             if (user.getRoles().isEmpty()) {
                 user.getRoles().add(roleRepository.findByName(RoleEnum.ROLE_SCOUTER).orElseThrow(WebBentayaRoleNotFoundException::new));
                 user.setEnabled(false);
             }
+        }
+        if (!user.isEnabled()) {
+            log.info("removeScoutFromUser - disabling user {}", user.getUsername());
         }
         userRepository.save(user);
     }

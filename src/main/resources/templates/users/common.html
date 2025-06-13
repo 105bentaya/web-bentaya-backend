@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${subject}">common</title>
+  <style>
+      .separator {
+          margin-top: 80px;
+          margin-bottom: 80px
+      }
+
+      .common-container {
+          max-width: 600px;
+          margin: 20px auto;
+          background: #ffffff;
+          padding: 25px;
+          border-radius: 10px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+  </style>
+</head>
+<body style="font-family: Arial, sans-serif;background-color: #f4f4f4;margin: 0;padding: 5px 0;">
+<div class="common-container">
+
+  <div th:fragment="container(content)"
+       style="max-width: 600px;margin: 20px auto;background: #ffffff;padding: 25px;border-radius: 10px;box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
+    <div th:replace="${content}"></div>
+  </div>
+
+  <div class="separator"></div>
+
+  <div th:fragment="hr" style="border: 1px solid #044A93">
+  </div>
+
+  <div class="separator"></div>
+
+  <div th:fragment="header">
+    <div class="header" th:text="${subject}"
+         style="color: #ffffff;text-align: center;padding: 20px;font-size: 22px;font-weight: bold;
+         border-top-left-radius: 10px;border-top-right-radius: 10px; background: #044A93;">
+      subject
+    </div>
+  </div>
+
+  <div class="separator"></div>
+
+  <div th:fragment="footer">
+    <div class="footer"
+         style="text-align: center;padding: 20px;font-size: 14px;color: #777777;border-top: 1px solid #dddddd;margin-top: 15px;">
+      <div>
+        Si cree que esto es un error o ante cualquier duda, mande un correo a
+        <a class="color-main" th:href="'mailto:' + ${itMail}" th:text="${itMail}" style="color: #044A93">
+          itMail
+        </a>
+        <br>
+      </div>
+      <p style="margin-bottom: 0">
+        <b>Atentamente,</b>
+        <br>
+        ⚜<b>El sistema de mensajería de Scouts 105 Bentaya</b>⚜
+      </p>
+    </div>
+  </div>
+
+  <p th:fragment="important-text(impotantText)"
+     style="margin-left: 0.6rem;padding-left: 0.4rem; padding-right: 1rem; border-left: 3px solid #044A93"
+     th:text="${impotantText}"
+  ></p>
+
+  <div class="separator"></div>
+
+  <div th:fragment="new-user">
+    <div>
+      <p>
+        Para acceder a nuestro sitio web, debe hacerlo usando las siguientes credenciales:
+      </p>
+      <ul>
+        <li><b>Usuario:</b> <span th:text="${username}">username</span></li>
+        <li><b>Contraseña:</b> <span th:text="${password}">password</span></li>
+      </ul>
+      <p style="margin-bottom: 0.5rem">Le <b>recomendamos</b> cambiar la contraseña en su primer acceso.</p>
+    </div>
+    <table style="width: 100%">
+      <tr>
+        <td style="text-align: center">
+          <a class="button"
+             th:href="${webUrl} + '/login'"
+             style="background: #044A93; display: inline-block;padding: 10px 20px;color: white;
+             text-decoration: none;border-radius: 12px;font-weight: bold;text-align: center;"
+          >Acceder a Web Bentaya</a>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="separator"></div>
+
+  <div th:fragment="user-access">
+    <div>
+      <p style="margin-bottom: 0.5rem">
+        Puede revisar los datos de la persona asociada con el usuario
+        <b><span th:text="${username}">username</span></b>
+        a través de nuestro sitio web o mediante el siguiente enlace
+      </p>
+    </div>
+    <table style="width: 100%">
+      <tr>
+        <td style="text-align: center">
+          <a class="button"
+             th:href="${webUrl} + '/datos'"
+             style="background: #044A93; display: inline-block;padding: 10px 20px;color: white;
+             text-decoration: none;border-radius: 12px;font-weight: bold;text-align: center;"
+          >Acceder a Web Bentaya</a>
+        </td>
+      </tr>
+    </table>
+    <div style="margin-top: 1.5rem">
+      <p style="margin-bottom: 0.5rem">Si olvidó su contraseña, puede restablecerla en el siguiente enlace</p>
+      <table style="width: 100%">
+        <tr>
+          <td style="text-align: center">
+            <a class="button" th:href="${webUrl} + '/login?forgot=true'"
+               style="background: #044A93; display: inline-block;padding: 10px 20px;color: white;text-decoration: none;border-radius: 12px;font-weight: bold;text-align: center;">Restablecer
+              contraseña</a>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="separator"></div>
+
+
+</div>
+</body>
+</html>

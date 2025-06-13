@@ -1,5 +1,6 @@
 package org.scouts105bentaya.features.scout.entity;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -88,6 +89,7 @@ public class Scout {
     private Set<User> scoutUsers = new HashSet<>();
 
     @OneToOne(mappedBy = "scouter")
+    @Nullable
     private User scouterUser;
 
     @Transient
