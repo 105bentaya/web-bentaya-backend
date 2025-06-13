@@ -36,10 +36,10 @@ public class ScoutSpecification implements Specification<Scout> {
             personalData.get("feltName")
         );
 
-        if (!CollectionUtils.isEmpty(filter.getGroupIds()) || !CollectionUtils.isEmpty(filter.getScoutTypes())) {
+        if (!CollectionUtils.isEmpty(filter.getGroupIds()) || !CollectionUtils.isEmpty(filter.getGroupScoutTypes())) {
             SpecificationPredicateHelper groupPredicates = new SpecificationPredicateHelper(criteriaBuilder);
             groupPredicates.inList(root.get("group").get("id"), filter.getGroupIds());
-            groupPredicates.inList(root.get("scoutType"), filter.getScoutTypes());
+            groupPredicates.inList(root.get("scoutType"), filter.getGroupScoutTypes());
             predicates.addPredicate(groupPredicates.getPredicatesOr());
         }
 
@@ -67,6 +67,7 @@ public class ScoutSpecification implements Specification<Scout> {
             predicates.addPredicate(sectionPredicates.getPredicatesOr());
         }
 
+        predicates.inList(root.get("scoutType"), filter.getScoutTypes());
         predicates.castedLike(root.get("census"), filter.getCensus());
         predicates.localDateBetweenFilterRange(personalData.get("birthday"), filter.getFilterDates());
         predicates.inList(personalData.get("gender"), filter.getGenders());

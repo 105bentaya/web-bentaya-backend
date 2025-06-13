@@ -22,8 +22,9 @@ public class ScoutSpecificationFilter extends SpecificationFilter {
     private String email;
     private Boolean imageAuthorization;
     private List<ScoutStatus> statuses;
+    private List<ScoutType> scoutTypes;
 
     private List<Integer> groupIds;
-    private List<ScoutType> scoutTypes;
+    private List<ScoutType> groupScoutTypes;
     private List<Section> sections;
 }

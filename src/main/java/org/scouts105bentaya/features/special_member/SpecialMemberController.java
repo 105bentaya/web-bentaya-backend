@@ -28,7 +28,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("api/special-member")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasRole('ROLE_SECRETARY')")
 public class SpecialMemberController {
 
     private final SpecialMemberService specialMemberService;
