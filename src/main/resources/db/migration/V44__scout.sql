@@ -24,12 +24,12 @@ CREATE TABLE scout_file
 
 CREATE TABLE scout
 (
-    id           INT AUTO_INCREMENT NOT NULL,
-    scout_type   VARCHAR(255)       NOT NULL,
-    status       VARCHAR(255)       NOT NULL,
-    federated    BIT(1)             NOT NULL,
-    census       INT                NULL,
-    group_id     INT                NULL,
+    id         INT AUTO_INCREMENT NOT NULL,
+    scout_type VARCHAR(255)       NOT NULL,
+    status     VARCHAR(255)       NOT NULL,
+    federated  BIT(1)             NOT NULL,
+    census     INT                NULL,
+    group_id   INT                NULL,
     CONSTRAINT UC_SCOUT_CENSUS UNIQUE (census),
     CONSTRAINT PK_SCOUT PRIMARY KEY (id),
     CONSTRAINT FK_SCOUT_ON_GROUP FOREIGN KEY (group_id) REFERENCES bentaya_group (id)
@@ -88,6 +88,7 @@ CREATE TABLE personal_data
     residence_municipality VARCHAR(255) NULL,
     gender                 VARCHAR(255) NOT NULL,
     image_authorization    BIT(1)       NOT NULL,
+    large_family           BIT(1)       NOT NULL,
     observations           TEXT         NULL,
     CONSTRAINT PK_PERSONAL_DATA PRIMARY KEY (scout_id),
     CONSTRAINT FK_PERSONAL_DATA_ON_SCOUT FOREIGN KEY (scout_id) REFERENCES scout (id),
@@ -216,7 +217,7 @@ SELECT id,
 FROM old_scout;
 
 INSERT INTO personal_data(scout_id, surname, name, birthday, gender, shirt_size, residence_municipality,
-                          image_authorization)
+                          image_authorization, large_family)
 SELECT id,
        surname,
        name,
@@ -224,7 +225,8 @@ SELECT id,
        gender,
        shirt_size,
        municipality,
-       image_authorization
+       image_authorization,
+       false
 FROM old_scout;
 
 ALTER TABLE identification_document

@@ -47,6 +47,7 @@ public class PersonalData {
     @Column(nullable = false)
     private String gender;
     private boolean imageAuthorization;
+    private boolean largeFamily;
 
     @Column(columnDefinition = "text")
     private String observations;

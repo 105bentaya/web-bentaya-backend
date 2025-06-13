@@ -84,6 +84,7 @@ public class ScoutPersonalDataService {
         data.setResidenceMunicipality(form.residenceMunicipality());
         data.setGender(form.gender());
         data.setImageAuthorization(form.imageAuthorization());
+        data.setLargeFamily(form.largeFamily());
 
         data.setIdDocument(ScoutUtils.updateIdDocument(data.getIdDocument(), form.idDocument()));
         data.setObservations(form.observations());

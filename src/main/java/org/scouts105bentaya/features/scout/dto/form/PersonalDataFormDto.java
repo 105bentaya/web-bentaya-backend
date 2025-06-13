@@ -26,7 +26,8 @@ public record PersonalDataFormDto(
     @Length(max = 255) String shirtSize,
     @Length(max = 255) String residenceMunicipality,
     @NotNull @Length(max = 255) String gender,
-    @NotNull Boolean imageAuthorization
+    @NotNull Boolean imageAuthorization,
+    @NotNull Boolean largeFamily
 ) {
     public static PersonalDataFormDto fromNewScoutForm(NewScoutFormDto form) {
         return new PersonalDataFormDto(
@@ -48,7 +49,8 @@ public record PersonalDataFormDto(
             form.shirtSize(),
             form.residenceMunicipality(),
             form.gender(),
-            form.imageAuthorization()
+            form.imageAuthorization(),
+            false
         );
     }
 }
