@@ -38,6 +38,8 @@ import java.util.Optional;
 @Service
 public class ScoutGroupDataService {
 
+    private static final int EXPLORER_FIRST_CENSUS = 95001;
+
     private final ScoutRepository scoutRepository;
     private final BlobService blobService;
     private final GroupRepository groupRepository;
@@ -71,21 +73,49 @@ public class ScoutGroupDataService {
         return Integer.parseInt(settingService.findByName(SettingEnum.LAST_CENSUS_SCOUT).getValue());
     }
 
-    public void updateScoutCensus(Scout scout, @Nullable Integer census) {
+    public int findLastExplorerCensus() {
+        return Integer.parseInt(settingService.findByName(SettingEnum.LAST_CENSUS_EXPLORER).getValue());
+    }
+
+    public void updateScoutCensus(Scout scout, @Nullable Integer newCensus) {
         if (authService.getLoggedUser().hasRole(RoleEnum.ROLE_SECRETARY)) {
-            scout.setCensus(census);
-            if (census != null) {
-                scoutRepository.findByCensus(census).ifPresent(exisitngScout -> {
-                    if (!exisitngScout.getId().equals(scout.getId())) {
-                        throw new WebBentayaConflictException("Ya existe un scout con este censo");
-                    }
-                });
-                if (scout.getCensus() > findLastScoutCensus()) {
-                    this.settingService.updateValue(scout.getCensus(), SettingEnum.LAST_CENSUS_SCOUT);
-                }
+            this.validateCensus(scout, newCensus);
+            scout.setCensus(newCensus);
+            if (newCensus != null) {
+                this.updateLastCensus(scout);
             }
-        } else if (census != null) {
+        } else if (newCensus != null) {
             throw new WebBentayaForbiddenException("No tiene permiso para cambiar el censo de una scout");
+        }
+    }
+
+    private void validateCensus(Scout scout, @Nullable Integer newCensus) {
+        if (newCensus == null) {
+            if (scout.getCensus() != null) {
+                throw new WebBentayaBadRequestException("No puede quitar el censo a una asociada que ya ha estado censada");
+            }
+        } else {
+            scoutRepository.findByCensus(newCensus).ifPresent(exisitngScout -> {
+                if (!exisitngScout.getId().equals(scout.getId())) {
+                    throw new WebBentayaConflictException("Ya existe un scout con este censo");
+                }
+            });
+            if (scout.getCensus() != null && scout.getCensus() < EXPLORER_FIRST_CENSUS && newCensus >= EXPLORER_FIRST_CENSUS) {
+                throw new WebBentayaConflictException("Una asociada que ha sido dada de alta no puede tener un censo de exploradora");
+            }
+            if (newCensus >= EXPLORER_FIRST_CENSUS && scout.getScoutType() != ScoutType.INACTIVE) {
+                throw new WebBentayaConflictException("Una asociada que no está de baja no puede se exploradora");
+            }
+        }
+    }
+
+    private void updateLastCensus(Scout scout) {
+        if (scout.getCensus() >= EXPLORER_FIRST_CENSUS) {
+            if (scout.getCensus() > findLastExplorerCensus()) {
+                this.settingService.updateValue(scout.getCensus(), SettingEnum.LAST_CENSUS_EXPLORER);
+            }
+        } else if (scout.getCensus() > findLastScoutCensus()) {
+            this.settingService.updateValue(scout.getCensus(), SettingEnum.LAST_CENSUS_SCOUT);
         }
     }
 
@@ -96,12 +126,6 @@ public class ScoutGroupDataService {
         Scout scout = scoutRepository.get(id);
         ScoutType oldScoutType = scout.getScoutType();
         Integer oldScoutScoutGroupId = Optional.ofNullable(scout.getGroup()).map(Group::getId).orElse(null);
-
-        if (form.census() == null && scout.getCensus() != null) {
-            throw new WebBentayaBadRequestException("No puede quitar el censo a una asociada que ya ha estado censada");
-        }
-
-        this.updateScoutCensus(scout, form.census());
 
         scout.setScoutType(form.scoutType());
         if (scout.getScoutType() == ScoutType.INACTIVE) {
@@ -114,6 +138,8 @@ public class ScoutGroupDataService {
             scout.setStatus(ScoutStatus.ACTIVE);
             scout.setFederated(form.federated());
         }
+
+        this.updateScoutCensus(scout, form.census());
 
         scout.setGroup(scout.getScoutType().isScoutOrScouter() && form.groupId() != 0 ?
             groupRepository.findById(form.groupId()).orElseThrow(WebBentayaNotFoundException::new) :

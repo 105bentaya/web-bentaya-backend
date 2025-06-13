@@ -23,7 +23,8 @@ public enum SettingEnum {
     LAST_CENSUS_ACKNOWLEDGED(SettingType.NUMBER),
     LAST_CENSUS_PROTECTOR(SettingType.NUMBER),
     LAST_CENSUS_DONOR(SettingType.NUMBER),
-    LAST_CENSUS_SCOUT(SettingType.NUMBER);
+    LAST_CENSUS_SCOUT(SettingType.NUMBER),
+    LAST_CENSUS_EXPLORER(SettingType.NUMBER);
 
     private final SettingType type;
     private final boolean nullable;

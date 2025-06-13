@@ -192,8 +192,6 @@ public class ScoutCreationService {
     }
 
     private void setGroupData(Scout scout, NewScoutFormDto form, ScoutStatus scoutStatus) {
-        scoutGroupDataService.updateScoutCensus(scout, form.census());
-
         scout.setScoutType(form.scoutType());
         if (scout.getScoutType() == ScoutType.INACTIVE) {
             scout.setStatus(ScoutStatus.INACTIVE);
@@ -206,6 +204,7 @@ public class ScoutCreationService {
             scout.setFederated(scout.getScoutType().isScoutOrScouter());
         }
 
+        scoutGroupDataService.updateScoutCensus(scout, form.census());
         scout.setGroup(scout.getScoutType().isScoutOrScouter() && form.groupId() != 0 ?
             groupRepository.findById(form.groupId()).orElseThrow(WebBentayaNotFoundException::new) :
             null

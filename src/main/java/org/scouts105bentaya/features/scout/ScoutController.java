@@ -198,6 +198,12 @@ public class ScoutController {
         return scoutGroupDataService.findLastScoutCensus();
     }
 
+    @PreAuthorize("hasRole('SECRETARY')")
+    @GetMapping("/last-explorer-census")
+    public int getExplorerLastCensus() {
+        return scoutGroupDataService.findLastExplorerCensus();
+    }
+
     @PreAuthorize("hasAnyRole('SECRETARY', 'SCOUTER')")
     @GetMapping("/previous-scout/{preScoutId}")
     public ScoutDto findScoutsLikeHasBeenInGroup(@PathVariable Integer preScoutId) {
