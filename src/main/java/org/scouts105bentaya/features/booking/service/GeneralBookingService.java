@@ -27,6 +27,7 @@ import org.scouts105bentaya.shared.service.AuthService;
 import org.scouts105bentaya.shared.service.BlobService;
 import org.scouts105bentaya.shared.service.EmailService;
 import org.scouts105bentaya.shared.util.EmailUtils;
+import org.scouts105bentaya.shared.util.FileTypeEnum;
 import org.scouts105bentaya.shared.util.FileUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -322,7 +323,7 @@ public class GeneralBookingService {
     }
 
     public void saveBookingIncidencesFile(Integer bookingId, MultipartFile file) {
-        FileUtils.validateFileIsDocOrPdf(file);
+        FileUtils.validateFileType(file, FileTypeEnum.PDF_TYPE, FileTypeEnum.DOC_TYPE);
         GeneralBooking booking = generalBookingRepository.get(bookingId);
 
         if (!booking.getStatus().reservedOrOccupied()) {

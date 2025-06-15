@@ -13,6 +13,7 @@ import org.scouts105bentaya.features.scout.repository.ScoutFileRepository;
 import org.scouts105bentaya.features.scout.repository.ScoutRecordRepository;
 import org.scouts105bentaya.features.scout.repository.ScoutRepository;
 import org.scouts105bentaya.shared.service.BlobService;
+import org.scouts105bentaya.shared.util.FileTypeEnum;
 import org.scouts105bentaya.shared.util.FileUtils;
 import org.scouts105bentaya.shared.util.dto.FileTransferDto;
 import org.springframework.http.ResponseEntity;
@@ -48,7 +49,7 @@ public class ScoutFileService {
 
     @Synchronized
     public ScoutFile createScoutFile(Integer entityId, MultipartFile file, ScoutFileType fileType, String customName) {
-        FileUtils.validateFileIsPdf(file);
+        FileUtils.validateFileType(file, FileTypeEnum.PDF_TYPE, FileTypeEnum.DOC_TYPE, FileTypeEnum.IMG_TYPE);
         ScoutFile scoutFile = buildScoutFile(file, customName);
 
         if (fileType == ScoutFileType.RECORD) {

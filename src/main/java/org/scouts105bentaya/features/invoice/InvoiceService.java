@@ -16,6 +16,7 @@ import org.scouts105bentaya.features.invoice.repository.InvoiceRepository;
 import org.scouts105bentaya.features.invoice.specification.InvoiceSpecification;
 import org.scouts105bentaya.features.invoice.specification.InvoiceSpecificationFilter;
 import org.scouts105bentaya.shared.service.BlobService;
+import org.scouts105bentaya.shared.util.FileTypeEnum;
 import org.scouts105bentaya.shared.util.FileUtils;
 import org.scouts105bentaya.shared.util.dto.FileTransferDto;
 import org.springframework.data.domain.Page;
@@ -102,7 +103,7 @@ public class InvoiceService {
 
     @Transactional
     public void saveDocument(Integer invoiceId, MultipartFile file) {
-        FileUtils.validateFileIsImgOrPdf(file);
+        FileUtils.validateFileType(file, FileTypeEnum.IMG_TYPE, FileTypeEnum.PDF_TYPE);
 
         Invoice invoice = findById(invoiceId);
 

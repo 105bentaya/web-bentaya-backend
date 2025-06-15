@@ -18,6 +18,7 @@ import org.scouts105bentaya.features.user.User;
 import org.scouts105bentaya.features.user.role.RoleEnum;
 import org.scouts105bentaya.shared.service.AuthService;
 import org.scouts105bentaya.shared.service.BlobService;
+import org.scouts105bentaya.shared.util.FileTypeEnum;
 import org.scouts105bentaya.shared.util.FileUtils;
 import org.scouts105bentaya.shared.util.dto.FileTransferDto;
 import org.springframework.http.ResponseEntity;
@@ -63,7 +64,7 @@ public class BookingDocumentService {
     }
 
     public void saveBookingDocument(Integer bookingId, MultipartFile file, Integer typeId) {
-        FileUtils.validateFileIsPdf(file);
+        FileUtils.validateFileType(file, FileTypeEnum.PDF_TYPE);
 
         GeneralBooking booking = generalBookingRepository.get(bookingId);
 

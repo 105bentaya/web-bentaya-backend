@@ -2,17 +2,17 @@ package org.scouts105bentaya.shared.util;
 
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
-import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 public final class FileUtils {
-    private static final Map<String, String> DOC_TYPES = Map.ofEntries(
+
+    static final Map<String, String> DOC_TYPES = Map.ofEntries(
         Map.entry(".doc", "application/msword"),
         Map.entry(".dot", "application/msword"),
         Map.entry(".docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
@@ -21,57 +21,32 @@ public final class FileUtils {
         Map.entry(".rtf", "application/rtf")
     );
 
-    private static final Map<String, String> IMG_TYPES = Map.ofEntries(
+    static final Map<String, String> IMG_TYPES = Map.ofEntries(
         Map.entry(".webp", "image/webp"),
         Map.entry(".jpg", "image/jpeg"),
         Map.entry(".png", "image/png"),
         Map.entry(".svg", "image/svg+xml")
     );
 
+    static final Map<String, String> PDF_TYPES = Map.ofEntries(
+        Map.entry(".pdf", "application/pdf")
+    );
+
     private FileUtils() {
     }
 
-    public static void validateFileIsDoc(MultipartFile file) {
-        String fileType = Optional.ofNullable(file.getContentType()).orElse("");
-        if (!DOC_TYPES.containsValue(fileType)) {
-            logUnsupportedType(file);
-            throw new WebBentayaBadRequestException("El archivo debe ser de tipo .docx, .odt o .rtf");
+    public static void validateFileType(MultipartFile file, FileTypeEnum... allowedTypes) {
+        if (Arrays.stream(allowedTypes).noneMatch(allowedType -> allowedType.fileIsValid(file))) {
+            log.warn("Unsupported document type: {}", file.getContentType());
+            throw new WebBentayaBadRequestException("El formato del archivo no admitido. Tipos permitidos: %s".formatted(getSupportedTypes(allowedTypes)));
         }
     }
 
-    public static void validateFileIsPdf(MultipartFile file) {
-        if (!Objects.equals(file.getContentType(), MediaType.APPLICATION_PDF.toString())) {
-            logUnsupportedType(file);
-            throw new WebBentayaBadRequestException("El archivo debe ser de tipo .pdf");
-        }
+    public static void validateFilesType(List<MultipartFile> files, FileTypeEnum... allowedTypes) {
+        files.forEach(file -> validateFileType(file, allowedTypes));
     }
 
-    public static void validateFileIsImg(MultipartFile file) {
-        String fileType = Optional.ofNullable(file.getContentType()).orElse("");
-        if (!IMG_TYPES.containsValue(fileType)) {
-            throw new WebBentayaBadRequestException("El archivo debe ser una imagen jpg, png o svg");
-        }
-    }
-
-    public static void validateFilesIsImg(List<MultipartFile> files) {
-        files.forEach(FileUtils::validateFileIsImg);
-    }
-
-    public static void validateFileIsDocOrPdf(MultipartFile file) {
-        if (!(Objects.equals(file.getContentType(), MediaType.APPLICATION_PDF.toString()) || DOC_TYPES.containsValue(file.getContentType()))) {
-            logUnsupportedType(file);
-            throw new WebBentayaBadRequestException("El archivo debe ser de tipo .pdf, .docx, .odt o .rtf");
-        }
-    }
-
-    public static void validateFileIsImgOrPdf(MultipartFile file) {
-        if (!(Objects.equals(file.getContentType(), MediaType.APPLICATION_PDF.toString()) || IMG_TYPES.containsValue(file.getContentType()))) {
-            logUnsupportedType(file);
-            throw new WebBentayaBadRequestException("El archivo debe ser de tipo pdf, jpg, png o svg");
-        }
-    }
-
-    private static void logUnsupportedType(MultipartFile file) {
-        log.warn("Unsupported document type: {}", file.getContentType());
+    private static String getSupportedTypes(FileTypeEnum... allowedTypes) {
+        return Arrays.stream(allowedTypes).flatMap(type -> type.validExtensions().stream()).collect(Collectors.joining(", "));
     }
 }

@@ -12,6 +12,7 @@ import org.scouts105bentaya.features.scout_center.repository.ScoutCenterReposito
 import org.scouts105bentaya.shared.service.BlobService;
 import org.scouts105bentaya.shared.service.GeneralBlobService;
 import org.scouts105bentaya.shared.service.PublicBlobService;
+import org.scouts105bentaya.shared.util.FileTypeEnum;
 import org.scouts105bentaya.shared.util.FileUtils;
 import org.scouts105bentaya.shared.util.dto.FileTransferDto;
 import org.springframework.http.MediaType;
@@ -21,8 +22,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
-
-import static org.scouts105bentaya.shared.util.FileUtils.validateFilesIsImg;
 
 @Service
 public class ScoutCenterService {
@@ -58,7 +57,7 @@ public class ScoutCenterService {
     }
 
     public ScoutCenterFile uploadRuleFile(int centerId, @NotNull MultipartFile file) {
-        FileUtils.validateFileIsPdf(file);
+        FileUtils.validateFileType(file, FileTypeEnum.PDF_TYPE);
         ScoutCenter scoutCenter = scoutCenterRepository.get(centerId);
         ScoutCenterFile ruleFile = updateScoutCenterFile(file, scoutCenter.getRulePdf(), blobService);
         scoutCenter.setRulePdf(ruleFile);
@@ -66,7 +65,7 @@ public class ScoutCenterService {
     }
 
     public ScoutCenterFile uploadIncidenceFile(int centerId, @NotNull MultipartFile file) {
-        FileUtils.validateFileIsDoc(file);
+        FileUtils.validateFileType(file, FileTypeEnum.DOC_TYPE);
         ScoutCenter scoutCenter = scoutCenterRepository.get(centerId);
         ScoutCenterFile incidenceFile = updateScoutCenterFile(file, scoutCenter.getIncidencesDoc(), blobService);
         scoutCenter.setIncidencesDoc(incidenceFile);
@@ -74,7 +73,7 @@ public class ScoutCenterService {
     }
 
     public ScoutCenterFile uploadAttendanceFile(int centerId, @NotNull MultipartFile file) {
-        FileUtils.validateFileIsDoc(file);
+        FileUtils.validateFileType(file, FileTypeEnum.DOC_TYPE);
         ScoutCenter scoutCenter = scoutCenterRepository.get(centerId);
         ScoutCenterFile attendance = updateScoutCenterFile(file, scoutCenter.getAttendanceDoc(), blobService);
         scoutCenter.setAttendanceDoc(attendance);
@@ -82,7 +81,7 @@ public class ScoutCenterService {
     }
 
     public ScoutCenterFile uploadMainPhotoFile(int centerId, @NotNull MultipartFile file) {
-        FileUtils.validateFileIsImg(file);
+        FileUtils.validateFileType(file, FileTypeEnum.IMG_TYPE);
         ScoutCenter scoutCenter = scoutCenterRepository.get(centerId);
         ScoutCenterFile mainPhoto = updateScoutCenterFile(file, scoutCenter.getMainPhoto(), publicBlobService);
         scoutCenter.setMainPhoto(mainPhoto);
@@ -113,7 +112,7 @@ public class ScoutCenterService {
     }
 
     public List<ScoutCenterFile> uploadPhotos(int centerId, @NotEmpty List<MultipartFile> files) {
-        validateFilesIsImg(files);
+        FileUtils.validateFilesType(files, FileTypeEnum.IMG_TYPE);
         ScoutCenter scoutCenter = scoutCenterRepository.get(centerId);
         List<ScoutCenterFile> photos = scoutCenter.getPhotos();
 
