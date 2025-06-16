@@ -50,7 +50,7 @@ public class PreScoutController {
         return this.preScoutConverter.convertEntityCollectionToDtoList(this.preScoutService.findAllAssignedByLoggedScouter());
     }
 
-    @PreAuthorize("hasRole('SCOUTER') and @authLogic.scouterHasPreScoutGroupId(#id)")
+    @PreAuthorize("hasRole('SECRETARY') or hasRole('SCOUTER') and @authLogic.scouterHasPreScoutGroupId(#id)")
     @GetMapping("/assignation/{id}")
     public PreScoutDto findById(@PathVariable Integer id) {
         log.info("METHOD PreScoutController.findById --- PARAMS id:{}{}", id, SecurityUtils.getLoggedUserUsernameForLog());
