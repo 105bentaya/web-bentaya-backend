@@ -208,6 +208,7 @@ public class AuthLogic {
         User user = authService.getLoggedUser();
         if (!user.hasRole(RoleEnum.ROLE_SCOUTER)) return false;
         if (!newScoutFormDto.scoutType().isScoutOrScouter()) return false;
+        if (!scouterHasGroupId(newScoutFormDto.groupId())) return false;
         return newScoutFormDto.census() == null;
     }
 }

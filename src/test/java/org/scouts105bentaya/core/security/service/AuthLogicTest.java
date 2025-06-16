@@ -870,8 +870,10 @@ class AuthLogicTest {
         NewScoutFormDto dto = Mockito.mock(NewScoutFormDto.class);
         Mockito.when(dto.scoutType()).thenReturn(scoutType);
         Mockito.when(dto.census()).thenReturn(null);
+        Mockito.when(dto.groupId()).thenReturn(1);
 
         User user = new User()
+            .setScouter(ScoutUtils.basicScouter())
             .setRoles(List.of(RoleUtils.of(RoleEnum.ROLE_SCOUTER)));
         Mockito.when(authService.getLoggedUser()).thenReturn(user);
 
@@ -881,13 +883,66 @@ class AuthLogicTest {
 
     @ParameterizedTest
     @EnumSource(value = ScoutType.class, names = {"SCOUT", "SCOUTER"})
+    void isScouterAndCanAddScout_withWrongGroup_returnsFalse(ScoutType scoutType) {
+        //given
+        NewScoutFormDto dto = Mockito.mock(NewScoutFormDto.class);
+        Mockito.when(dto.scoutType()).thenReturn(scoutType);
+        Mockito.when(dto.groupId()).thenReturn(2);
+
+        User user = new User()
+            .setScouter(ScoutUtils.basicScouter())
+            .setRoles(List.of(RoleUtils.of(RoleEnum.ROLE_SCOUTER)));
+        Mockito.when(authService.getLoggedUser()).thenReturn(user);
+
+        //then
+        Assertions.assertThat(authLogic.isScouterAndCanAddScout(dto)).isFalse();
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = ScoutType.class, names = {"SCOUT", "SCOUTER"})
+    void isScouterAndCanAddScout_withNoGroup_returnsFalse(ScoutType scoutType) {
+        //given
+        NewScoutFormDto dto = Mockito.mock(NewScoutFormDto.class);
+        Mockito.when(dto.scoutType()).thenReturn(scoutType);
+        Mockito.when(dto.groupId()).thenReturn(1);
+
+        User user = new User()
+            .setScouter(new Scout())
+            .setRoles(List.of(RoleUtils.of(RoleEnum.ROLE_SCOUTER)));
+        Mockito.when(authService.getLoggedUser()).thenReturn(user);
+
+        //then
+        Assertions.assertThat(authLogic.isScouterAndCanAddScout(dto)).isFalse();
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = ScoutType.class, names = {"SCOUT", "SCOUTER"})
+    void isScouterAndCanAddScout_withNoFormGroup_returnsFalse(ScoutType scoutType) {
+        //given
+        NewScoutFormDto dto = Mockito.mock(NewScoutFormDto.class);
+        Mockito.when(dto.scoutType()).thenReturn(scoutType);
+        Mockito.when(dto.groupId()).thenReturn(null);
+
+        User user = new User()
+            .setScouter(ScoutUtils.basicScouter())
+            .setRoles(List.of(RoleUtils.of(RoleEnum.ROLE_SCOUTER)));
+        Mockito.when(authService.getLoggedUser()).thenReturn(user);
+
+        //then
+        Assertions.assertThat(authLogic.isScouterAndCanAddScout(dto)).isFalse();
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = ScoutType.class, names = {"SCOUT", "SCOUTER"})
     void isScouterAndCanAddScout_withCensus_returnsFalse(ScoutType scoutType) {
         //given
         NewScoutFormDto dto = Mockito.mock(NewScoutFormDto.class);
         Mockito.when(dto.scoutType()).thenReturn(scoutType);
         Mockito.when(dto.census()).thenReturn(1234);
+        Mockito.when(dto.groupId()).thenReturn(1);
 
         User user = new User()
+            .setScouter(ScoutUtils.basicScouter())
             .setRoles(List.of(RoleUtils.of(RoleEnum.ROLE_SCOUTER)));
         Mockito.when(authService.getLoggedUser()).thenReturn(user);
 
