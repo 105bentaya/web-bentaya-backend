@@ -51,8 +51,8 @@ ALTER TABLE scout
     DROP COLUMN temp_user_id;
 
 
-INSERT INTO personal_data(image_authorization, birthday, gender, surname, name, scout_id, email)
-SELECT true, '19700101', 'Otro', 'PON TU APELLIDO', 'PON TU NOMBRE', scout_id, username
+INSERT INTO personal_data(image_authorization, birthday, gender, surname, name, scout_id, email, large_family)
+SELECT true, '19700101', 'Otro', 'PON TU APELLIDO', 'PON TU NOMBRE', scout_id, username, false
 FROM scouter_user_migration;
 
 INSERT INTO medical_data(scout_id, blood_type)
