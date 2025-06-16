@@ -10,6 +10,7 @@ import org.scouts105bentaya.features.jamboree_inscription.entity.JamboreeContact
 import org.scouts105bentaya.features.jamboree_inscription.entity.JamboreeInscription;
 import org.scouts105bentaya.features.jamboree_inscription.entity.JamboreeLanguage;
 import org.scouts105bentaya.features.scout.repository.ScoutRepository;
+import org.scouts105bentaya.shared.util.ExcelUtils;
 import org.scouts105bentaya.shared.util.dto.FileTransferDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -137,8 +138,7 @@ public class JamboreeInscriptionService {
                 excelRowHelper.addRow(inscription.getCp());
                 excelRowHelper.addRow(inscription.getLocality());
                 excelRowHelper.addRow(inscription.getBirthDate().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
-                Period age = Period.between(inscription.getBirthDate(), LocalDate.now());
-                excelRowHelper.addRow("%d años, %d meses, %d días".formatted(age.getYears(), age.getMonths(), age.getDays()));
+                excelRowHelper.addRow(ExcelUtils.getAge(inscription.getBirthDate()));
                 excelRowHelper.addRow(inscription.getAgeAtJamboree());
                 excelRowHelper.addRow(inscription.getGender());
                 excelRowHelper.addRow(inscription.getPhoneNumber());
@@ -181,10 +181,7 @@ public class JamboreeInscriptionService {
                 excelRowHelper.addRow(inscription.getObservations());
             }
 
-            for (int i = 0; i < JamboreeExcelConstants.HEADERS.length; i++) {
-                sheet.autoSizeColumn(i);
-                sheet.setColumnWidth(i, Math.min(65280, sheet.getColumnWidth(i) + 1000));
-            }
+            ExcelUtils.autosizeSheet(sheet, JamboreeExcelConstants.HEADERS.length);
 
             workbook.write(out);
             return new FileTransferDto(

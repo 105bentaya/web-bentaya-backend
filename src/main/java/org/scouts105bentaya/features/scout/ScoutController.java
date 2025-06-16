@@ -6,13 +6,13 @@ import org.scouts105bentaya.features.invoice.InvoiceService;
 import org.scouts105bentaya.features.invoice.dto.InvoiceTypesDto;
 import org.scouts105bentaya.features.scout.dto.ScoutDto;
 import org.scouts105bentaya.features.scout.dto.ScoutListDataDto;
-import org.scouts105bentaya.features.scout.dto.UserScoutDto;
 import org.scouts105bentaya.features.scout.dto.form.ContactListFormDto;
 import org.scouts105bentaya.features.scout.dto.form.EconomicDataFormDto;
 import org.scouts105bentaya.features.scout.dto.form.EconomicEntryFormDto;
 import org.scouts105bentaya.features.scout.dto.form.MedicalDataFormDto;
 import org.scouts105bentaya.features.scout.dto.form.NewScoutFormDto;
 import org.scouts105bentaya.features.scout.dto.form.PersonalDataFormDto;
+import org.scouts105bentaya.features.scout.dto.form.ScoutExcelDto;
 import org.scouts105bentaya.features.scout.dto.form.ScoutHistoryFormDto;
 import org.scouts105bentaya.features.scout.dto.form.ScoutInfoFormDto;
 import org.scouts105bentaya.features.scout.dto.form.ScoutRecordFormDto;
@@ -23,6 +23,7 @@ import org.scouts105bentaya.features.scout.enums.ScoutFileType;
 import org.scouts105bentaya.features.scout.service.ScoutContactService;
 import org.scouts105bentaya.features.scout.service.ScoutCreationService;
 import org.scouts105bentaya.features.scout.service.ScoutEconomicDataService;
+import org.scouts105bentaya.features.scout.service.ScoutExcelService;
 import org.scouts105bentaya.features.scout.service.ScoutFileService;
 import org.scouts105bentaya.features.scout.service.ScoutGroupDataService;
 import org.scouts105bentaya.features.scout.service.ScoutHistoryService;
@@ -30,10 +31,10 @@ import org.scouts105bentaya.features.scout.service.ScoutMedicalDataService;
 import org.scouts105bentaya.features.scout.service.ScoutPersonalDataService;
 import org.scouts105bentaya.features.scout.service.ScoutService;
 import org.scouts105bentaya.features.scout.specification.ScoutSpecificationFilter;
-import org.scouts105bentaya.features.user.dto.UserDto;
 import org.scouts105bentaya.shared.GenericConverter;
 import org.scouts105bentaya.shared.specification.PageDto;
 import org.scouts105bentaya.shared.util.SecurityUtils;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.CollectionUtils;
@@ -70,6 +71,7 @@ public class ScoutController {
     private final ScoutCreationService scoutCreationService;
     private final InvoiceService invoiceService;
     private final ScoutConverter scoutConverter;
+    private final ScoutExcelService scoutExcelService;
 
     public ScoutController(
         ScoutService scoutService,
@@ -82,7 +84,8 @@ public class ScoutController {
         ScoutHistoryService scoutHistoryService,
         ScoutCreationService scoutCreationService,
         InvoiceService invoiceService,
-        ScoutConverter scoutConverter
+        ScoutConverter scoutConverter,
+        ScoutExcelService scoutExcelService
     ) {
         this.scoutService = scoutService;
         this.scoutFileService = scoutFileService;
@@ -95,6 +98,7 @@ public class ScoutController {
         this.scoutCreationService = scoutCreationService;
         this.invoiceService = invoiceService;
         this.scoutConverter = scoutConverter;
+        this.scoutExcelService = scoutExcelService;
     }
 
     @PreAuthorize("hasAnyRole('SECRETARY', 'SCOUTER')")
@@ -102,6 +106,16 @@ public class ScoutController {
     public PageDto<ScoutListDataDto> findAll(ScoutSpecificationFilter filter) {
         log.info("findAll - filter:{}{}", filter, SecurityUtils.getLoggedUserUsernameForLog());
         return GenericConverter.convertListToPageDto(scoutService.findAll(filter), ScoutListDataDto::fromScout);
+    }
+
+    @PreAuthorize("hasAnyRole('SECRETARY', 'SCOUTER')")
+    @PostMapping("/excel")
+    public ResponseEntity<byte[]> downloadScoutExcel(@RequestBody ScoutExcelDto excelDto) {
+        log.info("downloadScoutExcel - filter:{}{}", excelDto.filter(), SecurityUtils.getLoggedUserUsernameForLog());
+        return ResponseEntity
+            .ok()
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+            .body(scoutExcelService.downloadScoutExcel(excelDto).toByteArray());
     }
 
     @PreAuthorize("hasRole('ADMIN')")
