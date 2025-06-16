@@ -4,6 +4,8 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -17,17 +19,27 @@ import org.scouts105bentaya.features.booking.repository.OwnBookingRepository;
 import org.scouts105bentaya.features.event.Event;
 import org.scouts105bentaya.features.event.dto.EventFormDto;
 import org.scouts105bentaya.features.event.service.EventService;
+import org.scouts105bentaya.features.group.Group;
 import org.scouts105bentaya.features.pre_scout.entity.PreScout;
 import org.scouts105bentaya.features.pre_scout.entity.PreScoutAssignation;
 import org.scouts105bentaya.features.pre_scout.service.PreScoutService;
-import org.scouts105bentaya.features.scout.OldScout;
-import org.scouts105bentaya.features.scout.service.ScoutService;
+import org.scouts105bentaya.features.scout.dto.form.NewScoutFormDto;
+import org.scouts105bentaya.features.scout.entity.Scout;
+import org.scouts105bentaya.features.scout.entity.ScoutFile;
+import org.scouts105bentaya.features.scout.enums.ScoutFileType;
+import org.scouts105bentaya.features.scout.enums.ScoutType;
+import org.scouts105bentaya.features.scout.repository.ScoutFileRepository;
+import org.scouts105bentaya.features.scout.repository.ScoutRepository;
 import org.scouts105bentaya.features.user.User;
+import org.scouts105bentaya.features.user.role.RoleEnum;
 import org.scouts105bentaya.shared.service.AuthService;
 import org.scouts105bentaya.utils.GroupUtils;
+import org.scouts105bentaya.utils.RoleUtils;
+import org.scouts105bentaya.utils.ScoutUtils;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @ExtendWith(MockitoExtension.class)
@@ -36,8 +48,6 @@ class AuthLogicTest {
     @Mock
     AuthService authService;
     @Mock
-    ScoutService scoutService;
-    @Mock
     EventService eventService;
     @Mock
     PreScoutService preScoutService;
@@ -45,67 +55,78 @@ class AuthLogicTest {
     BookingDocumentRepository bookingDocumentRepository;
     @Mock
     OwnBookingRepository ownBookingRepository;
+    @Mock
+    ScoutRepository scoutRepository;
+    @Mock
+    ScoutFileRepository scoutFileRepository;
 
 
     private AuthLogic authLogic;
 
     @BeforeEach
     void setUp() {
-        authLogic = new AuthLogic(authService, scoutService, eventService, preScoutService, bookingDocumentRepository, ownBookingRepository);
+        authLogic = new AuthLogic(authService, eventService, preScoutService, bookingDocumentRepository, ownBookingRepository, scoutRepository, scoutFileRepository);
     }
 
     @Test
-    void userHasSameGroupIdAsScoutShouldReturnTrue() {
+    void userHasAccessToScoutShouldReturnTrue() {
         //given
-        var scout = new OldScout().setId(1).setGroup(GroupUtils.basicGroup());
-        var loggedUser = new User().setId(1).setGroup(GroupUtils.basicGroup());
+        var scout = ScoutUtils.scoutOfId(1);
+        var loggedUser = new User().setId(1).setScouter(scout).setScoutList(Set.of(scout)).setRoles(List.of(RoleUtils.of(RoleEnum.ROLE_USER)));
 
         //when
         Mockito.when(authService.getLoggedUser()).thenReturn(loggedUser);
-        Mockito.when(scoutService.findActiveById(1)).thenReturn(scout);
-        var result = authLogic.userHasSameGroupIdAsScout(1);
+        var result = authLogic.userHasAccessToScout(1);
 
         //then
         Assertions.assertThat(result).isTrue();
     }
 
     @Test
-    void userHasDifferentGroupIdAsScoutShouldReturnFalse() {
+    void userHasAccessToScoutShouldReturnFalse1() {
         //given
-        var scout = new OldScout().setId(1).setGroup(GroupUtils.groupOfId(2));
-        var loggedUser = new User().setId(1).setGroup(GroupUtils.basicGroup());
+        var scout = ScoutUtils.scoutOfId(1);
 
+        var loggedUser = new User().setId(1).setScouter(scout).setScoutList(Set.of(scout)).setRoles(List.of(RoleUtils.of(RoleEnum.ROLE_SCOUTER)));
         //when
         Mockito.when(authService.getLoggedUser()).thenReturn(loggedUser);
-        Mockito.when(scoutService.findActiveById(1)).thenReturn(scout);
-        var result = authLogic.userHasSameGroupIdAsScout(1);
+        var result = authLogic.userHasAccessToScout(1);
 
         //then
         Assertions.assertThat(result).isFalse();
     }
 
     @Test
-    void userHasNoGroupIdShouldReturnFalse() {
+    void userHasAccessScoutShouldReturnFalse() {
         //given
-        var loggedUser = new User().setId(1);
+        var scout = ScoutUtils.scoutOfId(1);
+        var loggedUser = new User().setId(2).setScouter(scout).setScoutList(Set.of(scout)).setRoles(List.of(RoleUtils.of(RoleEnum.ROLE_SCOUTER)));
 
         //when
         Mockito.when(authService.getLoggedUser()).thenReturn(loggedUser);
-        Mockito.verifyNoInteractions(scoutService);
-        var result = authLogic.userHasSameGroupIdAsScout(1);
+        var result = authLogic.userHasAccessToScout(1);
 
         //then
         Assertions.assertThat(result).isFalse();
     }
 
-    void mockScout() {
-        Mockito.when(scoutService.findActiveById(1)).thenReturn(new OldScout().setId(1).setGroup(GroupUtils.basicGroup()));
+    @Test
+    void userHasAccessScoutShouldReturnFalse2() {
+        //given
+        var loggedUser = new User().setId(1).setRoles(List.of(RoleUtils.of(RoleEnum.ROLE_USER)));
+
+        //when
+        Mockito.when(authService.getLoggedUser()).thenReturn(loggedUser);
+        var result = authLogic.userHasAccessToScout(1);
+
+        //then
+        Assertions.assertThat(result).isFalse();
     }
 
     @Test
     void eventIsEditableByScouterWhenIdIsCorrect() {
         //given
-        var loggedUser = new User().setId(1).setGroup(GroupUtils.basicGroup());
+        var loggedUser = new User().setId(1).setScouter(ScoutUtils.basicScouter());
         var eventFormDto = EventFormDto.builder().id(1).groupId(1).build();
         var eventDB = new Event().setId(1).setGroup(GroupUtils.basicGroup());
 
@@ -121,7 +142,7 @@ class AuthLogicTest {
     @Test
     void eventIsEditableByScouter2() {
         //given
-        var loggedUser = new User().setId(1).setGroup(GroupUtils.groupOfId(2));
+        var loggedUser = new User().setId(1).setScouter(ScoutUtils.basicScouter(GroupUtils.groupOfId(2)));
         var eventFormDto = EventFormDto.builder().id(1).groupId(1).build();
         var eventDB = new Event().setId(1).setGroup(GroupUtils.basicGroup());
 
@@ -137,7 +158,7 @@ class AuthLogicTest {
     @Test
     void eventIsEditableByScouter3() {
         //given
-        var loggedUser = new User().setId(1).setGroup(GroupUtils.basicGroup());
+        var loggedUser = new User().setId(1).setScouter(ScoutUtils.basicScouter());
         var eventFormDto = EventFormDto.builder().id(1).groupId(2).build();
         var eventDB = new Event().setId(1).setGroup(GroupUtils.basicGroup());
 
@@ -153,7 +174,7 @@ class AuthLogicTest {
     @Test
     void eventIsEditableByScouter4() {
         //given
-        var loggedUser = new User().setId(1).setGroup(GroupUtils.basicGroup());
+        var loggedUser = new User().setId(1).setScouter(ScoutUtils.basicScouter());
         var eventFormDto = EventFormDto.builder().id(1).groupId(1).build();
         var eventDB = new Event().setId(1).setGroup(GroupUtils.groupOfId(2));
 
@@ -245,7 +266,7 @@ class AuthLogicTest {
     @Test
     void scouterHasAccessToEvent3() {
         //given
-        var loggedUser = new User().setId(1).setGroup(GroupUtils.basicGroup());
+        var loggedUser = new User().setId(1).setScouter(ScoutUtils.basicScouter());
         var eventDB = new Event().setId(1).setGroup(GroupUtils.basicGroup());
 
         //when
@@ -260,7 +281,7 @@ class AuthLogicTest {
     @Test
     void scouterHasAccessToEvent4() {
         //given
-        var loggedUser = new User().setId(1).setGroup(GroupUtils.basicGroup());
+        var loggedUser = new User().setId(1).setScouter(ScoutUtils.basicScouter());
         var eventDB = new Event().setId(1).setGroup(GroupUtils.groupOfId(2));
 
         //when
@@ -275,7 +296,7 @@ class AuthLogicTest {
     @Test
     void scouterHasGroupId() {
         //given
-        var loggedUser = new User().setId(1).setGroup(GroupUtils.basicGroup());
+        var loggedUser = new User().setId(1).setScouter(ScoutUtils.basicScouter());
 
         //when
         Mockito.when(authService.getLoggedUser()).thenReturn(loggedUser);
@@ -288,7 +309,7 @@ class AuthLogicTest {
     @Test
     void scouterHasGroupId2() {
         //given
-        var loggedUser = new User().setId(1).setGroup(GroupUtils.basicGroup());
+        var loggedUser = new User().setId(1).setScouter(ScoutUtils.basicScouter());
 
         //when
         Mockito.when(authService.getLoggedUser()).thenReturn(loggedUser);
@@ -312,35 +333,9 @@ class AuthLogicTest {
     }
 
     @Test
-    void preScoutHasGroupId() {
-        //given
-        var preScout = new PreScout().setId(1).setPreScoutAssignation(new PreScoutAssignation().setGroup(GroupUtils.basicGroup()));
-
-        //when
-        Mockito.when(preScoutService.findById(1)).thenReturn(preScout);
-        var result = authLogic.preScoutHasGroupId(1, 1);
-
-        //then
-        Assertions.assertThat(result).isTrue();
-    }
-
-    @Test
-    void preScoutHasNotGroupId() {
-        //given
-        var preScout = new PreScout().setId(1).setPreScoutAssignation(new PreScoutAssignation().setGroup(GroupUtils.basicGroup()));
-
-        //when
-        Mockito.when(preScoutService.findById(1)).thenReturn(preScout);
-        var result = authLogic.preScoutHasGroupId(1, 2);
-
-        //then
-        Assertions.assertThat(result).isFalse();
-    }
-
-    @Test
     void scouterHasPreScoutGroupId() {
         //given
-        var loggedUser = new User().setId(1).setGroup(GroupUtils.basicGroup());
+        var loggedUser = new User().setId(1).setScouter(ScoutUtils.basicScouter());
         var preScout = new PreScout().setId(1).setPreScoutAssignation(new PreScoutAssignation().setGroup(GroupUtils.basicGroup()));
 
         //when
@@ -370,7 +365,7 @@ class AuthLogicTest {
     @Test
     void scouterHasPreScoutGroupId3() {
         //given
-        var loggedUser = new User().setId(1).setGroup(GroupUtils.groupOfId(2));
+        var loggedUser = new User().setId(1).setScouter(ScoutUtils.basicScouter(GroupUtils.groupOfId(2)));
         var preScout = new PreScout().setId(1).setPreScoutAssignation(new PreScoutAssignation().setGroup(GroupUtils.basicGroup()));
 
         //when
@@ -385,7 +380,7 @@ class AuthLogicTest {
     @Test
     void userHasScoutId() {
         //given
-        var loggedUser = new User().setId(1).setScoutList(Set.of(new OldScout().setId(1), new OldScout().setId(2)));
+        var loggedUser = new User().setId(1).setScoutList(Set.of(ScoutUtils.scoutOfId(1), ScoutUtils.scoutOfId(2)));
 
         //when
         Mockito.when(authService.getLoggedUser()).thenReturn(loggedUser);
@@ -398,7 +393,7 @@ class AuthLogicTest {
     @Test
     void userHasScoutId2() {
         //given
-        var loggedUser = new User().setId(1).setScoutList(Set.of(new OldScout().setId(1), new OldScout().setId(2)));
+        var loggedUser = new User().setId(1).setScoutList(Set.of(ScoutUtils.scoutOfId(1), ScoutUtils.scoutOfId(2)));
 
         //when
         Mockito.when(authService.getLoggedUser()).thenReturn(loggedUser);
@@ -571,6 +566,7 @@ class AuthLogicTest {
         //then
         Assertions.assertThat(result).isFalse();
     }
+
     @Test
     void userCanEditBookingDocument4() {
         //given
@@ -586,5 +582,344 @@ class AuthLogicTest {
 
         //then
         Assertions.assertThat(result).isFalse();
+    }
+
+    @Test
+    void userHasAccessToScout_withUserRoleAndInList_returnsTrue() {
+        //given
+        Scout scout = ScoutUtils.scoutOfId(1);
+        User user = new User()
+            .setRoles(List.of(RoleUtils.of(RoleEnum.ROLE_USER)))
+            .setScoutList(Set.of(scout));
+
+        Mockito.when(authService.getLoggedUser()).thenReturn(user);
+        boolean canAccess = authLogic.userHasAccessToScout(1);
+
+        //then
+        Assertions.assertThat(canAccess).isTrue();
+    }
+
+    @Test
+    void userHasAccessToScout_withUserRoleAndNotInList_returnsFalse() {
+        //given
+        Scout scout = ScoutUtils.scoutOfId(2);
+        User user = new User()
+            .setRoles(List.of(RoleUtils.of(RoleEnum.ROLE_USER)))
+            .setScoutList(Set.of(scout));
+
+        Mockito.when(authService.getLoggedUser()).thenReturn(user);
+        boolean canAccess = authLogic.userHasAccessToScout(1);
+
+        //then
+        Assertions.assertThat(canAccess).isFalse();
+    }
+
+    @Test
+    void userHasAccessToScout_withoutUserRole_returnsFalse() {
+        //given
+        Scout scout = ScoutUtils.scoutOfId(1);
+        User user = new User()
+            .setRoles(List.of(RoleUtils.of(RoleEnum.ROLE_SCOUTER)))
+            .setScoutList(Set.of(scout));
+
+        Mockito.when(authService.getLoggedUser()).thenReturn(user);
+        boolean canAccess = authLogic.userHasAccessToScout(1);
+
+        //then
+        Assertions.assertThat(canAccess).isFalse();
+    }
+
+    @Test
+    void userHasAccessToScout_notInScoutList_returnsFalse() {
+        //given
+        User user = new User()
+            .setRoles(List.of(RoleUtils.of(RoleEnum.ROLE_USER)))
+            .setScoutList(Set.of());
+
+        Mockito.when(authService.getLoggedUser()).thenReturn(user);
+        boolean canAccess = authLogic.userHasAccessToScout(1);
+
+        //then
+        Assertions.assertThat(canAccess).isFalse();
+    }
+
+    @Test
+    void isUserWithAccessToScoutFile_validFileAndInDocuments_returnsTrue() {
+        //given
+        int fileId = 100;
+        ScoutFile file = new ScoutFile();
+        file.setId(fileId);
+        Mockito.when(scoutFileRepository.findById(fileId)).thenReturn(Optional.of(file));
+
+        Scout scout = ScoutUtils.scoutOfId(1);
+        scout.getMedicalData().getDocuments().add(file);
+        User user = new User()
+            .setRoles(List.of(RoleUtils.of(RoleEnum.ROLE_USER)))
+            .setScoutList(Set.of(scout));
+
+        Mockito.when(authService.getLoggedUser()).thenReturn(user);
+
+        //when
+        boolean hasAccess = authLogic.isUserWithAccessToScoutFile(100);
+
+        //then
+        Assertions.assertThat(hasAccess).isTrue();
+    }
+
+    @Test
+    void isUserWithAccessToScoutFile_validFileAndNotInDocuments_returnsFalse() {
+        //given
+        int fileId = 100;
+        ScoutFile file = new ScoutFile();
+        file.setId(fileId);
+
+        int notFileId = 200;
+        ScoutFile file2 = new ScoutFile();
+        file2.setId(fileId);
+        Mockito.when(scoutFileRepository.findById(notFileId)).thenReturn(Optional.of(file2));
+
+        Scout scout = ScoutUtils.scoutOfId(1);
+        scout.getMedicalData().getDocuments().add(file);
+        User user = new User()
+            .setRoles(List.of(RoleUtils.of(RoleEnum.ROLE_USER)))
+            .setScoutList(Set.of(scout));
+
+        Mockito.when(authService.getLoggedUser()).thenReturn(user);
+
+        //when
+        boolean hasAccess = authLogic.isUserWithAccessToScoutFile(200);
+
+        //then
+        Assertions.assertThat(hasAccess).isFalse();
+    }
+
+    @Test
+    void isUserWithAccessToScoutFile_fileNotFound_returnsFalse() {
+        //given
+        int fileId = 200;
+        Mockito.when(scoutFileRepository.findById(fileId)).thenReturn(Optional.empty());
+        User user = new User()
+            .setRoles(List.of(RoleUtils.of(RoleEnum.ROLE_USER)))
+            .setScoutList(Set.of());
+        Mockito.when(authService.getLoggedUser()).thenReturn(user);
+
+        //when
+        boolean hasAccess = authLogic.isUserWithAccessToScoutFile(200);
+
+        //then
+        Assertions.assertThat(hasAccess).isFalse();
+    }
+
+    @Test
+    void isUserWithAccessToScoutFile_withoutUserRole_returnsFalse() {
+        //given
+        User user = new User()
+            .setRoles(List.of(RoleUtils.of(RoleEnum.ROLE_SCOUTER)));
+        Mockito.when(authService.getLoggedUser()).thenReturn(user);
+
+        //when
+        boolean hasAccess = authLogic.isUserWithAccessToScoutFile(300);
+
+        //then
+        Assertions.assertThat(hasAccess).isFalse();
+    }
+
+    @Test
+    void isUserWithAccessToScoutFile_fileNotInAnyDocuments_returnsFalse() {
+        //given
+        int fileId = 400;
+        ScoutFile file = new ScoutFile();
+        file.setId(fileId);
+        Mockito.when(scoutFileRepository.findById(fileId)).thenReturn(Optional.of(file));
+
+        Scout scout = ScoutUtils.scoutOfId(1);
+        User user = new User()
+            .setRoles(List.of(RoleUtils.of(RoleEnum.ROLE_USER)))
+            .setScoutList(Set.of(scout));
+        Mockito.when(authService.getLoggedUser()).thenReturn(user);
+
+        //when
+        boolean hasAccess = authLogic.isUserWithAccessToScoutFile(400);
+
+        //then
+        Assertions.assertThat(hasAccess).isFalse();
+    }
+
+    @Test
+    void isScouterAndCanEditScout_asOwner_returnsTrue() {
+        //given
+        int scoutId = 10;
+        Scout owner = ScoutUtils.scoutOfId(scoutId);
+        User user = new User()
+            .setRoles(List.of(RoleUtils.of(RoleEnum.ROLE_SCOUTER)))
+            .setScouter(owner);
+        Mockito.when(authService.getLoggedUser()).thenReturn(user);
+
+        //when
+        var result = authLogic.isScouterAndCanEditScout(scoutId);
+
+        //then
+        Assertions.assertThat(result).isTrue();
+    }
+
+    @Test
+    void isScouterAndCanEditScout_inSameGroup_returnsTrue() {
+        //given
+        int scoutId = 20;
+        Group group = GroupUtils.basicGroup();
+        User user = new User()
+            .setRoles(List.of(RoleUtils.of(RoleEnum.ROLE_SCOUTER)))
+            .setScouter(ScoutUtils.basicScouter(group));
+        Mockito.when(authService.getLoggedUser()).thenReturn(user);
+        Mockito.when(scoutRepository.findScoutGroup(scoutId)).thenReturn(Optional.of(group));
+
+        //then
+        Assertions.assertThat(authLogic.isScouterAndCanEditScout(scoutId)).isTrue();
+    }
+
+    @Test
+    void isScouterAndCanEditScout_notInSameGroup_returnsFalse() {
+        //given
+        int scoutId = 20;
+        User user = new User()
+            .setRoles(List.of(RoleUtils.of(RoleEnum.ROLE_SCOUTER)))
+            .setScouter(ScoutUtils.basicScouter(GroupUtils.groupOfId(2)));
+        Mockito.when(authService.getLoggedUser()).thenReturn(user);
+        Mockito.when(scoutRepository.findScoutGroup(scoutId)).thenReturn(Optional.of(GroupUtils.basicGroup()));
+
+        //then
+        Assertions.assertThat(authLogic.isScouterAndCanEditScout(scoutId)).isFalse();
+    }
+
+    @Test
+    void isScouterAndCanEditScout_withoutScouterRole_returnsFalse() {
+        //given
+        User user = new User()
+            .setRoles(List.of(RoleUtils.of(RoleEnum.ROLE_USER)));
+        Mockito.when(authService.getLoggedUser()).thenReturn(user);
+
+        //then
+        Assertions.assertThat(authLogic.isScouterAndCanEditScout(1)).isFalse();
+    }
+
+    @Test
+    void isScouterAndCanEditGroupScout_inSameGroup_returnsTrue() {
+        //given
+        int scoutId = 50;
+        Group group = GroupUtils.groupOfId(8);
+        User user = new User()
+            .setRoles(List.of(RoleUtils.of(RoleEnum.ROLE_SCOUTER)))
+            .setScouter(ScoutUtils.basicScouter(group));
+        Mockito.when(authService.getLoggedUser()).thenReturn(user);
+        Mockito.when(scoutRepository.findScoutGroup(scoutId)).thenReturn(Optional.of(group));
+
+        //then
+        Assertions.assertThat(authLogic.isScouterAndCanEditGroupScout(scoutId)).isTrue();
+    }
+
+    @Test
+    void isScouterAndCanEditGroupScout_notInGroup_returnsFalse() {
+        //given
+        int scoutId = 60;
+        User user = new User()
+            .setRoles(List.of(RoleUtils.of(RoleEnum.ROLE_SCOUTER)))
+            .setScouter(ScoutUtils.scoutOfId(scoutId));
+        Mockito.when(authService.getLoggedUser()).thenReturn(user);
+        Mockito.when(scoutRepository.findScoutGroup(scoutId)).thenReturn(Optional.of(GroupUtils.groupOfId(2)));
+
+        //then
+        Assertions.assertThat(authLogic.isScouterAndCanEditGroupScout(scoutId)).isFalse();
+    }
+
+    @Test
+    void isScouterAndCanUploadDocument_recordType_returnsFalse() {
+        Assertions.assertThat(authLogic.isScouterAndCanUploadDocument(1, ScoutFileType.RECORD)).isFalse();
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = ScoutFileType.class, mode = EnumSource.Mode.EXCLUDE, names = {"RECORD"})
+    void isScouterAndCanUploadDocument_asOwnerValidType_returnsTrue(ScoutFileType scoutFileType) {
+        //given
+        int id = 70;
+        Scout owner = ScoutUtils.scoutOfId(id);
+        User user = new User()
+            .setRoles(List.of(RoleUtils.of(RoleEnum.ROLE_SCOUTER)))
+            .setScouter(owner);
+        Mockito.when(authService.getLoggedUser()).thenReturn(user);
+
+        //then
+        Assertions.assertThat(authLogic.isScouterAndCanUploadDocument(id, scoutFileType)).isTrue();
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = ScoutFileType.class, mode = EnumSource.Mode.EXCLUDE, names = {"RECORD"})
+    void isScouterAndCanUploadDocument_notScouter_returnsFalse(ScoutFileType scoutFileType) {
+        //given
+        User user = new User()
+            .setRoles(List.of(RoleUtils.of(RoleEnum.ROLE_USER)));
+        Mockito.when(authService.getLoggedUser()).thenReturn(user);
+
+        //then
+        Assertions.assertThat(authLogic.isScouterAndCanUploadDocument(1, scoutFileType)).isFalse();
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = ScoutType.class, names = {"SCOUT", "SCOUTER"})
+    void isScouterAndCanAddScout_validData_returnsTrue(ScoutType scoutType) {
+        //given
+        NewScoutFormDto dto = Mockito.mock(NewScoutFormDto.class);
+        Mockito.when(dto.scoutType()).thenReturn(scoutType);
+        Mockito.when(dto.census()).thenReturn(null);
+
+        User user = new User()
+            .setRoles(List.of(RoleUtils.of(RoleEnum.ROLE_SCOUTER)));
+        Mockito.when(authService.getLoggedUser()).thenReturn(user);
+
+        //then
+        Assertions.assertThat(authLogic.isScouterAndCanAddScout(dto)).isTrue();
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = ScoutType.class, names = {"SCOUT", "SCOUTER"})
+    void isScouterAndCanAddScout_withCensus_returnsFalse(ScoutType scoutType) {
+        //given
+        NewScoutFormDto dto = Mockito.mock(NewScoutFormDto.class);
+        Mockito.when(dto.scoutType()).thenReturn(scoutType);
+        Mockito.when(dto.census()).thenReturn(1234);
+
+        User user = new User()
+            .setRoles(List.of(RoleUtils.of(RoleEnum.ROLE_SCOUTER)));
+        Mockito.when(authService.getLoggedUser()).thenReturn(user);
+
+        //then
+        Assertions.assertThat(authLogic.isScouterAndCanAddScout(dto)).isFalse();
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = RoleEnum.class, mode = EnumSource.Mode.EXCLUDE, names = {"ROLE_SCOUTER"})
+    void isScouterAndCanAddScout_notScouterRole_returnsFalse(RoleEnum role) {
+        //given
+        NewScoutFormDto dto = Mockito.mock(NewScoutFormDto.class);
+
+        User user = new User()
+            .setRoles(List.of(RoleUtils.of(role)));
+        Mockito.when(authService.getLoggedUser()).thenReturn(user);
+
+        //then
+        Assertions.assertThat(authLogic.isScouterAndCanAddScout(dto)).isFalse();
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = ScoutType.class, mode = EnumSource.Mode.EXCLUDE, names = {"SCOUT", "SCOUTER"})
+    void isScouterAndCanAddScout_invalidType_returnsFalse(ScoutType scoutType) {
+        //given
+        NewScoutFormDto dto = Mockito.mock(NewScoutFormDto.class);
+        Mockito.when(dto.scoutType()).thenReturn(scoutType);
+        User user = new User()
+            .setRoles(List.of(RoleUtils.of(RoleEnum.ROLE_SCOUTER)));
+        Mockito.when(authService.getLoggedUser()).thenReturn(user);
+
+        //then
+        Assertions.assertThat(authLogic.isScouterAndCanAddScout(dto)).isFalse();
     }
 }

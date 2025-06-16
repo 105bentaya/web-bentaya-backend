@@ -35,14 +35,14 @@ class InvoiceControllerTest {
     private InvoiceService invoiceService;
 
     @ParameterizedTest
-    @EnumSource(value = RoleEnum.class, names = {"ROLE_SCOUTER", "ROLE_GROUP_SCOUTER"})
+    @EnumSource(value = RoleEnum.class, names = {"ROLE_SCOUTER"})
     void authorizedUsersCanGetInvoices(RoleEnum roles) throws Exception {
         buildResultActions("/api/invoice", roles)
             .andExpect(status().isOk());
     }
 
     @ParameterizedTest
-    @EnumSource(value = RoleEnum.class, mode = EnumSource.Mode.EXCLUDE, names = {"ROLE_SCOUTER", "ROLE_GROUP_SCOUTER"})
+    @EnumSource(value = RoleEnum.class, mode = EnumSource.Mode.EXCLUDE, names = {"ROLE_SCOUTER"})
     void unauthorizedUsersCannotGetInvoices(RoleEnum roles) throws Exception {
         buildResultActions("/api/invoice", roles)
             .andExpect(status().isForbidden());

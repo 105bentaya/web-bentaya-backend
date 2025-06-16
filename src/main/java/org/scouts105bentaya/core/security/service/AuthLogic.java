@@ -93,12 +93,6 @@ public class AuthLogic {
         return loggedUserGroup.getId().equals(groupId);
     }
 
-    public boolean preScoutHasGroupId(int preScoutId, int groupId) {
-        PreScoutAssignation preScoutAssignation = preScoutService.findById(preScoutId).getPreScoutAssignation();
-        if (preScoutAssignation == null) return false;
-        return groupId == Objects.requireNonNull(preScoutAssignation.getGroup()).getId();
-    }
-
     public boolean scouterHasPreScoutGroupId(int preScoutId) {
         PreScoutAssignation preScoutAssignation = preScoutService.findById(preScoutId).getPreScoutAssignation();
         Group loggedUserGroup = getLoggedUserScouterGroup();

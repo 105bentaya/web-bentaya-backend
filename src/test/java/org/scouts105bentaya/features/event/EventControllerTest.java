@@ -38,14 +38,14 @@ class EventControllerTest {
     private AuthLogic authLogic;
 
     @ParameterizedTest
-    @EnumSource(value = RoleEnum.class, names = {"ROLE_SCOUTER", "ROLE_GROUP_SCOUTER", "ROLE_USER"})
+    @EnumSource(value = RoleEnum.class, names = {"ROLE_SCOUTER", "ROLE_USER"})
     void authorizedUsersCanGetEvents(RoleEnum roles) throws Exception {
         buildResultActions("/api/event", roles)
             .andExpect(status().isOk());
     }
 
     @ParameterizedTest
-    @EnumSource(value = RoleEnum.class, mode = EnumSource.Mode.EXCLUDE, names = {"ROLE_SCOUTER", "ROLE_GROUP_SCOUTER", "ROLE_USER"})
+    @EnumSource(value = RoleEnum.class, mode = EnumSource.Mode.EXCLUDE, names = {"ROLE_SCOUTER", "ROLE_USER"})
     void unauthorizedUsersCannotGetEvents(RoleEnum roles) throws Exception {
         buildResultActions("/api/event", roles)
             .andExpect(status().isForbidden());
@@ -60,7 +60,7 @@ class EventControllerTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = RoleEnum.class, names = {"ROLE_SCOUTER", "ROLE_GROUP_SCOUTER"})
+    @EnumSource(value = RoleEnum.class, names = {"ROLE_SCOUTER"})
     void findAllAsScouterShouldReturnAll(RoleEnum role) throws Exception {
         Mockito.when(eventService.findAll()).thenReturn(buildEvents());
 
@@ -84,7 +84,7 @@ class EventControllerTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = RoleEnum.class, mode = EnumSource.Mode.EXCLUDE, names = {"ROLE_SCOUTER", "ROLE_GROUP_SCOUTER", "ROLE_USER"})
+    @EnumSource(value = RoleEnum.class, mode = EnumSource.Mode.EXCLUDE, names = {"ROLE_SCOUTER", "ROLE_USER"})
     void findAllAsUnauthorizedUserShouldReturnForbidden(RoleEnum role) throws Exception {
         this.buildResultActions("/api/event", role).andExpect(status().isForbidden());
         Mockito.verifyNoInteractions(authLogic, eventService);
