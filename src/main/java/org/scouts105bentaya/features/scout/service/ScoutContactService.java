@@ -38,7 +38,7 @@ public class ScoutContactService {
         Scout scout = scoutRepository.get(id);
 
         this.validateContactList(contactListForm, scout);
-        this.deleteUsersNoLongerInContactList(contactListForm, scout);
+        this.deleteUsersNoLongerInPreviousContactList(contactListForm, scout);
 
         List<Contact> newContacts = new ArrayList<>();
         contactListForm.forEach(contactFormDto -> {
@@ -58,10 +58,9 @@ public class ScoutContactService {
         return scoutRepository.save(scout);
     }
 
-    private void deleteUsersNoLongerInContactList(List<ContactFormDto> contactListForm, Scout scout) {
-        String scoutEmail = scout.getPersonalData().getEmail();
+    private void deleteUsersNoLongerInPreviousContactList(List<ContactFormDto> contactListForm, Scout scout) {
         scout.getAllUsers()
-            .stream().filter(user -> !user.getUsername().equalsIgnoreCase(scoutEmail))
+            .stream().filter(user -> scout.getContactList().stream().anyMatch(oldContact -> user.getUsername().equalsIgnoreCase(oldContact.getEmail())))
             .forEach(user -> {
                 if (contactListForm.stream().noneMatch(contact -> user.getUsername().equalsIgnoreCase(contact.email()))) {
                     userService.removeScoutFromUser(user, scout);
