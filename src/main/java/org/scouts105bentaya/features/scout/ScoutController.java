@@ -181,14 +181,14 @@ public class ScoutController {
         @RequestParam("file") MultipartFile file,
         @RequestParam(value = "customName", defaultValue = "") String customName
     ) {
-        log.info("uploadScoutFile - entityId:{},fileType{}{}", entityId, fileType, SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("uploadScoutFile - entityId:{},fileType:{}{}", entityId, fileType, SecurityUtils.getLoggedUserUsernameForLog());
         return scoutFileService.createScoutFile(entityId, file, fileType, customName);
     }
 
     @PreAuthorize("hasRole('SECRETARY') or @authLogic.isScouterAndCanUploadDocument(#entityId, #fileType)")
     @DeleteMapping("/document/{entityId}/{fileId}/{fileType}")
     public void deletePersonalDocument(@PathVariable Integer entityId, @PathVariable Integer fileId, @PathVariable ScoutFileType fileType) {
-        log.info("deletePersonalDocument - entityId:{},fileId:{},fileType{}{}", entityId, fileId, fileType, SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("deletePersonalDocument - entityId:{},fileId:{},fileType:{}{}", entityId, fileId, fileType, SecurityUtils.getLoggedUserUsernameForLog());
         scoutFileService.deleteScoutFile(entityId, fileId, fileType);
     }
 
