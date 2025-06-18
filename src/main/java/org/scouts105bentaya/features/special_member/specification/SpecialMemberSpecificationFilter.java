@@ -14,5 +14,6 @@ import java.util.List;
 public class SpecialMemberSpecificationFilter extends SpecificationFilter {
     private String census;
     private String name;
+    private String doi;
     private List<SpecialMemberRole> roles;
 }

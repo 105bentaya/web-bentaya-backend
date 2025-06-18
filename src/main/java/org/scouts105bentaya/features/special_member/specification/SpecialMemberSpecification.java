@@ -39,6 +39,11 @@ public class SpecialMemberSpecification implements Specification<SpecialMember> 
             person.get("companyName")
         );
 
+        predicates.likes(filter.getDoi(),
+            scout.join("idDocument", JoinType.LEFT).get("number"),
+            person.join("idDocument", JoinType.LEFT).get("number")
+        );
+
         String censusFilter = filter.getCensus();
         if (StringUtils.isNotBlank(filter.getCensus())) {
             Character prefix = censusFilter.charAt(0);

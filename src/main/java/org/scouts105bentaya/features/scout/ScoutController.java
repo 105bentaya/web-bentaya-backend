@@ -8,6 +8,7 @@ import org.scouts105bentaya.features.scout.dto.EconomicDonationEntryDto;
 import org.scouts105bentaya.features.scout.dto.ScoutDto;
 import org.scouts105bentaya.features.scout.dto.ScoutListDataDto;
 import org.scouts105bentaya.features.scout.dto.form.ContactListFormDto;
+import org.scouts105bentaya.features.scout.dto.form.DonationFeeFormDto;
 import org.scouts105bentaya.features.scout.dto.form.EconomicDataFormDto;
 import org.scouts105bentaya.features.scout.dto.form.EconomicEntryFormDto;
 import org.scouts105bentaya.features.scout.dto.form.MedicalDataFormDto;
@@ -24,6 +25,7 @@ import org.scouts105bentaya.features.scout.enums.ScoutFileType;
 import org.scouts105bentaya.features.scout.service.ScoutContactService;
 import org.scouts105bentaya.features.scout.service.ScoutCreationService;
 import org.scouts105bentaya.features.scout.service.ScoutEconomicDataService;
+import org.scouts105bentaya.features.scout.service.ScoutEconomicFeeService;
 import org.scouts105bentaya.features.scout.service.ScoutExcelService;
 import org.scouts105bentaya.features.scout.service.ScoutFileService;
 import org.scouts105bentaya.features.scout.service.ScoutGroupDataService;
@@ -42,6 +44,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -74,6 +77,7 @@ public class ScoutController {
     private final InvoiceService invoiceService;
     private final ScoutConverter scoutConverter;
     private final ScoutExcelService scoutExcelService;
+    private final ScoutEconomicFeeService scoutEconomicFeeService;
 
     public ScoutController(
         ScoutService scoutService,
@@ -87,7 +91,8 @@ public class ScoutController {
         ScoutCreationService scoutCreationService,
         InvoiceService invoiceService,
         ScoutConverter scoutConverter,
-        ScoutExcelService scoutExcelService
+        ScoutExcelService scoutExcelService,
+        ScoutEconomicFeeService scoutEconomicFeeService
     ) {
         this.scoutService = scoutService;
         this.scoutFileService = scoutFileService;
@@ -101,6 +106,7 @@ public class ScoutController {
         this.invoiceService = invoiceService;
         this.scoutConverter = scoutConverter;
         this.scoutExcelService = scoutExcelService;
+        this.scoutEconomicFeeService = scoutEconomicFeeService;
     }
 
     @PreAuthorize("hasAnyRole('SECRETARY', 'SCOUTER')")
@@ -316,6 +322,16 @@ public class ScoutController {
     public void deleteDonation(@PathVariable Integer entryId, @PathVariable Integer scoutId) {
         log.info("deleteDonation - scoutId:{},entryId:{}{}", scoutId, entryId, SecurityUtils.getLoggedUserUsernameForLog());
         scoutEconomicDataService.deleteEntry(scoutId, entryId);
+    }
+
+    @PreAuthorize("hasAnyRole('TRANSACTION')")
+    @PostMapping("/economic/new-fees")
+    public void addNewFees(
+        @ModelAttribute @Valid DonationFeeFormDto form,
+        @RequestParam(value = "file", required = false) MultipartFile file
+    ) {
+        log.info("addNewFee{}", SecurityUtils.getLoggedUserUsernameForLog());
+        scoutEconomicFeeService.addFees(form, file);
     }
 
     @PreAuthorize("hasRole('SECRETARY') or @authLogic.isScouterAndCanEditGroupScout(#scoutId)")

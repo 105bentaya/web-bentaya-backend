@@ -32,6 +32,10 @@ public final class FileUtils {
         Map.entry(".pdf", "application/pdf")
     );
 
+    static final Map<String, String> EXCEL_TYPES = Map.ofEntries(
+        Map.entry(".xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    );
+
     private FileUtils() {
     }
 

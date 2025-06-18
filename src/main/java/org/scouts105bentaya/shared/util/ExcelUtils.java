@@ -8,10 +8,12 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.AreaReference;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellReference;
+import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.Optional;
 
 public class ExcelUtils {
 
@@ -51,5 +53,9 @@ public class ExcelUtils {
     public static String getAge(LocalDate birthDate) {
         Period age = Period.between(birthDate, LocalDate.now());
         return "%d años, %d meses, %d días".formatted(age.getYears(), age.getMonths(), age.getDays());
+    }
+
+    public static boolean rowCellHasValue(XSSFRow row, int cellIndex, String value) {
+        return row != null && Optional.ofNullable(row.getCell(cellIndex)).map(cell -> cell.getStringCellValue().equals(value)).orElse(false);
     }
 }

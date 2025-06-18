@@ -1,6 +1,7 @@
 package org.scouts105bentaya.features.scout.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -24,6 +25,7 @@ public class PersonalData {
     private Integer scoutId;
 
     @OneToOne(cascade = CascadeType.PERSIST, orphanRemoval = true)
+    @Nullable
     private IdentificationDocument idDocument;
 
     @Column(nullable = false)

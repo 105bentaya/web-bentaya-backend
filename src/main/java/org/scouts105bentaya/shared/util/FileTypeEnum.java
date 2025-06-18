@@ -8,6 +8,7 @@ import java.util.Set;
 public enum FileTypeEnum {
     DOC_TYPE(FileUtils.DOC_TYPES),
     IMG_TYPE(FileUtils.IMG_TYPES),
+    EXCEL_TYPE(FileUtils.EXCEL_TYPES),
     PDF_TYPE(FileUtils.PDF_TYPES);
 
     private final Map<String, String> validTypes;
