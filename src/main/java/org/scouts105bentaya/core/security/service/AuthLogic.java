@@ -20,6 +20,10 @@ import org.scouts105bentaya.features.scout.entity.ScoutFile;
 import org.scouts105bentaya.features.scout.enums.ScoutFileType;
 import org.scouts105bentaya.features.scout.repository.ScoutFileRepository;
 import org.scouts105bentaya.features.scout.repository.ScoutRepository;
+import org.scouts105bentaya.features.special_member.entity.SpecialMember;
+import org.scouts105bentaya.features.special_member.enums.SpecialMemberRole;
+import org.scouts105bentaya.features.special_member.repository.SpecialMemberRepository;
+import org.scouts105bentaya.features.special_member.specification.SpecialMemberSpecificationFilter;
 import org.scouts105bentaya.features.user.User;
 import org.scouts105bentaya.features.user.role.RoleEnum;
 import org.scouts105bentaya.shared.service.AuthService;
@@ -40,6 +44,7 @@ public class AuthLogic {
     private final OwnBookingRepository ownBookingRepository;
     private final ScoutRepository scoutRepository;
     private final ScoutFileRepository scoutFileRepository;
+    private final SpecialMemberRepository specialMemberRepository;
 
     public AuthLogic(
         AuthService authService,
@@ -48,7 +53,8 @@ public class AuthLogic {
         BookingDocumentRepository bookingDocumentRepository,
         OwnBookingRepository ownBookingRepository,
         ScoutRepository scoutRepository,
-        ScoutFileRepository scoutFileRepository
+        ScoutFileRepository scoutFileRepository,
+        SpecialMemberRepository specialMemberRepository
     ) {
         this.authService = authService;
         this.eventService = eventService;
@@ -57,6 +63,7 @@ public class AuthLogic {
         this.ownBookingRepository = ownBookingRepository;
         this.scoutRepository = scoutRepository;
         this.scoutFileRepository = scoutFileRepository;
+        this.specialMemberRepository = specialMemberRepository;
     }
 
     public boolean eventIsEditableByScouter(EventFormDto eventFormDto) {
@@ -210,5 +217,23 @@ public class AuthLogic {
         if (!newScoutFormDto.scoutType().isScoutOrScouter()) return false;
         if (!scouterHasGroupId(newScoutFormDto.groupId())) return false;
         return newScoutFormDto.census() == null;
+    }
+
+    public boolean filterIsDonor(SpecialMemberSpecificationFilter filter) {
+        return filter.getRoles().size() == 1 && filter.getRoles().contains(SpecialMemberRole.DONOR);
+    }
+
+    public boolean roleIsDonor(SpecialMemberRole role) {
+        return role == SpecialMemberRole.DONOR;
+    }
+
+    public boolean canUpdateDonor(Integer id, SpecialMemberRole role) {
+        SpecialMember specialMember = specialMemberRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
+        return specialMember.getRole() == SpecialMemberRole.DONOR && role == SpecialMemberRole.DONOR;
+    }
+
+    public boolean specialMemberIsDonor(Integer id) {
+        SpecialMember specialMember = specialMemberRepository.findById(id).orElseThrow(WebBentayaNotFoundException::new);
+        return specialMember.getRole() == SpecialMemberRole.DONOR;
     }
 }

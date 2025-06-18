@@ -15,4 +15,5 @@ public class InvoiceIncomeType {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     private String description;
+    private boolean donation;
 }

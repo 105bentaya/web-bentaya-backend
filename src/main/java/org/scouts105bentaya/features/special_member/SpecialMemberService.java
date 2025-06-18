@@ -27,6 +27,8 @@ import org.scouts105bentaya.features.special_member.repository.SpecialMemberPers
 import org.scouts105bentaya.features.special_member.repository.SpecialMemberRepository;
 import org.scouts105bentaya.features.special_member.specification.SpecialMemberSpecification;
 import org.scouts105bentaya.features.special_member.specification.SpecialMemberSpecificationFilter;
+import org.scouts105bentaya.features.user.role.RoleEnum;
+import org.scouts105bentaya.shared.service.AuthService;
 import org.scouts105bentaya.shared.util.SecurityUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -44,18 +46,21 @@ public class SpecialMemberService {
     private final ScoutRepository scoutRepository;
     private final SpecialMemberPersonRepository specialMemberPersonRepository;
     private final SpecialMemberDonationRepository specialMemberDonationRepository;
+    private final AuthService authService;
 
     public SpecialMemberService(
         SpecialMemberRepository specialMemberRepository,
         SettingService settingService, ScoutRepository scoutRepository,
         SpecialMemberPersonRepository specialMemberPersonRepository,
-        SpecialMemberDonationRepository specialMemberDonationRepository
+        SpecialMemberDonationRepository specialMemberDonationRepository,
+        AuthService authService
     ) {
         this.specialMemberRepository = specialMemberRepository;
         this.settingService = settingService;
         this.scoutRepository = scoutRepository;
         this.specialMemberPersonRepository = specialMemberPersonRepository;
         this.specialMemberDonationRepository = specialMemberDonationRepository;
+        this.authService = authService;
     }
 
     public Page<SpecialMember> findAll(SpecialMemberSpecificationFilter filter) {
@@ -77,6 +82,10 @@ public class SpecialMemberService {
             records = specialMember.getScout().getSpecialRoles();
         } else if (Optional.ofNullable(specialMember.getPerson()).isPresent()) {
             records = specialMember.getPerson().getSpecialMembers();
+        }
+
+        if (!authService.getLoggedUser().hasRole(RoleEnum.ROLE_SECRETARY)) {
+            records = records.stream().filter(member -> member.getRole() == SpecialMemberRole.DONOR).toList();
         }
 
         return SpecialMemberDetailDto.fromEntities(specialMember, records);
@@ -256,14 +265,10 @@ public class SpecialMemberService {
         }
     }
 
-    public SpecialMemberDonation updateDonation(Integer memberId, Integer donationId, SpecialMemberDonationFormDto form) {
-        SpecialMember specialMember = this.findById(memberId);
+    public SpecialMemberDonation updateDonation(Integer donationId, SpecialMemberDonationFormDto form) {
         this.validateDonationForm(form);
 
-        SpecialMemberDonation donation = specialMember.getDonations().stream()
-            .filter(d -> d.getId().equals(donationId))
-            .findFirst().orElseThrow(WebBentayaNotFoundException::new);
-
+        SpecialMemberDonation donation = specialMemberDonationRepository.findById(donationId).orElseThrow(WebBentayaNotFoundException::new);
         this.updateDonationFromForm(donation, form);
 
         return specialMemberDonationRepository.save(donation);
@@ -287,12 +292,7 @@ public class SpecialMemberService {
         }
     }
 
-    public void deleteDonation(Integer memberId, Integer donationId) {
-        this.findById(memberId)
-            .getDonations().stream()
-            .filter(d -> d.getId().equals(donationId))
-            .findFirst().orElseThrow(WebBentayaNotFoundException::new);
-
+    public void deleteDonation(Integer donationId) {
         specialMemberDonationRepository.deleteById(donationId);
     }
 

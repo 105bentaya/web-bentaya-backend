@@ -12,6 +12,9 @@ import org.scouts105bentaya.features.scout.entity.EconomicEntry;
 import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.scout.repository.EconomicEntryRepository;
 import org.scouts105bentaya.features.scout.repository.ScoutRepository;
+import org.scouts105bentaya.features.scout.specification.DonationEntrySpecification;
+import org.scouts105bentaya.features.scout.specification.DonationEntrySpecificationFilter;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -33,6 +36,10 @@ public class ScoutEconomicDataService {
         this.economicEntryRepository = economicEntryRepository;
         this.invoiceExpenseTypeRepository = invoiceExpenseTypeRepository;
         this.invoiceIncomeTypeRepository = invoiceIncomeTypeRepository;
+    }
+
+    public Page<EconomicEntry> findAllDonations(DonationEntrySpecificationFilter filter) {
+        return economicEntryRepository.findAll(new DonationEntrySpecification(filter), filter.getPageable());
     }
 
     public Scout updateEconomicData(Integer id, EconomicDataFormDto form) {

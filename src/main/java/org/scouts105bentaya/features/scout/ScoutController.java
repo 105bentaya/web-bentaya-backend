@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.features.invoice.InvoiceService;
 import org.scouts105bentaya.features.invoice.dto.InvoiceTypesDto;
+import org.scouts105bentaya.features.scout.dto.EconomicDonationEntryDto;
 import org.scouts105bentaya.features.scout.dto.ScoutDto;
 import org.scouts105bentaya.features.scout.dto.ScoutListDataDto;
 import org.scouts105bentaya.features.scout.dto.form.ContactListFormDto;
@@ -30,6 +31,7 @@ import org.scouts105bentaya.features.scout.service.ScoutHistoryService;
 import org.scouts105bentaya.features.scout.service.ScoutMedicalDataService;
 import org.scouts105bentaya.features.scout.service.ScoutPersonalDataService;
 import org.scouts105bentaya.features.scout.service.ScoutService;
+import org.scouts105bentaya.features.scout.specification.DonationEntrySpecificationFilter;
 import org.scouts105bentaya.features.scout.specification.ScoutSpecificationFilter;
 import org.scouts105bentaya.shared.GenericConverter;
 import org.scouts105bentaya.shared.specification.PageDto;
@@ -133,7 +135,7 @@ public class ScoutController {
         return scoutConverter.convertFromEntity(scoutService.getFilteredScout(scoutId));
     }
 
-    @PreAuthorize("hasAnyRole('SECRETARY', 'SCOUTER')")
+    @PreAuthorize("hasAnyRole('SECRETARY', 'SCOUTER', 'TRANSACTION')")
     @GetMapping("/donation-types")
     public InvoiceTypesDto getInvoiceTypes() {
         log.info("getInvoiceTypes{}", SecurityUtils.getLoggedUserUsernameForLog());
@@ -274,14 +276,21 @@ public class ScoutController {
         scoutGroupDataService.deleteScoutRecord(scoutId, recordId);
     }
 
-    @PreAuthorize("hasRole('SECRETARY') or @authLogic.isScouterAndCanEditScout(#scoutId)")
+    @PreAuthorize("hasAnyRole('SECRETARY', 'TRANSACTION') or @authLogic.isScouterAndCanEditScout(#scoutId)")
     @PatchMapping("/economic/{scoutId}")
     public ScoutDto updateEconomicData(@PathVariable Integer scoutId, @RequestBody @Valid EconomicDataFormDto form) {
         log.info("updateEconomicData - scoutId:{}{}", scoutId, SecurityUtils.getLoggedUserUsernameForLog());
         return scoutConverter.convertFromEntity(scoutEconomicDataService.updateEconomicData(scoutId, form));
     }
 
-    @PreAuthorize("hasRole('SECRETARY')")
+    @PreAuthorize("hasRole('TRANSACTION')")
+    @GetMapping("/economic/entries")
+    public PageDto<EconomicDonationEntryDto> getEconomicDonationEntries(DonationEntrySpecificationFilter filter) {
+        log.info("getEconomicDonationEntries - filter:{}{}", filter, SecurityUtils.getLoggedUserUsernameForLog());
+        return GenericConverter.convertListToPageDto(scoutEconomicDataService.findAllDonations(filter), EconomicDonationEntryDto::fromEntry);
+    }
+
+    @PreAuthorize("hasAnyRole('SECRETARY', 'TRANSACTION')")
     @PostMapping("/economic/entry/{scoutId}")
     public EconomicEntry addDonation(
         @PathVariable Integer scoutId,
@@ -291,7 +300,7 @@ public class ScoutController {
         return scoutEconomicDataService.addEntry(scoutId, form);
     }
 
-    @PreAuthorize("hasRole('SECRETARY')")
+    @PreAuthorize("hasAnyRole('SECRETARY', 'TRANSACTION')")
     @PutMapping("/economic/entry/{scoutId}/{entryId}")
     public EconomicEntry updateDonation(
         @PathVariable Integer entryId,
@@ -302,7 +311,7 @@ public class ScoutController {
         return scoutEconomicDataService.updateEntry(scoutId, entryId, form);
     }
 
-    @PreAuthorize("hasRole('SECRETARY')")
+    @PreAuthorize("hasAnyRole('SECRETARY', 'TRANSACTION')")
     @DeleteMapping("/economic/entry/{scoutId}/{entryId}")
     public void deleteDonation(@PathVariable Integer entryId, @PathVariable Integer scoutId) {
         log.info("deleteDonation - scoutId:{},entryId:{}{}", scoutId, entryId, SecurityUtils.getLoggedUserUsernameForLog());
