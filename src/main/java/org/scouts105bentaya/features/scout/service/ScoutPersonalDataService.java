@@ -2,16 +2,17 @@ package org.scouts105bentaya.features.scout.service;
 
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
 import org.scouts105bentaya.core.exception.WebBentayaConflictException;
 import org.scouts105bentaya.features.scout.ScoutUtils;
 import org.scouts105bentaya.features.scout.dto.form.PersonalDataFormDto;
+import org.scouts105bentaya.features.scout.entity.Contact;
 import org.scouts105bentaya.features.scout.entity.PersonalData;
 import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.scout.repository.ScoutRepository;
 import org.scouts105bentaya.features.user.UserService;
 import org.springframework.stereotype.Service;
 
-import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
@@ -46,6 +47,10 @@ public class ScoutPersonalDataService {
             scout.getAllUsers().stream()
                 .filter(user -> user.getUsername().equalsIgnoreCase(oldEmail))
                 .findFirst().ifPresent(user -> userService.removeScoutFromUser(user, scout));
+        }
+
+        if (scout.getContactList().stream().noneMatch(Contact::isDonor) && form.idDocument() == null) {
+            throw new WebBentayaBadRequestException("Debe especificar el documento de identidad de la asociada por su condición de donante");
         }
     }
 

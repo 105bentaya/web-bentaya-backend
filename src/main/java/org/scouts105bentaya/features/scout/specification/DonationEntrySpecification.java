@@ -24,7 +24,7 @@ public class DonationEntrySpecification implements Specification<EconomicEntry> 
     public Predicate toPredicate(@NonNull Root<EconomicEntry> root, CriteriaQuery<?> query, @NonNull CriteriaBuilder criteriaBuilder) {
         SpecificationPredicateHelper predicates = new SpecificationPredicateHelper(criteriaBuilder);
 
-        predicates.addPredicate(criteriaBuilder.isTrue(root.get("incomeType").get("donation")));
+        predicates.addPredicate(criteriaBuilder.equal(root.get("type"), "DONATION"));
 
         Path<Scout> scoutPath = root.get("economicData").get("scout");
         Path<PersonalData> personalData = scoutPath.get("personalData");

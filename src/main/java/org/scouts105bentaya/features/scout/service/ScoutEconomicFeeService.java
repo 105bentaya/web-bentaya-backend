@@ -11,9 +11,13 @@ import org.scouts105bentaya.core.exception.WebBentayaErrorException;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.invoice.entity.InvoiceIncomeType;
 import org.scouts105bentaya.features.invoice.repository.InvoiceIncomeTypeRepository;
+import org.scouts105bentaya.features.scout.dto.ScoutDonorDto;
 import org.scouts105bentaya.features.scout.dto.form.DonationFeeFormDto;
 import org.scouts105bentaya.features.scout.entity.EconomicEntry;
+import org.scouts105bentaya.features.scout.entity.EconomicEntryDonor;
+import org.scouts105bentaya.features.scout.entity.IdentificationDocument;
 import org.scouts105bentaya.features.scout.entity.Scout;
+import org.scouts105bentaya.features.scout.enums.EntryType;
 import org.scouts105bentaya.features.scout.enums.ScoutStatus;
 import org.scouts105bentaya.features.scout.enums.ScoutType;
 import org.scouts105bentaya.features.scout.repository.EconomicEntryRepository;
@@ -41,23 +45,25 @@ public class ScoutEconomicFeeService {
     private static final String HEADER_CENSUS = "censo";
     private static final String HEADER_AMOUNT = "importe";
     private static final Pattern AMOUNT_PATTERN = Pattern.compile("^\\d+(?:[.,]\\d{1,2})?$");
-    private static final String DONATION_TYPE = "Donación";
 
     private final InvoiceIncomeTypeRepository invoiceIncomeTypeRepository;
     private final ScoutService scoutService;
     private final EconomicEntryRepository economicEntryRepository;
     private final ScoutRepository scoutRepository;
+    private final ScoutEconomicDataService scoutEconomicDataService;
 
     public ScoutEconomicFeeService(
         InvoiceIncomeTypeRepository invoiceIncomeTypeRepository,
         ScoutService scoutService,
         EconomicEntryRepository economicEntryRepository,
-        ScoutRepository scoutRepository
+        ScoutRepository scoutRepository,
+        ScoutEconomicDataService scoutEconomicDataService
     ) {
         this.invoiceIncomeTypeRepository = invoiceIncomeTypeRepository;
         this.scoutService = scoutService;
         this.economicEntryRepository = economicEntryRepository;
         this.scoutRepository = scoutRepository;
+        this.scoutEconomicDataService = scoutEconomicDataService;
     }
 
     @Transactional
@@ -101,15 +107,40 @@ public class ScoutEconomicFeeService {
 
     private EconomicEntry fromForm(DonationFeeFormDto formDto, Scout scout) {
         EconomicEntry entry = new EconomicEntry();
-        entry.setIssueDate(formDto.issueDate());
-        entry.setDueDate(formDto.dueDate());
-        entry.setAccount(formDto.account());
-        entry.setType(DONATION_TYPE);
-        entry.setAmount(formDto.amount());
-        entry.setIncomeType(invoiceIncomeTypeRepository.findById(formDto.donationTypeId()).orElseThrow(WebBentayaNotFoundException::new));
-        entry.setDescription(formDto.description());
-        entry.setEconomicData(scout.getEconomicData());
+        entry.setIssueDate(formDto.issueDate())
+            .setDueDate(formDto.dueDate())
+            .setAccount(formDto.account())
+            .setType(EntryType.DONATION)
+            .setAmount(formDto.amount())
+            .setIncomeType(invoiceIncomeTypeRepository.findById(formDto.donationTypeId()).orElseThrow(WebBentayaNotFoundException::new))
+            .setDescription(formDto.description())
+            .setEconomicData(scout.getEconomicData());
+
+        ScoutDonorDto donorDto = scoutEconomicDataService.getScoutDonor(scout);
+        IdentificationDocument donorId = donorDto.idDocument();
+
+        this.validateDonor(donorDto, scout);
+
+        EconomicEntryDonor donor = new EconomicEntryDonor();
+        donor.setName(donorDto.name())
+            .setSurname(donorDto.surname())
+            .setPersonType(donorDto.personType())
+            .setIdDocument(new IdentificationDocument().setIdType(donorId.getIdType()).setNumber(donorId.getNumber()))
+            .setEconomicEntry(entry);
+
+        entry.setDonor(donor);
+
         return entry;
+    }
+
+    private void validateDonor(ScoutDonorDto donorDto, Scout scout) {
+        if (donorDto.name() == null || donorDto.idDocument() == null) {
+            String name = scout.getPersonalData().getName() + " " + scout.getPersonalData().getSurname();
+            throw new WebBentayaBadRequestException(
+                "No se pueden crear los apuntes por que la asociada %s (censo %s), no tiene el nombre y el DNI del donante especificados"
+                    .formatted(name, scout.getCensus())
+            );
+        }
     }
 
     private Map<Integer, Integer> parseAndValidateExcel(MultipartFile file) {

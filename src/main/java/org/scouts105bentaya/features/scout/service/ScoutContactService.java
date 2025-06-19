@@ -76,6 +76,16 @@ public class ScoutContactService {
         if (contactList.stream().filter(ContactFormDto::donor).count() > 1) {
             throw new WebBentayaBadRequestException("Sólo un contacto puede ser el donante");
         }
+
+        Optional<ContactFormDto> donorContact = contactList.stream().filter(ContactFormDto::donor).findFirst();
+        if (donorContact.isPresent()) {
+            if (donorContact.get().idDocument() == null) {
+                throw new WebBentayaConflictException("Debe especificar el documento de identidad del contacto donante");
+            }
+        } else if (scout.getPersonalData().getIdDocument() == null) {
+            throw new WebBentayaConflictException("Si ningún contacto es donante, debe especificar el documento de identidad de la asociada, ya que se considera la donante");
+        }
+
         String scoutEmail = scout.getPersonalData().getEmail();
         if (scoutEmail != null && contactList.stream().anyMatch(contact -> contact.email().equalsIgnoreCase(scoutEmail))) {
             throw new WebBentayaConflictException("Los contactos no pueden tener el mismo correo electrónico que la persona asociada");

@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.scouts105bentaya.features.invoice.InvoiceService;
 import org.scouts105bentaya.features.invoice.dto.InvoiceTypesDto;
 import org.scouts105bentaya.features.scout.dto.EconomicDonationEntryDto;
+import org.scouts105bentaya.features.scout.dto.ScoutDonorDto;
 import org.scouts105bentaya.features.scout.dto.ScoutDto;
 import org.scouts105bentaya.features.scout.dto.ScoutListDataDto;
 import org.scouts105bentaya.features.scout.dto.form.ContactListFormDto;
@@ -304,6 +305,13 @@ public class ScoutController {
     ) {
         log.info("addDonation - scoutId:{}{}", scoutId, SecurityUtils.getLoggedUserUsernameForLog());
         return scoutEconomicDataService.addEntry(scoutId, form);
+    }
+
+    @PreAuthorize("hasAnyRole('SECRETARY', 'TRANSACTION')")
+    @GetMapping("/economic/donor/{scoutId}")
+    public ScoutDonorDto getScoutDonor(@PathVariable Integer scoutId) {
+        log.info("getScoutDonor - scoutId:{}{}", scoutId, SecurityUtils.getLoggedUserUsernameForLog());
+        return scoutEconomicDataService.findDonorByScoutId(scoutId);
     }
 
     @PreAuthorize("hasAnyRole('SECRETARY', 'TRANSACTION')")

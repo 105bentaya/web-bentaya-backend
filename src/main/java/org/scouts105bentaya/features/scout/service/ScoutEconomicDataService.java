@@ -5,17 +5,27 @@ import org.scouts105bentaya.core.exception.WebBentayaBadRequestException;
 import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.invoice.repository.InvoiceExpenseTypeRepository;
 import org.scouts105bentaya.features.invoice.repository.InvoiceIncomeTypeRepository;
+import org.scouts105bentaya.features.scout.ScoutUtils;
+import org.scouts105bentaya.features.scout.dto.ScoutDonorDto;
 import org.scouts105bentaya.features.scout.dto.form.EconomicDataFormDto;
+import org.scouts105bentaya.features.scout.dto.form.EconomicEntryDonorFormDto;
 import org.scouts105bentaya.features.scout.dto.form.EconomicEntryFormDto;
+import org.scouts105bentaya.features.scout.entity.Contact;
 import org.scouts105bentaya.features.scout.entity.EconomicData;
 import org.scouts105bentaya.features.scout.entity.EconomicEntry;
+import org.scouts105bentaya.features.scout.entity.EconomicEntryDonor;
+import org.scouts105bentaya.features.scout.entity.PersonalData;
 import org.scouts105bentaya.features.scout.entity.Scout;
+import org.scouts105bentaya.features.scout.enums.EntryType;
+import org.scouts105bentaya.features.scout.enums.PersonType;
 import org.scouts105bentaya.features.scout.repository.EconomicEntryRepository;
 import org.scouts105bentaya.features.scout.repository.ScoutRepository;
 import org.scouts105bentaya.features.scout.specification.DonationEntrySpecification;
 import org.scouts105bentaya.features.scout.specification.DonationEntrySpecificationFilter;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -42,16 +52,54 @@ public class ScoutEconomicDataService {
         return economicEntryRepository.findAll(new DonationEntrySpecification(filter), filter.getPageable());
     }
 
+    public ScoutDonorDto findDonorByScoutId(Integer scoutId) {
+        Scout scout = scoutRepository.get(scoutId);
+        return this.getScoutDonor(scout);
+    }
+
+    public ScoutDonorDto getScoutDonor(Scout scout) {
+        Optional<Contact> first = scout.getContactList().stream().filter(Contact::isDonor).findFirst();
+        if (first.isPresent()) {
+            Contact contact = first.get();
+            if (contact.getPersonType() == PersonType.REAL) {
+                return new ScoutDonorDto(
+                    contact.getName(),
+                    contact.getSurname(),
+                    contact.getIdDocument(),
+                    contact.getPersonType()
+                );
+            }
+            return new ScoutDonorDto(
+                contact.getCompanyName(),
+                null,
+                contact.getIdDocument(),
+                contact.getPersonType()
+            );
+        }
+        PersonalData personalData = scout.getPersonalData();
+        return new ScoutDonorDto(
+            personalData.getName(),
+            personalData.getSurname(),
+            personalData.getIdDocument(),
+            PersonType.REAL
+        );
+    }
+
     public Scout updateEconomicData(Integer id, EconomicDataFormDto form) {
         Scout scout = scoutRepository.get(id);
         EconomicData data = scout.getEconomicData();
 
         scout.getContactList().forEach(contact -> contact.setDonor(false));
         if (form.donorId() != null) {
-            scout.getContactList().stream()
+            Contact newDonor = scout.getContactList().stream()
                 .filter(contact -> contact.getId().equals(form.donorId()))
-                .findFirst().orElseThrow(WebBentayaNotFoundException::new)
-                .setDonor(true);
+                .findFirst().orElseThrow(WebBentayaNotFoundException::new);
+            if (newDonor.getIdDocument() == null) {
+                throw new WebBentayaBadRequestException("El contacto donante debe tener un documento de identidad asociado");
+            }
+            newDonor.setDonor(true);
+        } else if (scout.getPersonalData().getIdDocument() == null) {
+            throw new WebBentayaBadRequestException("La asociada debe tener un documento de identidad asociado para ser considerada donante");
         }
 
         data.setIban(form.iban());
@@ -78,6 +126,10 @@ public class ScoutEconomicDataService {
             form.expenseId() != null && form.incomeId() != null
         ) {
             throw new WebBentayaBadRequestException("Debe especificar un único gasto o ingreso");
+        }
+
+        if (form.type() == EntryType.DONATION && form.donor() == null) {
+            throw new WebBentayaBadRequestException("Debe especificar el donante de la donación");
         }
     }
 
@@ -112,6 +164,25 @@ public class ScoutEconomicDataService {
             entry.setIncomeType(null);
             entry.setExpenseType(invoiceExpenseTypeRepository.findById(form.expenseId()).orElseThrow(WebBentayaNotFoundException::new));
         }
+
+        if (form.type() == EntryType.DONATION) {
+            updateEntryDonor(entry, form.donor());
+        } else {
+            entry.setDonor(null);
+        }
+    }
+
+    private void updateEntryDonor(EconomicEntry entry, EconomicEntryDonorFormDto form) {
+        EconomicEntryDonor donor = entry.getDonor() == null ? new EconomicEntryDonor() : entry.getDonor();
+
+        donor
+            .setName(form.name())
+            .setSurname(form.surname())
+            .setIdDocument(ScoutUtils.updateIdDocument(donor.getIdDocument(), form.idDocument()))
+            .setPersonType(form.personType())
+            .setEconomicEntry(entry);
+
+        entry.setDonor(donor);
     }
 
     public void deleteEntry(Integer scoutId, Integer entryId) {
