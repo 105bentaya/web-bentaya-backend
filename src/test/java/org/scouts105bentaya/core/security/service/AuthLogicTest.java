@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.scouts105bentaya.core.exception.WebBentayaNotFoundException;
 import org.scouts105bentaya.features.booking.entity.BookingDocument;
 import org.scouts105bentaya.features.booking.entity.BookingDocumentFile;
 import org.scouts105bentaya.features.booking.entity.GeneralBooking;
@@ -30,6 +31,10 @@ import org.scouts105bentaya.features.scout.enums.ScoutFileType;
 import org.scouts105bentaya.features.scout.enums.ScoutType;
 import org.scouts105bentaya.features.scout.repository.ScoutFileRepository;
 import org.scouts105bentaya.features.scout.repository.ScoutRepository;
+import org.scouts105bentaya.features.special_member.entity.SpecialMember;
+import org.scouts105bentaya.features.special_member.enums.SpecialMemberRole;
+import org.scouts105bentaya.features.special_member.repository.SpecialMemberRepository;
+import org.scouts105bentaya.features.special_member.specification.SpecialMemberSpecificationFilter;
 import org.scouts105bentaya.features.user.User;
 import org.scouts105bentaya.features.user.role.RoleEnum;
 import org.scouts105bentaya.shared.service.AuthService;
@@ -59,13 +64,24 @@ class AuthLogicTest {
     ScoutRepository scoutRepository;
     @Mock
     ScoutFileRepository scoutFileRepository;
+    @Mock
+    SpecialMemberRepository specialMemberRepository;
 
 
     private AuthLogic authLogic;
 
     @BeforeEach
     void setUp() {
-        authLogic = new AuthLogic(authService, eventService, preScoutService, bookingDocumentRepository, ownBookingRepository, scoutRepository, scoutFileRepository);
+        authLogic = new AuthLogic(
+            authService,
+            eventService,
+            preScoutService,
+            bookingDocumentRepository,
+            ownBookingRepository,
+            scoutRepository,
+            scoutFileRepository,
+            specialMemberRepository
+        );
     }
 
     @Test
@@ -976,5 +992,151 @@ class AuthLogicTest {
 
         //then
         Assertions.assertThat(authLogic.isScouterAndCanAddScout(dto)).isFalse();
+    }
+
+    @Test
+    void filterIsDonor_withOnlyDonorRole_returnsTrue() {
+        //given
+        SpecialMemberSpecificationFilter filter = new SpecialMemberSpecificationFilter();
+        filter.setRoles(List.of(SpecialMemberRole.DONOR));
+
+        //when
+        boolean result = authLogic.filterIsDonor(filter);
+
+        //then
+        Assertions.assertThat(result).isTrue();
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = SpecialMemberRole.class, mode = EnumSource.Mode.EXCLUDE, names = {"DONOR"})
+    void filterIsDonor_withMultipleRoles_returnsFalse(SpecialMemberRole role) {
+        //given
+        SpecialMemberSpecificationFilter filter = new SpecialMemberSpecificationFilter();
+        filter.setRoles(List.of(SpecialMemberRole.DONOR, role));
+
+        //when
+        boolean result = authLogic.filterIsDonor(filter);
+
+        //then
+        Assertions.assertThat(result).isFalse();
+    }
+
+    @Test
+    void filterIsDonor_withNoRoles_returnsFalse() {
+        //given
+        SpecialMemberSpecificationFilter filter = new SpecialMemberSpecificationFilter();
+        filter.setRoles(List.of());
+
+        //when
+        boolean result = authLogic.filterIsDonor(filter);
+
+        //then
+        Assertions.assertThat(result).isFalse();
+    }
+
+    @Test
+    void roleIsDonor_whenDonor_returnsTrue() {
+        //given
+        boolean result = authLogic.roleIsDonor(SpecialMemberRole.DONOR);
+
+        //then
+        Assertions.assertThat(result).isTrue();
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = SpecialMemberRole.class, mode = EnumSource.Mode.EXCLUDE, names = {"DONOR"})
+    void roleIsDonor_whenNotDonor_returnsFalse(SpecialMemberRole role) {
+        //given
+        boolean result = authLogic.roleIsDonor(role);
+
+        //then
+        Assertions.assertThat(result).isFalse();
+    }
+
+    @Test
+    void canUpdateDonor_whenBothCurrentAndNewAreDonor_returnsTrue() {
+        //given
+        SpecialMember member = new SpecialMember().setRole(SpecialMemberRole.DONOR);
+        Mockito.when(specialMemberRepository.findById(1)).thenReturn(Optional.of(member));
+
+        //when
+        boolean result = authLogic.canUpdateDonor(1, SpecialMemberRole.DONOR);
+
+        //then
+        Assertions.assertThat(result).isTrue();
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = SpecialMemberRole.class, mode = EnumSource.Mode.EXCLUDE, names = {"DONOR"})
+    void canUpdateDonor_whenCurrentIsNotDonor_returnsFalse(SpecialMemberRole role) {
+        //given
+        SpecialMember member = new SpecialMember().setRole(role);
+        Mockito.when(specialMemberRepository.findById(1)).thenReturn(Optional.of(member));
+
+        //when
+        boolean result = authLogic.canUpdateDonor(1, SpecialMemberRole.DONOR);
+
+        //then
+        Assertions.assertThat(result).isFalse();
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = SpecialMemberRole.class, mode = EnumSource.Mode.EXCLUDE, names = {"DONOR"})
+    void canUpdateDonor_whenNewRoleIsNotDonor_returnsFalse(SpecialMemberRole role) {
+        //given
+        SpecialMember member = new SpecialMember().setRole(SpecialMemberRole.DONOR);
+        Mockito.when(specialMemberRepository.findById(1)).thenReturn(Optional.of(member));
+
+        //when
+        boolean result = authLogic.canUpdateDonor(1, role);
+
+        //then
+        Assertions.assertThat(result).isFalse();
+    }
+
+    @Test
+    void canUpdateDonor_whenMemberNotFound_throwsException() {
+        //when
+        Mockito.when(specialMemberRepository.findById(1)).thenReturn(Optional.empty());
+
+        Assertions.assertThatThrownBy(() -> authLogic.canUpdateDonor(1, SpecialMemberRole.DONOR))
+            .isInstanceOf(WebBentayaNotFoundException.class);
+    }
+
+    @Test
+    void specialMemberIsDonor_whenDonor_returnsTrue() {
+        //given
+        SpecialMember member = new SpecialMember().setRole(SpecialMemberRole.DONOR);
+        Mockito.when(specialMemberRepository.findById(1)).thenReturn(Optional.of(member));
+
+        //when
+        boolean result = authLogic.specialMemberIsDonor(1);
+
+        //then
+        Assertions.assertThat(result).isTrue();
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = SpecialMemberRole.class, mode = EnumSource.Mode.EXCLUDE, names = {"DONOR"})
+    void specialMemberIsDonor_whenNotDonor_returnsFalse(SpecialMemberRole role) {
+        //given
+        SpecialMember member = new SpecialMember().setRole(role);
+        Mockito.when(specialMemberRepository.findById(1)).thenReturn(Optional.of(member));
+
+        //when
+        boolean result = authLogic.specialMemberIsDonor(1);
+
+        //then
+        Assertions.assertThat(result).isFalse();
+    }
+
+    @Test
+    void specialMemberIsDonor_whenNotFound_throwsException() {
+        //when
+        Mockito.when(specialMemberRepository.findById(1)).thenReturn(Optional.empty());
+
+        //then
+        Assertions.assertThatThrownBy(() -> authLogic.specialMemberIsDonor(1))
+            .isInstanceOf(WebBentayaNotFoundException.class);
     }
 }
