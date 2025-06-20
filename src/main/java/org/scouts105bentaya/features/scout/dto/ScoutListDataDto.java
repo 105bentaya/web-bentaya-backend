@@ -1,6 +1,7 @@
 package org.scouts105bentaya.features.scout.dto;
 
 import org.scouts105bentaya.features.group.GroupBasicDataDto;
+import org.scouts105bentaya.features.scout.entity.Contact;
 import org.scouts105bentaya.features.scout.entity.IdentificationDocument;
 import org.scouts105bentaya.features.scout.entity.Scout;
 import org.scouts105bentaya.features.scout.enums.ScoutType;
@@ -18,7 +19,8 @@ public record ScoutListDataDto(
     String gender,
     IdentificationDocument idDocument,
     Integer census,
-    String email
+    String email,
+    boolean hasWarnings
 ) {
     public static ScoutListDataDto fromScout(Scout scout) {
         return new ScoutListDataDto(
@@ -32,7 +34,15 @@ public record ScoutListDataDto(
             scout.getPersonalData().getGender(),
             scout.getPersonalData().getIdDocument(),
             scout.getCensus(),
-            scout.getPersonalData().getEmail()
+            scout.getPersonalData().getEmail(),
+            scoutHasWarnings(scout)
         );
+    }
+
+    private static boolean scoutHasWarnings(Scout scout) {
+        if (scout.getScoutType() == ScoutType.SCOUT && scout.getScoutUsers().isEmpty()) {
+            return true;
+        }
+        return scout.getScoutType() == ScoutType.SCOUT && scout.getContactList().stream().noneMatch(Contact::isDonor);
     }
 }
