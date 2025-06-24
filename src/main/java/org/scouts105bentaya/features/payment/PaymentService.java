@@ -10,6 +10,8 @@ import org.scouts105bentaya.features.donation.DonationService;
 import org.scouts105bentaya.features.payment.dto.PaymentFormDataRequestDto;
 import org.scouts105bentaya.features.payment.dto.PaymentInfoDto;
 import org.scouts105bentaya.features.payment.dto.PaymentRedsysFormDataDto;
+import org.scouts105bentaya.features.shop.PaymentStatus;
+import org.scouts105bentaya.features.shop.service.ShopPaymentService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -30,10 +32,12 @@ import java.util.List;
 @Slf4j
 @Service
 public class PaymentService {
-
     private static final DateTimeFormatter DATE_AND_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyMMdd");
+    private static final String TPV_VERSION = "HMAC_SHA256_V1";
+
     private final PaymentRepository paymentRepository;
     private final DonationService donationService;
+    private final ShopPaymentService shopPaymentService;
     @Value("${tpv.shop.key}")
     private String key;
     @Value("${tpv.shop.id}")
@@ -43,10 +47,12 @@ public class PaymentService {
 
     public PaymentService(
         PaymentRepository paymentRepository,
-        @Lazy DonationService donationService
+        @Lazy DonationService donationService,
+        @Lazy ShopPaymentService shopPaymentService
     ) {
         this.paymentRepository = paymentRepository;
         this.donationService = donationService;
+        this.shopPaymentService = shopPaymentService;
     }
 
     public List<Payment> findAll() {
@@ -80,14 +86,14 @@ public class PaymentService {
     public PaymentRedsysFormDataDto getPaymentAsRedsysFormData(PaymentFormDataRequestDto requestDto) {
         Payment payment = requestDto.payment();
 
-        if (payment.getStatus() != -1) {
-            log.warn("Payment {} has already been processed", payment.getId());
+        if (!PaymentStatus.paymentStartedOrOngoing(payment)) {
+            log.warn("getPaymentAsRedsysFormData - payment {} has already been processed", payment.getId());
             throw new WebBentayaConflictException("Este pago ya ha sido procesado");
         }
         try {
             ApiMacSha256 apiMacSha256 = getApiMacSha256(payment, requestDto.okUrl(), requestDto.koUrl());
             return new PaymentRedsysFormDataDto(
-                "HMAC_SHA256_V1",
+                TPV_VERSION,
                 apiMacSha256.createMerchantParameters(),
                 apiMacSha256.createMerchantSignature(key)
             );
@@ -95,7 +101,7 @@ public class PaymentService {
                  NoSuchPaddingException | InvalidAlgorithmParameterException | IllegalBlockSizeException |
                  BadPaddingException e
         ) {
-            log.error("METHOD getPaymentFormData: Error whilst encrypting payment form info: {}", e.getMessage());
+            log.error("getPaymentFormData - error whilst encrypting payment form info: {}", e.getMessage());
             throw new WebBentayaErrorException("No se han podido generar los datos para realizar el pago");
         }
     }
@@ -113,12 +119,14 @@ public class PaymentService {
                 throw new PaymentException();
             }
 
-        } catch (InvalidAlgorithmParameterException | UnsupportedEncodingException | NoSuchPaddingException |
-                 IllegalBlockSizeException | NoSuchAlgorithmException | BadPaddingException | InvalidKeyException e) {
-            log.error("METHOD paymentConfirmation: error whilst decrypting payment confirmation: {}", e.getMessage());
+        } catch (
+            InvalidAlgorithmParameterException | UnsupportedEncodingException | NoSuchPaddingException |
+            IllegalBlockSizeException | NoSuchAlgorithmException | BadPaddingException | InvalidKeyException e
+        ) {
+            log.error("paymentConfirmation - error whilst decrypting payment confirmation: {}", e.getMessage());
             throw new PaymentException();
         } catch (Exception e) {
-            log.error("METHOD paymentConfirmation: error whilst processing payment confirmation: {}", e.getMessage());
+            log.error("paymentConfirmation - error whilst processing payment confirmation: {}", e.getMessage());
             throw new PaymentException();
         }
     }
@@ -134,6 +142,8 @@ public class PaymentService {
         paymentRepository.save(payment);
         if (type == PaymentTypeEnum.DONATION) {
             donationService.confirmDonationPayment(payment.getDonation());
+        } else if (type == PaymentTypeEnum.SHOP_PURCHASE) {
+            shopPaymentService.updatePaymentStatus(payment.getShopPurchase());
         }
     }
 

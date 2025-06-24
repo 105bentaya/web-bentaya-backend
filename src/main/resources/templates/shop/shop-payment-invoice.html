@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<body>
+<div>
+  <h2>Scouts 105 Bentaya - Recibo de la compra</h2>
+  <p>
+    Se ha realizado el pago de la compra
+    <strong><span th:text="${purchaseNumber}">número</span></strong>
+    con éxito. A continuación, se adjunta el recibo con los artículos comprados de forma detallada.
+  </p>
+  <p>
+    Ante cualquier duda o error, por favor envíe un correo a
+    <a th:href="'mailto:' + ${itMail}" th:text="${itMail}">
+      itMail
+    </a>.
+  </p>
+  <div>
+    <br>
+    <span>Atentamente,<br></span>
+    <span>El sistema de mensajería de Scouts 105 Bentaya</span>
+  </div>
+</div>
+</body>
+</html>

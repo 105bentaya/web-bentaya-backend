@@ -12,6 +12,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.scouts105bentaya.features.donation.Donation;
+import org.scouts105bentaya.features.shop.entity.ShopPurchase;
 
 import java.time.ZonedDateTime;
 
@@ -34,4 +35,6 @@ public class Payment {
     private ZonedDateTime modificationDate;
     @OneToOne(mappedBy = "payment")
     private Donation donation;
+    @OneToOne(mappedBy = "payment")
+    private ShopPurchase shopPurchase;
 }

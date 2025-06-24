@@ -20,6 +20,7 @@ final class SecurityConstant {
         "/api/event/public/**",
         "/api/scout-center/public/**",
         "/api/jamboree/public/**",
+        "/api/shop/product/public/**",
     };
 
     static final String API_URL = "/api/**";

@@ -32,13 +32,13 @@ public class PaymentController {
     @PreAuthorize("hasRole('TRANSACTION')")
     @GetMapping
     public List<PaymentDto> findAll() {
-        log.info("METHOD PaymentController.findAll{}", SecurityUtils.getLoggedUserUsernameForLog());
+        log.info("findAll{}", SecurityUtils.getLoggedUserUsernameForLog());
         return paymentConverter.convertEntityCollectionToDtoList(paymentService.findAll());
     }
 
     @PostMapping("/notification/{type}")
     public void updatePaymentAfterNotification(PaymentRedsysFormDataDto paymentRedsysFormDataDto, @PathVariable PaymentTypeEnum type) {
-        log.info("METHOD PaymentController.updatePaymentAfterNotification --- PARAMS type: {}", type);
+        log.info("updatePaymentAfterNotification - type:{}", type);
         this.paymentService.handleRedsysNotification(paymentRedsysFormDataDto, type);
     }
 }

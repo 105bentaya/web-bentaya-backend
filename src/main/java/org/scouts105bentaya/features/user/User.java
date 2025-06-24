@@ -18,6 +18,8 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.scouts105bentaya.features.booking.entity.GeneralBooking;
 import org.scouts105bentaya.features.scout.entity.Scout;
+import org.scouts105bentaya.features.shop.entity.CartProduct;
+import org.scouts105bentaya.features.shop.entity.ShopPurchase;
 import org.scouts105bentaya.features.user.role.Role;
 import org.scouts105bentaya.features.user.role.RoleEnum;
 
@@ -66,6 +68,12 @@ public class User {
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<GeneralBooking> bookingList;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private List<CartProduct> items;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private List<ShopPurchase> shopPurchases;
 
     @Transient
     public boolean hasRole(RoleEnum roleEnum) {

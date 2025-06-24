@@ -24,8 +24,8 @@ import java.io.IOException;
 @Slf4j
 public final class PdfUtils {
     private static final Font HEAD_FONT = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, WebColors.getRGBColor("#F1E61F"));
-    private static final Font BOLD_FONT = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10);
-    private static final Font NORMAL_FONT = FontFactory.getFont(FontFactory.HELVETICA, 10);
+    public static final Font BOLD_FONT = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10);
+    public static final Font NORMAL_FONT = FontFactory.getFont(FontFactory.HELVETICA, 10);
     private static final String LOGO_IMG = "img/logo.JPG";
     private static final Color HEADER_COLOR = WebColors.getRGBColor("#03569C");
 
@@ -63,16 +63,21 @@ public final class PdfUtils {
     }
 
     public static void createDoubleTitleHeader(PdfPTable table, String secondTitle) {
-        createBasicHeader(table);
+        createTitleHeader(table);
         PdfPCell cell;
 
-        cell = new PdfPCell(new Phrase("ASOCIACIÓN SCOUTS-EXPLORADORES BENTAYA", HEAD_FONT));
+        cell = new PdfPCell(new Phrase(secondTitle, HEAD_FONT));
         cell.setColspan(12);
         cell.setBackgroundColor(HEADER_COLOR);
         cell.setBorder(0);
         addAlignCenterCell(table, cell);
+    }
 
-        cell = new PdfPCell(new Phrase(secondTitle, HEAD_FONT));
+    public static void createTitleHeader(PdfPTable table) {
+        createBasicHeader(table);
+        PdfPCell cell;
+
+        cell = new PdfPCell(new Phrase("ASOCIACIÓN SCOUTS-EXPLORADORES BENTAYA", HEAD_FONT));
         cell.setColspan(12);
         cell.setBackgroundColor(HEADER_COLOR);
         cell.setBorder(0);

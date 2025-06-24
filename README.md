@@ -28,7 +28,9 @@ no deseas añadir un correo, pon cualquier valor a la variable de entorno. **NO*
 estén bajo tu control.
 
 Si deseas tener un entorno de pago funcional, instalar ngrok, ejecutarlo y añadir la variable de entorno TPV_URL con la
-dirección proporcionada por ngrok.
+dirección proporcionada por ngrok:
+1. En primer lugar ejecuta el comando `ngrok http 8080`
+2. Copia la url que te sale en el apartado _Forwarding_ a la variable de entorno `TPV_URL`
 
 Puedes copiar las variables de entorno en el formato de IntelliJ a continuación. Con estas variables de entorno
 funcionará la aplicación, pero puedes cambiar los valores según lo comentado anteriormente:
