@@ -196,7 +196,7 @@ public class ScoutCreationService {
         if (scout.getScoutType() == ScoutType.INACTIVE) {
             scout.setStatus(ScoutStatus.INACTIVE);
             scout.setFederated(false);
-        } else if (scout.getCensus() == null && form.preScoutId() == null) {
+        } else if (scout.getCensus() == null || form.preScoutId() != null) {
             scout.setStatus(scoutStatus);
             scout.setFederated(false);
         } else {
