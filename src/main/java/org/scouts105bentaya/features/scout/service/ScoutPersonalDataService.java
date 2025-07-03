@@ -39,7 +39,7 @@ public class ScoutPersonalDataService {
         String oldEmail = scout.getPersonalData().getEmail();
         String newEmail = form.email();
 
-        if (newEmail != null && scout.getContactList().stream().anyMatch(contact -> contact.getEmail().equals(newEmail))) {
+        if (newEmail != null && scout.getContactList().stream().anyMatch(contact -> newEmail.equals(contact.getEmail()))) {
             throw new WebBentayaConflictException("La persona asociada no puede tener el mismo correo que uno de los contactos");
         }
 
