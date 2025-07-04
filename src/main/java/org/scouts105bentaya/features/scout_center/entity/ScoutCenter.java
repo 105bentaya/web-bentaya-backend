@@ -56,9 +56,6 @@ public class ScoutCenter {
     @Column(nullable = false, length = 7)
     private String color;
 
-    @ManyToMany
-    private List<BookingDocumentType> allowedDocuments;
-
     @Transient
     public boolean isAlwaysExclusive() {
         return this.minExclusiveCapacity < 1;

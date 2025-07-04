@@ -204,11 +204,12 @@ public class ScoutCreationService {
             scout.setFederated(scout.getScoutType().isScoutOrScouter());
         }
 
-        scoutGroupDataService.updateScoutCensus(scout, form.census());
         scout.setGroup(scout.getScoutType().isScoutOrScouter() && form.groupId() != 0 ?
             groupRepository.findById(form.groupId()).orElseThrow(WebBentayaNotFoundException::new) :
             null
         );
+
+        scoutGroupDataService.updateScoutCensus(scout, form.census());
     }
 
     public void deletePendingScout(Integer scoutId) {

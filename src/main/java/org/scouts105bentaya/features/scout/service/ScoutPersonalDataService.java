@@ -55,7 +55,6 @@ public class ScoutPersonalDataService {
     }
 
     public void updatePersonalData(PersonalDataFormDto form, PersonalData data) {
-
         if (form.idDocument() != null) {
             scoutRepository.findFirstByPersonalDataIdDocumentNumber(form.idDocument().number()).ifPresent(scout -> {
                 if (!scout.getId().equals(data.getScoutId())) {

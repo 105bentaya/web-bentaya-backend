@@ -87,7 +87,7 @@ public class ScoutContactService {
         }
 
         String scoutEmail = scout.getPersonalData().getEmail();
-        if (scoutEmail != null && contactList.stream().anyMatch(contact -> contact.email().equalsIgnoreCase(scoutEmail))) {
+        if (scoutEmail != null && contactList.stream().anyMatch(contact -> scoutEmail.equalsIgnoreCase(contact.email()))) {
             throw new WebBentayaConflictException("Los contactos no pueden tener el mismo correo electrónico que la persona asociada");
         }
     }

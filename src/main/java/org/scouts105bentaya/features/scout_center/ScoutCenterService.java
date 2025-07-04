@@ -41,7 +41,7 @@ public class ScoutCenterService {
     public FileTransferDto getRulePDF(int centerId) {
         ScoutCenterFile ruleFile = Optional.ofNullable(scoutCenterRepository.get(centerId).getRulePdf())
             .orElseThrow(WebBentayaNotFoundException::new);
-        return new FileTransferDto(blobService.getBlob(ruleFile.getUuid()), ruleFile.getName(), MediaType.APPLICATION_PDF);
+        return new FileTransferDto(blobService.getBlob(ruleFile.getUuid()), ruleFile.getName(), ruleFile.getMimeType());
     }
 
     public FileTransferDto getIncidenceFile(int centerId) {
